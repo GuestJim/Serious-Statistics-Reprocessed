@@ -1,0 +1,594 @@
+\section{Scripting: OCAT -- Combined -- Input.r}
+
+Some time ago I decided to split up the R script that handled the processing of the data to separate the code for reading in the data and that for generating the statistics and graphs.
+The reason was so that if I was tweaking this output code, I would not need to make the changes to multiple files, but one that would then be referenced by the input code.
+This is the current version of that Input script and as the idea is to have it control everything in the Output script, it has a number of controls in it, and my preference is to have such controls near the top.
+This means the top of the file has a lot of variables being set to TRUE or FALSE, as we will shortly see, but there is some other code ahead of these switches.
+
+\begin{styleR}
+library(readr)
+library(ggplot2)
+library(moments)
+\end{styleR}
+
+Technically the Input script only actually needs the first library here to be loaded, the \textit{readr} library as the \textbf{read\_csv} function will be used later, but there is no issue with loading the other two in now.
+I also have a preference to load the libraries I want at the top of the script.
+
+The \textit{ggplot2} library provides the functions and formatting for creating and saving the graphs.
+There is a single line coming up soon that does use \textit{ggplot2}, but I could likely move that to the Output script without issue.
+The \textit{moments} library is just needed for the skewness and kurtosis calculating functions, but I load it here because of my preference.
+
+There is one exception to my preference of having the libraries loaded here and that is the \textit{tableHTML} library.
+The HTML-related code is a relatively recent addition to the Output script, but very desirable as building HTML tables is not much fun.
+When I was figuring out how to get that code to work as I wanted, I kept all of the relevant code in one location for easier troubleshooting, and this includes the loading of that library.
+I could easily move it but I like the idea of keeping it all together, in part because of the special formatting I needed to put in place.
+
+\begin{styleR}
+game	=	"!GAME!"
+cGPU	=	!GPU!
+
+gameF	=	gsub(":", "-", game)
+gameF	=	unlist(strsplit(gameF, split=" [(]"))[1]
+\end{styleR}
+
+The first two lines here are to set variables for the name of the game, or article title, and the current GPU.
+The values for both are placed here by the Python script covered in the previous section.
+Because the game name, or article title, will always be a string and should always be provided, the double quotes to identify it as a string are here.
+They are missing for \textbf{cGPU} because for the multi-GPU situation it should be \textbf{NULL}, which is a special word in R and thus should not be in a string.
+The Python script will add the quotes when they are necessary
+
+The next two lines are for creating a file name-safe version of the game or article title.
+This is done by using the \textbf{gsub} function, which expects the first argument to be the string pattern it is to replace, the second is the pattern to replace it with, and then the third is the string it is performing the operation on.
+You can change this ordering by simply setting the names of the arguments equal to the values, but I find it easier to just use the expected order.
+Here is an example with the names provided:
+
+\begin{styleR}
+gsub(pattern = ":", replacement = "-", x = game)
+\end{styleR}
+
+The last line does something that is actually pretty similar to things I was doing in Python, which is to split a string at certain points, and then select a specific portion of it.
+First the \textbf{strsplit} function is used to split the \textbf{gameF} variable at the opening of parentheses.
+The output it provides is not a simple vector though, but an actual list and that is not what I want.
+To fix that I use the \textbf{unlist} function that simplifies a list into a vector.
+I then select the first portion of the vector, which will be the portion in front of the open parenthesis, so if parentheses were used, everything they contain will be removed by this.
+
+\begin{styleR}
+theme_set(theme_grey(base_size = 16))
+DPI			=	120
+ggdevice	=	"png"
+\end{styleR}
+
+These three lines all have to do with certain controls for the graphs.
+The first is setting the base font size to be used, and it is greater than the norm for \textit{ggplot2}.
+Changing theme settings for \textit{ggplot2} can look a little weird, but fortunately it tends not to come up much.
+
+Both the \textbf{DPI} and \textbf{ggdevice} variables are for controlling the saving of the graphs.
+I think setting the DPI does not require explanation, but the \textbf{ggdevice} might.
+It is possible to save graphs to many formats, such as PNG, what I usually use, and PDF.
+You control this by setting the device the \textbf{ggsave} function uses, which we will see later.
+If I want a PDF output, I would change this variable to be PDF, but while having a graphic version can be nice for fine details, they can also be as large as the data itself, making a PNG of limited resolution better.
+I have also configured things so I can set a value of "both" and have both a PNG and PDF created
+
+\begin{styleR}
+textOUT		=	TRUE
+HTMLOUT		=	TRUE
+graphs		=	TRUE
+graphs_all	=	FALSE
+useSHORT	=	TRUE
+\end{styleR}
+
+Here we have the first batch of switches, and chances are these are the only ones that will be used.
+The first three control the main outputs of the Output script, which is if the text files containing the statistics should be produced (\textbf{textOUT}), the HTML files (\textbf{HTMLOUT)}, and finally if the graphs should be generated (\textbf{graphs}).
+As generating the graphs can take a while, the ability to disable them can be quite helpful when you only want the text or HTML files.
+
+The \textbf{graphs\_all} switch controls a block of code at the end of the Input script, and it is if the data should be filtered, such as by location, and then passed to the Output script.
+For a while now I have been using faceted graphs, which contain multiple plots in them, but there can be times graphs holding few plots or a single plot are wanted.
+If this is true, then a subset of the data will be found and passed to the Output script.
+Currently it is configured to create subsets for each location, but it could be changed for other subsets.
+(The reason it is for locations is that this is most likely going to be used to get separate graphs for each location with the same GPU, API, and quality configuration.)
+
+The \textbf{useSHORT} switch is to control using the shortened versions of the locations and APIs.
+In general it is best to leave this to TRUE, as the functions I wrote to do the name changing do handle the situation of no names bring provided.
+
+\begin{styleR}
+textFRAM	=	TRUE
+graphFRAM	=	TRUE
+
+textDISP	=	FALSE
+graphDISP	=	FALSE
+
+textREND	=	FALSE
+graphREND	=	FALSE
+
+textDRIV	=	FALSE
+graphDRIV	=	FALSE
+\end{styleR}
+
+These pairs of switches all serve a similar purpose, which is to individually control if the text and graph outputs for the frame time data, display time data, and now render time data and estimated driver lag data are provided.
+Generally it is only the frame time data that is desired, which is why its values are both TRUE while the others are FALSE.
+The render time and driver lag controls I have only added for this article, as it seems reasonable to me that the MsUntilRenderComplete and MsEstimatedDriver Lag data may capture the impact of the Anti-Lag features.
+Though I doubt I will need them in the future, I can simply change these variables to TRUE and get what I want.
+If I ever want to add support for additional data types, I will need to add new switches too.
+
+\begin{styleR}
+textAPI		=	FALSE
+textLOC		=	FALSE
+
+textDiff	=	FALSE
+graphDiff	=	FALSE
+\end{styleR}
+
+Something I have set up for the text output is the ability to have it produce files for each API and location, which is what these first two variables control.
+Usually I do not find this necessary, so they are FALSE in the reference file.
+
+The \textbf{textDiff} and \textbf{graphDiff} variables are similar to the variables above for controlling frame time and such, but I keep them separate because these are for something quite different.
+When either is set to TRUE, columns will be made for the consecutive differences between the frame time (MsBetweenPresents) and display time (MsBetweenDisplayChange).
+At present there is no reason for these to ever be TRUE, because while the columns will be made, I have not set anything up in the Output script to use them.
+For a time I did require these columns, but I was able to solve that issue such that they would not be necessary.
+There may come a time in the future when I do want to do something with these columns, so I am keeping the relevant code.
+("Diff" not being all uppercase is to avoid a naming issue later.)
+
+\begin{styleR}
+listFPS		=	NULL
+QUAN		=	c(0.01, 0.99)
+FtimeLimit	=	1000/15
+
+gWIDTH	=	8
+gHEIGH	=	9
+\end{styleR}
+
+These variables are all for controlling the output as well.
+With \textbf{listFPS} I can add to the list of frame rates the corresponding percentiles are found for.
+By default this is always done and shown for 60 FPS, but perhaps there is a game where the percentile for a different frame rate, like 50 or 90.
+By setting this to the desired value, or a list of values (c(50, 90) for example), they will be included too.
+It is a little more complicated than that may seem, but we will not see how until we get to the Output script.
+
+The \textbf{QUAN} variable is to control the probabilities used for creating the line on the QQ plots.
+There might be cases where instead of having the line connect the 1% and 99% points I want, say, 5% and 95%, and this can be controlled here.
+
+\textbf{FtimeLimit} is for setting the upper frame time limit for the graphs.
+By default I use 15 FPS, which is why the value is 1000 / 15 or 66.667, but for this article I have it set to 1000 / 60, or 16.667 ms, because the frame times are so short.
+
+The \textbf{gWIDTH} and \textbf{gHEIGHT} variables are for controlling the width and height of the graphs, which can be very necessary when a large number of plots are contained in a single graph.
+These values can be changed here, to impact every graph saved, or at the time when the graphs are saved, in case one should be larger or smaller than the others.
+
+\begin{styleR}
+if (!graphs){
+	graphFRAM	=	FALSE
+	graphDISP	=	FALSE
+	graphREND	=	FALSE
+	graphDiff	=	FALSE
+}
+\end{styleR}
+
+This \textbf{if} statement is to check if any graphs are wanted, and if not they will be disabled by setting the individual controls.
+The exclamation mark is needed so the statement's code will be run when \textbf{graphs} is FALSE.
+
+\begin{styleR}
+if (interactive())	{
+	setwd("!PATH!")
+}	else	{
+	pdf(NULL)
+}
+\end{styleR}
+
+This code may look simple, but it is actually doing some fairly important things.
+To understand this I need to explain the two ways I can and do run R code.
+One is I just execute an R script and let it go in its own console window.
+The other is to run the code in the GUI that is installed with R.
+The next paragraphs cover the differences between these methods that are relevant to this code.
+To distinguish between whether I am in the GUI or console, I use the \textbf{interactive} function, which is TRUE for the GUI and FALSE for the console.
+
+When I am using the GUI it assumes the working directory is actually the location of its executable, which makes the \textbf{setwd} function, for setting the working directory, necessary.
+The path is provided by the Python script, replacing !PATH!.
+When running a script directly though, it will use its location as the working directory, which is perfect as that is the location I keep everything, or everything is relative to.
+This is why it is necessary to set the working directory for the GUI, but not for the console.
+
+While the direct script has the advantage with the working directory, it will also generate the rplots.pdf file, which I believe serves as a kind of intermediate file for graphs.
+I do not want this file and a way to disable it is to use the \textbf{pdf(NULL)} command.
+The GUI, however, does not produce this file, so the command is not necessary with it.
+
+The purpose of this code block then is to address the disadvantages between the two methods of running R code, and I do not need to think about it when running the code.
+Whichever method I am using, running this code handles the disadvantage and I do not need to think about it past that.
+
+\begin{styleR}
+resultsFull	=	read_csv("@Combined - !QUA!.csv")
+\end{styleR}
+
+Now we are getting to where some work is being done.
+In this case it is to use the \textbf{read\_csv} function from the \textit{readr} to get the data out of a CSV.
+This data is then assigned to the \textbf{resultsFull} variable.
+The "!QUA!"
+in the name will be replaced by the Python script already covered and will point to the file made by the OCAT – Combined – PA.r script.
+
+By the way, while I have thus far used the equals sign to store values to variables, there are other assignment symbols for R and there are some differences.
+I am mentioning this now because fairly often I see people using a different symbol, "<-" specifically with \textbf{read\_csv}, but it does not make a difference here.
+We will see the third symbol, "<<-", used in the Output script because it has a special capability that is necessary for something I want to do.
+
+Before moving on I want to mention there is a reason the variable name is \textbf{resultsFull}.
+It is so I always have a complete copy of the data, since it can end up filtered when \textbf{graphs\_all} is TRUE.
+The variable the Output script uses to accessing data is \textbf{results}, so when it is not a subset of the data being used, these two variables are equal.
+
+\begin{styleR}
+listGPU		=	c(
+"RX 580",
+"RX Vega 64",
+"GTX 770",
+"GTX 980",
+"GTX 1070",
+"GTX 1080",
+"RTX 2060",
+"RTX 2080"
+)
+\end{styleR}
+
+For purposes that will be shown in the Output script sections, having an ordered list of the GPUs, locations, and APIs is useful.
+In the case of the GPUs, I can have that just manually placed in the file, since this list is not going to change significantly between articles.
+This article, using only two of the GPUs, is different but the scripts do not have an issue with skipping GPUs.
+I would not want this set up to be automatically generated by the Python script and placed in the file that way though, because I want this order, with AMD and NVIDIA separated, and expected performance increasing within those brands.
+I could probably still have Python insert the list and just have it ordered in there, but I do not see anything wrong with keeping it everywhere it is relevant.
+
+\begin{styleR}
+listQUA		=	c(
+"!QUA!"
+)
+
+listLOC		=	c(
+!LOC!
+)
+
+shortLOC	=	c(
+!LOCSHO!
+)
+
+listAPI		=	c(
+!API!
+)
+
+shortAPI	=	c(
+!APISHO!
+)
+\end{styleR}
+
+These are the other ordered lists I need, with \textbf{listQUA} being a bit different because it should always be a single string element.
+This is why the term the Python script will replace is already in quotes, as it will not add the quotes to identify it as a string.
+The other terms will have the quotes in the strings Python will replace them with, quotes are not needed in this reference file.
+
+\begin{styleR}
+if	(textDiff	|	graphDiff)	{
+	DIFF	=	as.data.frame(NULL)
+	colIN	=	c("MsBetweenPresents",		"MsBetweenDisplayChange")
+	colOUT	=	c("MsDifferencePresents",	"MsDifferenceDisplayChange")
+
+	for (gpu in unique(resultsFull$GPU))		{
+	for (qua in unique(resultsFull$Quality))	{
+	for (loc in unique(resultsFull$Location))	{
+	for (api in unique(resultsFull$API))		{
+		if (paste0(unique(resultsFull$API)[1]) == "NA")	{
+			temp	=	resultsFull[resultsFull$GPU == gpu & resultsFull$Quality == qua & resultsFull$Location == loc, colIN]
+		}	else	{
+			temp	=	resultsFull[resultsFull$GPU == gpu & resultsFull$Quality == qua & resultsFull$Location == loc & resultsFull$API == api, colIN]
+		}
+		tempD	=	rbind(as.data.frame(sapply(temp, diff)), 0)
+
+		if (nrow(tempD) > 1)	{
+			DIFF	=	rbind(DIFF, tempD)
+		}
+	}	}	}	}
+	colnames(DIFF)	=	colOUT
+
+	resultsFull	=	cbind(resultsFull, DIFF)
+}
+\end{styleR}
+
+This is the block of code I mentioned earlier that will add columns for the consecutive frame time and display time differences.
+It will be executed if either \textbf{textDiff} or \textbf{graphDiff} are TRUE, with the "|" symbol used to indicate or.
+If both needed to be TRUE then the "\&" symbol is used.
+
+The first piece of this block is an \textbf{if} statement that actually checks two variables, instead of just one.
+Both \textbf{textDiff} and \textbf{graphDiff} are looked at and either being TRUE will pass the statement because I am using \textbf{or} instead of \textbf{and}.
+The pipe symbol, \textbf{|}, can be used for \textbf{or} like how the ampersand, \textbf{\&}, can be used for \textbf{and} in this same context.
+
+Once inside the \textbf{if} code block, an empty data frame named \textbf{DIFF} is made because we need the object to exist for when we attach things to it.
+The next two lines serve to identify the columns from the \textbf{resultsFull} data frame we want to find the consecutive differences for, and then the name of the new columns this code will produce.
+
+This next bit is a series of \textbf{for} loops that will go through the configurations of GPU, quality, location, and API.
+Instead of using the lists I provided earlier, I instead am using the \textbf{unique} function to get just the unique values from the relevant columns in the data.
+To identify the columns I am using the "\$" symbol after the variable name and before the name of the desired column.
+This is my preferred method to get specific columns from data frames.
+(It works with other object types too, for getting the data under a specific name.)
+
+Another way to get values out of a data frame and other objects is by placing the index values in square brackets next to the variable name, but there is more you can do than that with this bracket notation..
+We see this in the next piece of code, but the \textbf{if} statement needs to be covered first.
+
+\begin{styleR}
+if (paste0(unique(resultsFull$API)[1]) == "NA")	{
+	temp	=	resultsFull[resultsFull$GPU == gpu & resultsFull$Quality == qua & resultsFull$Location == loc, colIN]
+}	else	{
+	temp	=	resultsFull[resultsFull$GPU == gpu & resultsFull$Quality == qua & resultsFull$Location == loc & resultsFull$API == api, colIN]
+}
+\end{styleR}
+
+After the \textbf{for} loops we have an \textbf{if…else} statement that tests if there are multiple APIs involved or not.
+This test works by finding the unique elements in the API column, then taking the first element from the list and converting it to a string using the \textbf{paste0} function.
+
+The reason this check works is that when there are no APIs present, the column will be empty and that returns as \textbf{NA}.
+Using the \textbf{paste0} function then returns \textbf{"NA"} and the \textbf{==} test sees this and will return TRUE.
+When it returns \textbf{FALSE}, then the code block for the \textbf{else} statement is done.
+
+\begin{styleR}
+temp	=	resultsFull[resultsFull$GPU == gpu & resultsFull$Quality == qua & resultsFull$Location == loc, colIN]
+\end{styleR}
+
+This is the code that is run when there are not multiple APIs to consider, but the code for when an API should be considered is very similar.
+We can see a value is saved to the \textbf{temp} variable, which will then be used outside of the entire \textbf{if…else} code block.
+What it saves to \textbf{temp} is a subset of the \textbf{resultsFull} data frame and the conditions for the subset are set within the square brackets.
+
+These conditions are constructed the same way they are for the \textbf{if} statements we have previously seen, though their placement is important.
+The way the filtering for these subsets will work is to grab the rows that contain data matching the desired configuration, so the conditions are given on the left side of the comma in the brackets.
+This is the side for selecting rows while the right side is for selecting columns.
+The order of the conditions does not matter, but the first one checks that the value in the GPU column is equal to the current value of the \textbf{gpu} variable for the \textbf{for} loop.
+The second and third then check the values in the Quality and Location columns to match the respective variables.
+Only those rows for each all three of these conditions, or four if API is included, are satisfied will be returned and assigned to \textbf{temp}.
+
+In the original version of this code, the whole of the rows were grabbed, but by changing things just a little I can make this more extensible.
+Specifically, the later step that would have selected the columns to perform the consecutive difference function would need to be manually edited to have it work on more columns.
+By instead using the \textbf{colIN} list to select the columns here, I can edit that list, which is more convenient, and have the desired data passed through to the function without any additional edits.
+
+\begin{styleR}
+tempD	=	rbind(as.data.frame(sapply(temp, diff)), 0)
+\end{styleR}
+
+There are a few things going on here, but it is actually simpler than what it was prior to the tweaks I just mentioned.
+Starting from the inner-most code, the \textbf{sapply} function is being used and what this does is apply the provided function onto each element of the data provided to it.
+In this case the data is the \textbf{temp} variable just created and the function is \textbf{diff}, which by default will produce a list of the differences between consecutive values.
+It does have arguments to control the step and the number of times to find the differences between values, but I do not need to touch these.
+
+The output of \textbf{sapply} will actually be a matrix in this case, but I want it to be a data frame so I use \textbf{as.data.frame} to change the data type.
+
+The \textbf{rbind} and similar \textbf{cbind} function serve to combine objects together by row or column.
+At the moment I want to combine by rows, so I am using \textbf{rbind} to attach zeroes to the end of each column.
+The reason I need the zeroes is that when given a list, \textbf{diff} will produce a list with one less element than the input, and I need the lengths to be equal.
+My solution is to add a zero to the end, which is also appropriate as there is no difference between the last frame and the next that was not measured.
+(Attaching this zero to the beginning would mean the difference would point backwards, to the previous frame, but I want to point forward.Usefully, R understands to apply the zero to each column without needing to create a list the same length as the number of columns.
+
+\begin{styleR}
+if (nrow(tempD) > 1)	{
+	DIFF	=	rbind(DIFF, tempD)
+}
+\end{styleR}
+
+This test is to make sure a difference data frame was made by checking how many rows \textbf{tempD} has.
+The only way this would be empty is if the subset for \textbf{temp} was empty, which would result in \textbf{tempD} being an empty frame.
+
+If the test passes, then the \textbf{DIFF} frame created earlier has the contents of \textbf{tempD} attached to it using \textbf{rbind}.
+
+After this the \textbf{for} loops close and we get to sticking the values onto \textbf{resultsFull}.
+
+\begin{styleR}
+colnames(DIFF) = colOUT
+
+resultsFull = cbind(resultsFull, DIFF)
+\end{styleR}
+
+First the column names for the \textbf{DIFF} frame are set, so we can use those names to call up the data later.
+After this, the \textbf{resultsFull} frame has \textbf{DIFF} attached to it as new columns using \textbf{cbind}.
+
+\begin{styleR}
+resultsFull$GPU		=	factor(resultsFull$GPU, levels = listGPU, ordered = TRUE)
+resultsFull$Quality	=	factor(resultsFull$Quality, levels = listQUA)
+if (length(listLOC[1]) != 0) {
+	resultsFull$Location	=	factor(resultsFull$Location, levels = listLOC, ordered = TRUE)
+}
+resultsFull$API		=	factor(resultsFull$API, levels = listAPI, ordered = TRUE)
+
+results = resultsFull
+\end{styleR}
+
+All of these are doing basically the same thing, which I will explain in a bit, but first I want to address that the \textbf{if} statement is to cover the situation when no location list is provided.
+This is accomplished by testing if the length of the first entry in \textbf{listLOC} is not equal to zero.
+
+I have mentioned before that data frames are a data type in R, and another few that have come up are \textit{string}, \textit{numeric}, and \textit{logical}.
+String would be strings of characters, so text.
+Numeric covers floating point numbers, and there are also \textit{integer} and \textit{complex} for integers and complex numbers, but I do not need either of these.
+Logical is either TRUE or FALSE, so we are looking at a Boolean value with logical.
+There are also vectors, which will hold a simple list of values of all the same type, lists, which are more advanced than vectors, and data frames.
+We will see lists later, but what we are seeing here is another data type called \textit{factor}s.
+
+Factors are discrete values and the way they work is to assign values to integers and then keep a list that maps the factor values to these integers.
+The values that are mapped are the levels.
+What makes factors powerful and useful is that they can be ordered, which is what I am taking advantage of.
+If I do not provide the order for things like the GPU, location, and API, then R will apply its own order, which might not make sense.
+
+Factors are more useful than that though, which we will be seeing in the Output script.
+Factors are necessary to create the faceted graphs and for the \textbf{aggregate} function which is exactly something I need as it will find groups in a data frame and then apply a function to these groups separately.
+For example, I could tell it to group by GPU, location, and API for finding the mean, and it will go through and find the mean for each configuration of GPU, location, and API, all with just one line of code.
+You have already seen what it takes to work through each of these configurations, and it would take even more to produce as nicely a formatted output as \textbf{aggregate} does.
+
+What these lines of code do is set the columns named to be factors, and then take the vector I provide and uses that to order these factors.
+That is except for the Quality column, as that will always be a single value so ordering is not necessary.
+Also, because some kind of list is always provided for the locations, that \textbf{if} statement should not be necessary, but it does not hurt to leave this previously needed check in place.
+
+Now that the factor formatting is complete, \textbf{resultsFull} has its value assigned to \textbf{results}, as this is the variable name the Output script actually works with.
+This allows me to make \textbf{results} a subset of the complete data, and with the complete data, \textbf{resultsFull} protected from any edits, I do not need to load in the CSV again, which can take a while.
+
+\begin{styleR}
+reLoc	=	function(DATA, shortLOC = NULL)	{
+	if (!is.null(shortLOC))	{
+		for (i in length(shortLOC):1)	{
+			DATA$Location	=	gsub(listLOC[i], shortLOC[i], DATA$Location)
+		}
+		DATA$Location	=	factor(DATA$Location, levels = shortLoc, ordered = TRUE)
+	}
+	return(DATA)
+}
+
+reAPI	=	function(DATA, shortAPI = NULL)	{
+	if (!is.null(shortAPI))	{
+		for (i in length(shortAPI):1)	{
+			DATA$API	=	gsub(listAPI[i], shortAPI[i], DATA$API, fixed=TRUE)
+		}
+		DATA$API	=	factor(DATA$API, levels = shortAPI, ordered = TRUE)
+	}
+	return(DATA)
+}
+\end{styleR}
+
+Here we have a couple custom functions that do effectively the same thing, but to different columns.
+Both are for serving the purpose of applying the shortened versions of the locations and API lists to data.
+Getting it to work right has been a little tricky though, because while theoretically this should be simple, theory and reality are not always consistent.
+
+Creating a custom function in R is fairly easy as you start by providing a name for the function and setting it equal to the \textbf{function} command.
+The arguments for this command will be the arguments for the custom function, and focusing on the \textbf{reLoc} function for replacing the Location factors, these arguments are \textbf{DATA} and \textbf{shortLOC}.
+That this argument is the same name as the list of shortened names will not be a problem as R will use the value for the argument without touching the variable.
+If you want to provide a default value for an argument, you set the name of the argument equal to that value.
+As I want the default value for the \textbf{shortLOC} argument to be NULL, I have \textbf{shortLOC = NULL} in the function command.
+The reason I have the default set to NULL is because this is a safe way to ensure nothing will be changed if a shortened list is not provided.
+
+Going within the code the function will run when called, we have an \textbf{if} statement that considers the result of \textbf{is.null}.
+This is a function that checks if the value of a variable is NULL and returns TRUE or FALSE depending on which is the case.
+I want the reverse, so I use the exclamation point to invert the result to ensure the statement's code is only run when \textbf{shortLOC} is not NULL.
+
+The \textbf{if} statement also checks if there is more than one location in the data.
+This is achieved by using the \textbf{unique} function, that returns just the unique values in a list, and then the \textbf{length} function to reports the number of elements in a list.
+The reason this is check is necessary is to protect against unnecessary levels being added, such as when the data is a subset with only one location, while \textbf{shortLOC} has multiple locations.
+The fact this skips the replacement is not an issue, as such a situation likely will not require the shorter names.
+
+If a shortened list was provided we come to a \textbf{for} loop that will go through a list of numbers, starting at the length of the provided list, and going to 1.
+R understands this means the sequence should be decreasing in value.
+The reason I need it to work backwards through the list is to protect against the levels for factors being changed because of partial pattern matches.
+This could cause values in the data to be replaced with the wrong value from \textbf{shortLOC}, and this is also true for the \textbf{reAPI} function.
+Going backwards through the lists relieved this issue, as typically the longer strings in the lists are later in them, and these longer strings will be less likely to suffer the issue.
+
+\begin{styleR}
+DATA$Location	=	gsub(listLOC[i], shortLOC[i], DATA$Location)
+\end{styleR}
+
+This is the code run by the \textbf{for} loop.
+Like when using \textbf{gsub} before, it will replace every string that matches the pattern of the first argument, elements in \textbf{listLOC}, with the string that is the second argument, corresponding elements in \textbf{shortLOC}.
+The data that will have this replacement done to it is \textbf{DATA\$Location}, the entire location column and then the results are saved to that column, replacing the original values.
+
+It may seem odd that this will work on factors, but it does.
+The result is the column will be strings instead of factors, which is why outside of the \textbf{for} loop is a line for making the column factors.
+The \textbf{DATA} input is then returned as the function's output.
+
+Ideally it would be possible to just map new values to the levels, and I think there might be such a function in a library R can load, but I tend to prefer not loading in additional libraries if I can find a solution without doing so.
+Kind of silly, especially if the solution I can get will be easier than the one I can make, but it is what I do and tends to teach me (potentially just how silly I am).
+
+\begin{styleR}
+multiGPU	=	is.null(cGPU)
+
+testAPI		=	(length(unique(results$API)) >= 2)
+\end{styleR}
+
+Both \textbf{multiGPU} and \textbf{testAPI} serve to identify the current situation.
+With \textbf{multiGPU} it sees if the \textbf{cGPU} variable is NULL, and the result of the test, TRUE or FALSE, is saved.
+This is used to identify if certain things should happen later on.
+The check for \textbf{testAPI} is a bit more complicated, as it needs to see if the number of unique APIs in the data is greater than or equal to 2.
+(It could also just check for if there is more than one, but this is what I wrote and there is no real need to change it.The parentheses around this check are not necessary but I want them there visually indicate the check is one thing.
+
+The next section of code is concerned with creating variables for naming things.
+
+\begin{styleR}
+if (levels(results$Quality)[1] != "Review")	{
+	QUA	=	paste0(levels(results$Quality)[1], " Quality")
+	qua	=	paste0(levels(results$Quality)[1])
+}	else	{
+	QUA	=	"Review"
+	qua	=	"Review"
+}
+
+gameQ		=	paste0(game, " - ", QUA)
+gameGAQ		=	game
+gameGAQF	=	gameF
+
+if	(!multiGPU)	{
+	gameGAQ		=	paste0(gameGAQ, " - ", cGPU)
+	gameGAQF	=	paste0(gameGAQF, " - ", cGPU)
+}
+if	(!testAPI	&	!is.null(listAPI))	{
+	gameGAQ		=	paste0(gameGAQ, " - ", unique(results$API))
+	gameGAQF	=	paste0(gameGAQF, " - ", unique(results$API))
+}
+gameGAQ		=	paste0(gameGAQ, " - ", QUA)
+gameGAQF	=	paste0(gameGAQF, " - ", qua)
+\end{styleR}
+
+That top \textbf{if...else} statement checks if the quality for the data is Review.
+If it is not, then two variables are created with \textbf{QUA} being the name of the quality with the string " Quality" pasted onto its end while the \textbf{qua} variable is just the name of the quality.
+If the quality is Review though, then these two variables are both set to Review.
+
+After this we have three variables created, but only the first one, \textbf{gameQ} will not be changed.
+It is just attaching the \textbf{QUA} value to the game name, with a hyphen separating the pasted strings.
+The \textbf{gameGAQ} and \textbf{gameGAQF} will be very similar, but the former will not be a file name-safe string while the latter is.
+
+The two \textbf{if} statements that follow check for if this is a multi-GPU situation, if there are multiple APIs to be tested and that \textbf{listAPI} is not empty.
+When there are multiple GPUs in the data, I do not want the GPU identified in the file name, and this is true for APIs too.
+When the current data is for just a single GPU and single API though, having them identified in the name is helpful.
+
+At the end of this, the name of the quality is pasted onto these variables, with the file name-safe version not getting the " Quality" string on it, to keep the file names shorter.
+
+After all of this we are finally at the near-end of this script.
+
+\begin{styleR}
+source("@Combined - Output.r")
+\end{styleR}
+
+The \textbf{source} function will read and parse the contents of the provided script for execution.
+It is the Output script it will read in, and because it is in the environment created by this Input script, all of the variables and custom functions will be available to it.
+The reason I am using this capability of R is so that multiple Input scripts can call the same Output script, so changes to the one script propagate through all of the inputs.
+Though I am creating and using combined CSVs now, so there are fewer scripts involved, this modularity is still very useful because I can
+
+\begin{styleR}
+if	(graphs_all)	{
+textFRAM	=	FALSE
+textDISP	=	FALSE
+textREND	=	FALSE
+textDRIV	=	FALSE
+HTMLOUT		=	FALSE
+textDiff	=	FALSE
+
+for	(loc in listLOC)	{
+
+	message(paste0("\n", loc))
+	results	=	resultsFull[resultsFull$Location == loc, ]
+
+	gameQ		=	paste0(game, " - ", QUA, " - ", loc)
+	gameGAQ		=	game
+	gameGAQF	=	gameF
+
+	if	(!multiGPU)	{
+		gameGAQ		=	paste0(gameGAQ, " - ", cGPU)
+		gameGAQF	=	paste0(gameGAQF, " - ", cGPU)
+	}
+	if	(!testAPI	&	!is.null(listAPI))	{
+		gameGAQ		=	paste0(gameGAQ, " - ", unique(results$API))
+		gameGAQF	=	paste0(gameGAQF, " - ", unique(results$API))
+	}
+	gameGAQ		=	paste0(gameGAQ, " - ", QUA, " - ", loc)
+	gameGAQF	=	paste0(gameGAQF, " - ", qua, " - ", loc)
+
+	source("@Combined - Output.r")
+}	}
+\end{styleR}
+
+While I am usually happy with the faceted graphs when looking at individual configurations, there can be times I want individual graphs each location, for the individual configurations.
+This is the code that, when activated by having \textbf{graphs\_all} set to TRUE, will go through the different locations, filtering the data so the graphs produced are for the single locations.
+Technically this could also be used with the multi-GPU situation to filter for each GPU, but I do not think that situation calls for this.
+
+Because the purpose for this code is to generate graphs, all of text outputs are disabled, including the HTML outputs, and that is how the code block starts.
+
+After turning off the text we have a \textbf{for} loop that will go through the locations provided by \textbf{listLOC} and we finally see why I have both \textbf{results} and \textbf{resultsFull}.
+With \textbf{resultsFull} holding the complete data already formatted, this code to get a subset of it will always provide a complete subset for \textbf{results}.
+It is much faster to do this than to reload the original CSV again, especially as the factor formatting would need to be redone in that case.
+
+What does need to be redone though, is the setting of the naming variables, so all of that code is here again.
+The only change is that now \textbf{gameQ} also includes the current location name.
+
+Once these names are set, the Output script is read in again just like before.
+I have spent the time to get it configured so it will work just as well with these subsets as it does the complete data frames.
+
+Next up is the Output script itself, but because of its size I am breaking it across three sections.
+The first will cover the top of the file where I have most custom functions and the processing of the statistics.
+The second is the middle section and is concerned with the text and HTML outputs.
+The third and final section is for creating the graphs.

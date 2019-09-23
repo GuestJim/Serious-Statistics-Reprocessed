@@ -1,0 +1,60 @@
+\section{Scripting: Common Concepts}
+Generally it is a good idea to avoid repetition whenever you are writing scripts or any kind of code.
+There can be various benefits to this, including making it easier to have an update propagate through the code, as it need only be applied in one location to impact multiple.
+There are other advantages too, but right now I am just coming to the point that I want to cover certain concepts that will be common in these scripts here, instead of needing to repeat myself for each script.
+
+The first concept I want to cover is something both R and Python have exactly in common and is very important; their comment symbol.
+All programming languages I am aware of have some way to write comments within the code.
+These comments will be ignored when the code is run, as they are there to inform the person reading the code.
+Some languages can do block comments, with a symbol to start a comment and then another to end it, so everything between these symbols is ignored.
+Both R and Python, however, use a single character, \#, to mark everything on the line following the symbol as a comment.
+
+Knowing how to comment in the languages you use is very important for two reasons.
+One is to leave comments, so that when a future version of you, or someone else looks at your code, it is possible to figure out what the code is for.
+Perhaps the code itself is so complicated just reading through it is not enough, or it is meant to work with another piece of code and otherwise appears unnecessary.
+No matter the situation, placing comments in code is a good idea.
+
+The other reason I have is for troubleshooting.
+Comments are not executed, so if you are trying to track down an issue, you can just comment out code to search for the cause.
+If you cannot just comment out entire lines of code, you can also try new versions of the code, keeping the old version present as a comment, at least until you finish the new one.
+
+The comment symbol is a special symbol in the language, which means it has a special use so you cannot use it other ways, without escaping it.
+To escape a special symbol there will be another special symbol for that.
+This is definitely going to come up with Python but it is the special word concept I want to bring up currently.
+
+Like special characters, special words have certain uses and are protected from other uses.
+Some examples in R of special words are TRUE, FALSE, and NULL.
+Both R and Python are case sensitive, so True, False, and Null are not special words.
+Anyway, those words will be coming up in the scripts later, especially NULL as it can be used, in many cases, like an empty value that will not break functions when it is provided.
+
+The next concept that is in use in both R and Python are the \textbf{if} and \textbf{if…else} statements.
+There are some differences in how they function in these languages, but the concepts are the same that you give the \textbf{if} statement some condition to check and code to execute depending on this check.
+The result of this check needs to be TRUE or FALSE, and when it is TRUE the code will be executed.
+When the check returns FALSE, then the code will not be executed.
+If you do want something to happen when the check is FALSE, you can use \textbf{else} to provide the code to be run under this condition.
+
+You can combine multiple \textbf{if} and \textbf{if…else} statements to cover nested situations, with Python even having an \textbf{elif}, for else-if, command for this.
+
+Another concept I use a lot in both is the \textbf{for} loop.
+There are multiple types of loops, but this is the one I use the most.
+What distinguishes a \textbf{for} loop is that it creates a variable that it will iterate through a list you provide.
+You also provide the name for the variable, which helps to keep things straight and when using that variable inside the loop.
+The elements of the list can be numbers or strings.
+
+Lastly, both R and Python support the creation of custom functions.
+While this is not really uncommon, it is still very powerful for cleaning up code by placing code that would otherwise be repeated in a function that you can call as needed.
+When you create a custom function you also set its arguments, the information you can or must provide for it to work.
+Like with \textbf{for} loops, you assign a name to the arguments and you can then call the information provided to the function using that name.
+
+As you will see, I use custom functions, a lot.
+Partly this is to avoid repetition, but it is also to make the code more modular.
+This modularity allows me to expand the scripts more easily, such as adding another data type to process.
+Instead of needing to create a copy of the code for processing the data and the creating the graphs, I can just add a few things to cover the new condition and then use the custom functions I already have.
+This is especially helpful for the graphs as the formatting will be more consistent between them.
+
+Another advantage to using custom functions, at least for me, is I feel it makes me produce better code.
+I cannot just have specific tweaks to get things to work, I need the whole of the function to work.
+Sometimes this means having intelligent controls within it, to handle those tweaks.
+I also want to use as few arguments as I can, which can require some creativity, but the result is cleaner code and occasionally some interesting capabilities.
+
+With those concepts covered, we can get to the actual scripts.

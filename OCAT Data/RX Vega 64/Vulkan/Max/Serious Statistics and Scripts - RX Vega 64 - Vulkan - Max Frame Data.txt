@@ -1,0 +1,32 @@
+Serious Statistics and Scripts - RX Vega 64 - Vulkan - Max Quality
+Frame Time
+
+Mean
+        GPU        Location       Mean Median
+ RX Vega 64       Hatsheput FPS 227.04 227.12
+ RX Vega 64           Dunes FPS 256.74 258.93
+ RX Vega 64 Thebes - Karnak FPS 231.83 243.37
+ RX Vega 64       Hatsheput  ms   4.40   4.40
+ RX Vega 64           Dunes  ms   3.90   3.86
+ RX Vega 64 Thebes - Karnak  ms   4.31   4.11
+
+Percentiles
+        GPU        Location       0.1%     1%    99%  99.9%
+ RX Vega 64       Hatsheput FPS 338.93 293.69 190.99 160.50
+ RX Vega 64           Dunes FPS 416.84 299.67 199.36 156.24
+ RX Vega 64 Thebes - Karnak FPS 343.79 286.53 148.54 134.15
+ RX Vega 64       Hatsheput  ms   2.95   3.40   5.24   6.23
+ RX Vega 64           Dunes  ms   2.40   3.34   5.02   6.40
+ RX Vega 64 Thebes - Karnak  ms   2.91   3.49   6.73   7.45
+
+Percentile of FPS
+        GPU        Location 60 FPS 50 FPS 30 FPS 20 FPS 15 FPS
+ RX Vega 64       Hatsheput   0.04   0.02   0.01   0.01      0
+ RX Vega 64           Dunes   0.01   0.01   0.00   0.00      0
+ RX Vega 64 Thebes - Karnak   0.04   0.02   0.01   0.00      0
+
+Distribution Stats
+        GPU        Location Mean (ms) StDev (ms) CoV (%)  Skew Kurtosis
+ RX Vega 64       Hatsheput      4.40       1.05   23.86 93.91 12759.66
+ RX Vega 64           Dunes      3.90       0.44   11.42 32.16  2743.69
+ RX Vega 64 Thebes - Karnak      4.31       1.09   25.31 61.52  7648.03

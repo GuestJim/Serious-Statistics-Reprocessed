@@ -1,0 +1,62 @@
+Serious Statistics and Scripts
+Frame Time
+
+Mean
+      GPU                   API        Location     Mean Median
+ RTX 2060            DirectX 11       Hatsheput 4.411660  4.423
+ RTX 2060            DirectX 12       Hatsheput 4.587996  4.601
+ RTX 2060                Vulkan       Hatsheput 4.499194  4.491
+ RTX 2060 DirectX 11 - Anti-Lag       Hatsheput 4.408515  4.422
+ RTX 2060            DirectX 11           Dunes 3.859683  3.804
+ RTX 2060            DirectX 12           Dunes 3.975013  3.894
+ RTX 2060                Vulkan           Dunes 3.913002  3.856
+ RTX 2060 DirectX 11 - Anti-Lag           Dunes 3.849811  3.797
+ RTX 2060            DirectX 11 Thebes - Karnak 4.196142  3.994
+ RTX 2060            DirectX 12 Thebes - Karnak 4.511324  4.339
+ RTX 2060                Vulkan Thebes - Karnak 4.399093  4.197
+ RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak 4.141346  3.974
+
+Percentiles
+      GPU                   API        Location     0.1%      1%     99%     99.9%
+ RTX 2060            DirectX 11       Hatsheput 3.294142 3.47000 5.54500  5.807000
+ RTX 2060            DirectX 12       Hatsheput 2.797804 3.54751 5.68449  6.172549
+ RTX 2060                Vulkan       Hatsheput 2.973229 3.51500 5.51300  6.032000
+ RTX 2060 DirectX 11 - Anti-Lag       Hatsheput 3.165590 3.39218 5.47800  5.762000
+ RTX 2060            DirectX 11           Dunes 2.520240 3.16500 5.31700  6.362570
+ RTX 2060            DirectX 12           Dunes 2.974543 3.31800 5.51257  7.957398
+ RTX 2060                Vulkan           Dunes 2.261247 3.22200 5.41351  6.650008
+ RTX 2060 DirectX 11 - Anti-Lag           Dunes 2.322045 3.07200 5.14000  5.951955
+ RTX 2060            DirectX 11 Thebes - Karnak 2.711557 3.07100 7.69800  8.824430
+ RTX 2060            DirectX 12 Thebes - Karnak 2.525552 2.88800 7.95748  9.689792
+ RTX 2060                Vulkan Thebes - Karnak 2.932360 3.33844 7.95400 10.476976
+ RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak 2.807000 3.05400 7.47584  8.825968
+
+Percentile of FPS
+      GPU                   API        Location 60 FPS 50 FPS 30 FPS 20 FPS 15 FPS
+ RTX 2060            DirectX 11       Hatsheput   0.00   0.00   0.00   0.00   0.00
+ RTX 2060            DirectX 12       Hatsheput   0.01   0.01   0.00   0.00   0.00
+ RTX 2060                Vulkan       Hatsheput   0.03   0.02   0.01   0.01   0.01
+ RTX 2060 DirectX 11 - Anti-Lag       Hatsheput   0.00   0.00   0.00   0.00   0.00
+ RTX 2060            DirectX 11           Dunes   0.00   0.00   0.00   0.00   0.00
+ RTX 2060            DirectX 12           Dunes   0.00   0.00   0.00   0.00   0.00
+ RTX 2060                Vulkan           Dunes   0.01   0.00   0.00   0.00   0.00
+ RTX 2060 DirectX 11 - Anti-Lag           Dunes   0.00   0.00   0.00   0.00   0.00
+ RTX 2060            DirectX 11 Thebes - Karnak   0.00   0.00   0.00   0.00   0.00
+ RTX 2060            DirectX 12 Thebes - Karnak   0.02   0.01   0.00   0.00   0.00
+ RTX 2060                Vulkan Thebes - Karnak   0.06   0.05   0.01   0.00   0.00
+ RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak   0.00   0.00   0.00   0.00   0.00
+
+Distribution Stats
+      GPU                   API        Location Mean (ms) StDev (ms) CoV (%)  Skew Kurtosis
+ RTX 2060            DirectX 11       Hatsheput      4.41       0.46   10.38  0.25     5.09
+ RTX 2060            DirectX 12       Hatsheput      4.59       0.54   11.79 30.76  3169.09
+ RTX 2060                Vulkan       Hatsheput      4.50       1.05   23.43 88.32 11332.17
+ RTX 2060 DirectX 11 - Anti-Lag       Hatsheput      4.41       0.52   11.76 29.35  3692.25
+ RTX 2060            DirectX 11           Dunes      3.86       0.42   10.87  1.55     9.73
+ RTX 2060            DirectX 12           Dunes      3.98       0.48   12.01  6.95   248.91
+ RTX 2060                Vulkan           Dunes      3.91       0.48   12.37 13.89   958.78
+ RTX 2060 DirectX 11 - Anti-Lag           Dunes      3.85       0.43   11.16 13.28  1235.55
+ RTX 2060            DirectX 11 Thebes - Karnak      4.20       0.89   21.18  2.17     8.98
+ RTX 2060            DirectX 12 Thebes - Karnak      4.51       1.00   22.19  3.95    79.95
+ RTX 2060                Vulkan Thebes - Karnak      4.40       1.06   24.15  9.62   264.01
+ RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak      4.14       0.82   19.71  2.25    10.17

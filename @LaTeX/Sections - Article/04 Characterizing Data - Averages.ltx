@@ -1,0 +1,126 @@
+\section{Statistics: Characterizing Data (Averages)}
+
+There is an old quote along the lines of, "There are three kinds of lies: lies; damned lies; and statistics."
+While there is some truth to this description of statistics, it is only as true as one's lack of understanding of statistics.
+Armed with the proper knowledge, claims made based on statistics can be appropriately criticized and have their significance challenged.
+One example concerning performance data is reporting an average of 60 FPS, because while the expected performance is indeed 60 FPS, it is possible a lot of time is spent at much lower and much higher frame rates, balancing out to 60 FPS.
+This is why many provide more statistics than just the average, such as the 1\% and 0.1\% lows, to give a greater sense of the game's performance profile, for a given system configuration.
+Perhaps a more statistical term would be the game's performance distribution.
+
+\subsection{Distributions}
+
+A core concept to statistics and probability is distributions; the spread of results generated from a random variable.
+In this case the variable is the performance of a computer in a game and it is the distribution we try to share using statistical values and concepts.
+Averages, percentiles, standard deviation, skewness, and more are all characteristics of distributions that can be shared so one can reconstruct it and have a fuller understanding of what to expect.
+
+
+Something interesting is that two variables can generate similar distributions, which means certain properties will be true for both, even if the variables themselves are completely unrelated, and the specific values, too, are different.
+This fact is taken special advantage of with the Normal distribution in particular, as it has certain properties that make it mathematical convenient to work with.
+For that reason, sometimes it is desirable to assume a Normal distribution for a sample of random data.
+Conveniently though, there are some random samples, such as height and weight in a population, that do tend to be normally distributed.
+
+Unfortunately, I am unsure if the Normal distribution is too helpful with performance data, but I am admittedly not an expert with statistics or probability.
+I do know it is a reasonable expectation for the distribution of performance data to have a bias to longer frame times.
+This is a result of a computer running up against the limits of its hardware, while it is still possible for an arbitrary frame to take a very long time to render for almost any reason.
+
+Something I do want to talk about before getting to the next subsection is that performance data is likely going to be noisy.
+You can see this in the Course graphs I share, where the frame time measurements tend not to fall on a thin line, but something thicker.
+This noise is almost certainly related to the immense complexity of computers, both hardware and software, but it also means different games will have different amounts of noise to their performance.
+This noise makes using statistics like average, percentiles, and others all the more valuable, as a way to describe what one can expect.
+
+\subsection{Averages}
+
+Almost certainly the most commonly used statistic to describe a distribution is the average.
+One issue with this is that average itself does not have a fixed meaning.
+Putting it another way, if all you ask for is the average, there are a few statistics that can be given to you, making them aliases.
+Keeping it simple, these are the mean and median, but there are also different kinds of means, making the situation less than simple.
+There is the Arithmetic mean, Geometric mean, and Harmonic mean, and each of these I have seen used in reviews and analyses, which makes sense as they each have advantages.
+
+Before getting to what these different means are, I want to explain what the average is, and why these different statistics are all considered averages.
+The average of a distribution is the expected or central value of the distribution.
+The mean, whichever the kind, returns a central value based on the values while the median cuts the distribution in half, ignoring the values to return a value literally in the center.
+In some cases, like the Normal distribution, the mean and median will be identical, but this is not always the case, especially when the distribution is skewed.
+
+This may lead to the question of which is better to use, the mean or median?
+It depends on the circumstance, and both can provide useful information regardless.
+Personally I think a mean would be the more appropriate for performance data, because it will take into account the actual values, while the median is only concerned with the placement of the data.
+Of course this can result in the mean being sensitive to outliers, but thankfully one solution to that can be to just have a lot of data, so the outliers are outweighed.
+Usually that will work, but not always.
+
+\subsection{Arithmetic Mean}
+
+The arithmetic mean is what most people are familiar with, and is what I personally use.
+In its simplest form it works by finding the sum of all the values in a sample, and then dividing by the count of samples.
+In other cases though, it would be to multiply each value by its own probability to occur, and add up all of those products.
+This can also be called a Weighted mean, but it is the same concept as what I described above, which applies the same probability to each value.
+
+
+\begin{equation}
+	\sum\limits^n	\frac{x_n}{n}
+\end{equation}
+
+\subsection{Geometric Mean}
+
+The geometric mean has a somewhat similar form to the arithmetic mean, but instead of adding the values up, you multiply them together, and instead of dividing by the count, you take the nth root of that product, where n is the count.
+There are actually more algorithms than that to calculate the geometric mean, with another being to take find the arithmetic mean of the logarithm of the values, and then undo the logarithm.
+This is the algorithm I have placed in my scripts, because I like the look of it in R better.
+
+\begin{equation}
+	\prod\limits^n	\sqrt[n]{x_n} ~~\textnormal{or}~~ \exp(\textnormal{mean}(\log{(x)}))
+\end{equation}
+
+\subsection{Harmonic Mean}
+
+The harmonic mean is an interesting one compared to the other two, as it divides the count of samples by the sum of the reciprocal of the values.
+This is actually useful if you are working with rates, like frame rates, but as the data I use is of frame times instead, it is not necessary for me.
+
+\begin{equation}
+	\frac{n}{\sum\limits^n	\frac{1}{x_n}}
+\end{equation}
+
+\subsection{Mean Advantages and Disadvantages}
+
+Now that I have touched on these types of means, I want to cover some advantages and disadvantages to them, and thereby also explain why some are more or less appropriate for certain situations.
+Already mentioned that the harmonic mean is good for working with rates, but as I do not use data in the form of rates, it is not appropriate for me to use.
+This leaves the arithmetic and geometric means, which also have better or worse situations to be used in.
+
+Personally I have always used arithmetic means partly because I had not researched other means prior to now, but now that I have I do believe it is still the most appropriate mean for me to use.
+One of the reasons for this is that arithmetic means are good to use when the sum of the values has a meaning to them.
+With frame time, the sum would be the length of the recording period (approximately, just in case there is a time between the end and start of Present API calls), but the same rule applies to geometric means.
+The product of frame times does not have a meaning though, which we can recognize by just considering the units.
+If we are using just one hundred frame time measurements, then the product would have a unit of milliseconds to the hundredth power.
+Another way to consider that is as a volume of time measured in one hundred dimensions, and I am very uncertain what use that could have.
+(Just the concept of a volume of time does not really seem to have much use to it, but maybe there is an exotic purpose, though I doubt it is relevant to measuring computer performance.)
+
+While that rule does suggest the geometric mean is not a good one to use, there is another advantage it has that is worth considering.
+A percentage change to one of the values in the geometric mean will have the same weight on the mean as the same change on any other value.
+This would be very useful if you wanted to use the results from multiple tests to arrive at a score, for the purpose of comparing against other, similarly derived scores.
+For example, consider comparing two graphics cards, A and B, on a selection of games.
+For all games the graphics perform identically except for two.
+Card A performs 10\% better than Card B in one game, while Card B performs 10\% better than Card A in another game.
+The geometric mean of these results will be identical, because that 10\% improvement in one game is no different than a 10\% improvement in any other game.
+
+For reviewing hardware, this property is helpful, but that is not what I do, or at least not how I think of what I do with performance analyses.
+The image I have for the analyses purpose is to report to you what you can expect for each GPU I test, and not as a formal comparison between them, even though the High Quality Results data I share does allow for direct comparison between the GPUs.
+If I wanted to formally compare the GPUs in those sections, then I would want to use the geometric mean of the statistics, not the original data, to arrive at scores for the comparison.
+(The geometric mean of the arithmetic means, the percentiles, and so forth.)
+
+The geometric mean is also less sensitive to outliers than the arithmetic, but I am less worried about outliers, than I am the idea of time volumes.
+Plus, by taking data samples as large as I do, the outliers should be significantly outweighed.
+
+
+\subsection{Median}
+
+Before moving on to the next section, I want to spend some time on the Median.
+I already stated it is the middle value of a distribution, so it cuts the distribution exactly in half.
+Another way to think of it is as the 50\textsuperscript{th} percentile, as 50\% of the data is above it, and 50\% of the data below it.
+Such a value can be useful because outliers will not disturb it.
+If you have ninety-nine ones, the median will be one, and if you have ninety-eight ones and then something like three billion, the median will still be one.
+(The arithmetic mean for that sample would be 30303031, in case you were curious.
+The geometric mean is 1.246604.)
+
+The way one can find the median is to sort all of the values in a sample, and to then select the one at the center.
+If there is an even number of values, so there are two at the center, the median is the arithmetic mean of these two values, so the center value between them.
+
+Previously I have not been reporting the median, but I think I will add it, since, if nothing else, there is nothing wrong with also reporting this value.
+Next up is covering more statistics I already report; percentiles.

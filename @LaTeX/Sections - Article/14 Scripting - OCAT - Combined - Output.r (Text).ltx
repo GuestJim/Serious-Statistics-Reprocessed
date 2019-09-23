@@ -1,0 +1,270 @@
+\section{Scripting: OCAT -- Combined -- Output.r (Text and HTML Outputs)}
+\subCustomFunction
+While the previous section was mostly concerned with the functions for processing the data into the desired statistics, this section's focus is on creating the text and HTML files containing the statistics.
+To start things off is a simple looking function, but it is actually fairly powerful and exactly fills a need I have.
+
+\subsubsection{Subset Out Function}
+\begin{styleR}
+subOUT	=	function(DATA, COL = "")	{
+	if	(COL == "")	{
+		out	=	DATA
+	}	else	{
+		SUB	=	eval(parse(text = COL))
+		out	=	DATA[DATA[, COL] == SUB, ]
+	}
+	return(out)
+}
+\end{styleR}
+
+The purpose of this function is to return a subset of the data passed to it, hence the name \textbf{subOUT}, but what makes it special is the situation it is meant to work in.
+I wanted the ability to create a subset for an arbitrary column and arbitrary value, but only using a single variable, and the \textbf{DATA}, naturally.
+The way I achieved this was to take advantage of clever naming and the ability to parse and then evaluate text.
+
+To be more specific with the situation, later we will see I have the code written so this script will create the TXT and HTML files for each GPU, which involves having a \textbf{for} loop work through the list of GPUs.
+The trick I use is to have the \textbf{for} loop's variable the same name as the column in the data.
+With that name, "GPU" in this case, passed as \textbf{COL}, the code for filtering \textbf{DATA} will properly find the column to work on.
+To get the value of the \textbf{GPU} variable, I use the combination of \textbf{parse} and \textbf{eval}.
+The \textbf{parse} function normally works with files the \textbf{text} argument is necessary to identify what is being worked with.
+This function will not evaluate what it is given though, which is why the \textbf{eval} function is also used.
+What this causes to happen is it parses the string and interprets it as a variable name, and when that variable is evaluated, the value assigned to it is returned.
+This value is then stored to the \textbf{SUB} variable for use in filtering \textbf{DATA} to just the interested subset.
+
+The first thing that happens within the function is a check for if the \textbf{COL} variable is more than an empty string, which is also its default value.
+If it is empty, then the \textbf{DATA} input is returned as is.
+If it is not empty, then the \textbf{SUB} variable is determined using the functions I described above.
+Now, between \textbf{COL} and \textbf{SUB} I have both the column and value to filter by, so all that remains is to actually create the subset.
+This is done using the square bracket notation I have used before.
+To use a string to identify a column like this, it is necessary to use the bracket notation a second time to select just the column with the name matching that string.
+Then the check is done that the value in that column must equal the value of \textbf{SUB}.
+
+As long as the name of the variable for the \textbf{for} loop working through the values to filter by matches the name of the column, this can be used to filter by GPU, API, or location, making this function very powerful.
+The fact it is just seven lines seems to speak to the potential for solutions to be elegant.
+
+\subsubsection{Data Type Selection Function}
+\begin{styleR}
+dataSEL	=	function(datatype, COL = "")	{
+	if	(datatype == "MsBetweenPresents"		|	datatype == "Frame Time")	{
+		type		<<-	"Frame Time"
+		typeSHORT	<<-	"data"
+		MEAN		<<-	subOUT(dataMEAN, COL)
+		PERC		<<-	subOUT(dataPERC, COL)
+		ECDF		<<-	subOUT(dataECDF, COL)
+		STAT		<<-	subOUT(dataSTAT, COL)
+	}
+	if	(datatype == "MsBetweenDisplayChange"	|	datatype == "Display Time")	{
+		type		<<-	"Display Time"
+		typeSHORT	<<-	"disp"
+		MEAN		<<-	subOUT(dispMEAN, COL)
+		PERC		<<-	subOUT(dispPERC, COL)
+		ECDF		<<-	subOUT(dispECDF, COL)
+		STAT		<<-	subOUT(dispSTAT, COL)
+	}
+	...
+}
+\end{styleR}
+
+This is not the complete function, but the parts that remain are similar to the two parts I show here.
+This is the \textbf{dataSEL}, for data selection, function and is what makes use of the \textbf{subOUT} function above as well as makes the output of the different data types much simpler.
+Its arguments are \textbf{datatype}, such as "MsBetweenPresents" and "MsBetweenDisplayChange" as shown here, and the same \textbf{COL} argument as \textbf{subOUT} had.
+Indeed, this variable is just meant for passing on to that function.
+While the \textbf{if} statements here do also work with the friendlier "Frame Time" and "Display Time" names, this is the only function with similar checks that does so.
+I consider it better practice to use the actual column name but felt like adding these or conditions and have not felt like removing them.
+
+Going into the code for the \textbf{if} statements, we have a number of variables assigned certain variables.
+The key things are how these variables are assigned their values and what the names of these variables are.
+By using \textbf{$<<-$} to assign the values, instead of \textbf{=} or \textbf{<-}, these variables and those values can be accessed outside of this function.
+Normally these variables would be private to the function, but that assignment symbol makes them public, as it were.
+After \textbf{dataSEL} is run I can use \textbf{PERC} to get the percentile data for whatever data type I told this function to select, and I use this so other functions later on can use these generic names without issue.
+
+The data holding variables are fairly clear for their purpose, but the \textbf{type} and \textbf{typeSHORT} variables will become clear later.
+They are for nicely naming output files to identify the type of data they hold.
+The \textbf{type} variable is for naming the TXT files that hold all of the relevant statistics while the \textbf{typeSHORT} variable is for the multiple HTML files that each hold a different collection of statistics.
+
+\subsubsection{TXT Output Function}
+\begin{styleR}
+sinkTXT	=	function(datatype, COL = "")	{
+	options(width = 1000)
+
+	dataSEL(datatype, COL)
+
+	subSTR	=	""
+	if	(COL != "")	{
+		SUB		=	eval(parse(text = COL))
+		subSTR	=	paste0(" - ", SUB, " - ")
+	}
+
+	if	(COL	==	"GPU")	{
+		sink(paste0(SUB, "\\", gameGAQF, " ", subSTR, type, ".txt"), split = TRUE)
+	}	else	{
+		sink(paste0(gameGAQF, " ", subSTR, type, ".txt"), split = TRUE)
+	}
+
+	writeLines(gameGAQ)
+	writeLines(type)
+	writeLines("\nMean")
+	print(addFPS(MEAN), row.names = FALSE)
+	writeLines("\nPercentiles")
+	print(addFPS(PERC), row.names = FALSE)
+	writeLines("\nPercentile of FPS")
+	print(ECDF, row.names = FALSE)
+	writeLines("\nDistribution Stats")
+	print(STAT, row.names = FALSE)
+sink()
+}
+\end{styleR}
+
+To have R create and save information to a TXT file you use the \textbf{sink} function and calling the function again will close the file.
+I created this \textbf{sinkTXT} function to take over the naming of the file and writing what I want into it.
+Its arguments are the same as \textbf{dataSEL}, which makes sense because it runs that function inside of it.
+The first thing it does though is use the \textbf{option} function to set \textbf{width} to 1000.
+Normally when R creates a TXT file it will  wrap lines if they surpass a certain width, and I do not want such wrapping, so I set the width to a suitably high value to prevent this.
+
+The next thing in the function is to run the \textbf{dataSEL} function, so those generic variables are assigned the values of the desired data type, and to apply any desired filtering.
+
+Because I want any filtering to be referenced in the file name, I need a \textbf{subSTR} variable that will place the value used for the filtering.
+Instead of using an \textbf{if...else} statement to cover the two possibilities, I am just making the \textbf{subSTR} variable an empty string and then using the \textbf{if} statement to check if it needs to be something else.
+
+The next \textbf{if...else} statement is where the \textbf{sink} function is finally used, but first there is the check for if the column being filtered by is "GPU."
+Finding subsets for each GPU is a special case as there are folders for each GPU and I want the files to be placed within them.
+This is achieved by just adding the \textbf{SUB} variable to the front of the file name given to the \textbf{sink} function.
+The \textbf{paste0} function also places the \textbf{gameGAQF}, \textbf{subSTR}, and \textbf{type} variable from \textbf{dataSEL} in the file name so the file can be easily identified.
+
+While the file name argument is not named, the second \textbf{split} argument for \textbf{sink} is.
+The purpose of this argument is to tell \textbf{split} to send its output to both the file and the R window, whether that is a console or GUI.
+This is helpful to make sure it is working.
+
+After the \textbf{sink} command opens the file, what remains is to actually write the contents of the file.
+This is accomplished with the \textbf{writeLines} and \textbf{print} functions.
+The \textbf{writeLines} function will write the string it is given to the file, and then by default place a line break at the end of the string.
+While this works well for writing strings, the \textbf{print} function is better for writing things like the data frames I have.
+Data frames can have row names, so it is necessary to use the \textbf{row.names} argument to disable them.
+
+I doubt I need to go through each line code for writing to the TXT file, but I do want to quickly explain I have the new line symbol in some of the commands to ensure an empty line between the different data frames.
+
+To close the file, \textbf{sink} is called again, but without any arguments.
+
+\subsubsection{HTML Configuration Functions}
+\begin{styleR}
+library(tableHTML)
+OCCHTML	=	function(DATA)	{
+	tableHTML(DATA, rownames = FALSE, class="OCC") %>%
+	replace_html('style="border-collapse:collapse;" class=OCC border=1', 'align="center" border="1" cellpadding="1" cellspacing="1" style="width: 90%;"') %>%
+	replace_html(' id=\"tableHTML_header_\\d\"', '', replace_all = TRUE) %>%
+	replace_html(' id=\"tableHTML_column_\\d\"', '', replace_all = TRUE)
+}
+
+writeOCC	=	function(DATA, dataNAME=substitute(DATA), name=gameGAQF, fold = FOLD)	{
+	if	(fold != "")	{
+		write_tableHTML(OCCHTML(DATA), file = paste0(fold, "\\", name, " - ", dataNAME,".html"))
+	}	else	{
+		write_tableHTML(OCCHTML(DATA), file = paste0(name, " - ", dataNAME,".html"))
+	}
+}
+\end{styleR}
+
+We are now at the point when the HTML files are going to be created, and for that to happen the \textit{tableHTML} library needs to be loaded.
+There are other libraries that can save tables to HTML, but I found this one the easiest to do specifically what I wanted.
+It still took some work to get things the way I wanted, as you can see in the \textbf{OCCHTML} function, but the other libraries I tried did not present as ready of solutions.
+I am loading the library here just because when I was originally working on this code I was keeping it all together.
+This made it easier to test and experiment with things and after that phase of development finished, I just did not feel like moving it.
+
+To produce an HTML file with the \textit{tableHTML} library you use the \textbf{tableHTML} function on the object in R to generate the HTML formatting.
+The \textbf{write\_tableHTML} function is then used to actually write the file.
+The thing is, the formatting the library uses by default is not what I want for the tables I place in articles, which is why I created the \textbf{OCCHTML} function.
+It contains the \textbf{tableHTML} function and the changes I want to make, with \textbf{\%\>\%} the symbol connecting the function with the replacements.
+I cannot say I am very familiar with this symbol for any other purpose in R, but it works here.
+
+The \textbf{OCCHTML} function works by just calling the \textbf{tableHTML} function with the configuration I want already applied, including disabling the row names and setting the class to "OCC."I then use three instances of \textbf{replace\_html}, which are applied to the \textbf{tableHTML} function using the\textbf{\%\>\%} symbol, each one to replace some code that appears in the default formatting of the table.
+Basically I am just setting the table to be centered on the page, have a border, and padding between the cells.
+I also remove code that gives cells IDs as headers or columns, which is not necessary.
+The resulting HTML formatting I can easily copy and paste into the articles, with the only change necessary to make being to make the first column headers too, which is not something I know how to achieve within this code.
+
+Next I make another new function, \textbf{writeOCC}, that is responsible for actually writing the HTML file.
+Its arguments are the data object to be written, \textbf{DATA}, the name for it, \textbf{dataNAME}, then \textbf{name} and \textbf{fold} which both go to the output file name.
+By default the \textbf{gameGAQF} is used for \textbf{name} and there is no reason for this to change.
+The default value for \textbf{fold} is an empty string as normally the HTML files will be saved to the same directory as the script.
+An \textbf{if} statements checks if \textbf{fold} is an empty string and based on that check, it either will or will not add the folder to the file name.
+The file name itself will be a combination of the \textbf{name} and \textbf{dataNAME} arguments.
+
+\subsubsection{HTML Output Function}
+\begin{styleR}
+sinkHTML	=	function(datatype, COL = "")	{
+	dataSEL(datatype, COL)
+
+	SUB		=	""
+	if	(COL	!=	"")		SUB		=	paste0(eval(parse(text = COL)), " - ")
+
+	FOLD	=	""
+	if	(COL	==	"GPU")	FOLD	=	eval(parse(text = COL))
+
+	writeOCC(addFPS(MEAN),				dataNAME = paste0(SUB, typeSHORT, "MEAN"),	fold = FOLD)
+	writeOCC(addFPS(PERC),				dataNAME = paste0(SUB, typeSHORT, "PERC"),	fold = FOLD)
+	writeOCC(ECDF,						dataNAME = paste0(SUB, typeSHORT, "ECDF"),	fold = FOLD)
+	writeOCC(STAT,						dataNAME = paste0(SUB, typeSHORT, "STAT"),	fold = FOLD)
+	writeOCC(compTAB(MEAN, PERC, ECDF),	dataNAME = paste0(SUB, typeSHORT, "COMP"),	fold = FOLD)
+}
+\end{styleR}
+
+Having a similar purpose to \textbf{sinkTXT}, this \textbf{sinkHTML} function also has a similar structure, which includes having identical arguments.
+Within the function the first thing that happens is \textbf{dataSEL} is run so the desired values are assigned to the generic variables.
+Next the \textbf{SUB} and \textbf{FOLD} variables are created like the \textbf{subSTR} variable was in \textbf{sinTXT}.
+First they are made empty strings and then, if the appropriate condition is met, these values will change.
+If \textbf{COL} is not empty, then \textbf{SUB} needs to change and if \textbf{COL} is "GPU" then \textbf{FOLD} needs to change.
+
+At this point \textbf{sinkHTML} starts to look and function differently than \textbf{sinkTXT}.
+This is because the text files I want contain all of the information, as they are just for me to look at, while the HTML files need to be separate files.
+These separate files can more easily have their contents copied into an article, though it is true I typically only copy the compact table into an article.
+
+Using \textbf{writeOCC} is easy enough as it just needs the data I want as an HTML table, the \textbf{dataNAME}, for easy identification of the file, and then the \textbf{FOLD} variable for if they should be placed into a different folder.
+The \textbf{dataNAME} is the combination of the \textbf{SUB} variable, an empty string when not using a subset, the short name from \textbf{dataSEL}, and then the name of the table.
+
+If you were hoping to not see any more custom functions in this section, then you are going to be disappointed as I wrote one to combine together the creation of the TXT and HTML files.
+It will look a little different than other parts of my code because I suspended some of my usual formatting quirks, opting for a more compact visual.
+
+\subsubsection{All Text Output Function}
+\begin{styleR}
+sinkOUT	=	function(datatype)	{
+if	(textOUT)	sinkTXT(datatype)
+if	(HTMLOUT)	sinkHTML(datatype)
+
+for (GPU in listGPU)	{	if	(file.exists(GPU))	{	GPU	<<-	GPU
+	if	(textOUT)	sinkTXT("MsBetweenPresents", "GPU")
+	if	(HTMLOUT)	sinkHTML(datatype, "GPU")
+}	}
+
+if	(testAPI)			{	for (API in listAPI)	{	API	<<-	API
+	if	(textOUT)	sinkTXT(datatype, "API")
+	if	(HTMLOUT)	sinkHTML(datatype, "API")
+}	}
+}
+\end{styleR}
+
+This new \textbf{sinkOUT} function just needs to be told the desired \textbf{datatype} and then it will pass this to the \textbf{sinkTXT} and \textbf{sinkHTML} functions.
+I also have \textbf{if} statements throughout to make sure the text and HTML outputs are even desired, but usually they are.
+
+To go through the list of GPUs and APIs, \textbf{for} loops are used, but there are also a couple checks to see if it is necessary.
+The \textbf{testAPI} check is pretty clear, but the \textbf{file.exists} function serves a slightly different purpose.
+I always want the individual outputs for each GPU, though Iso all this does is check a folder exists for that GPU, which is also a way to confirm there was data for that GPU.
+
+When I was building this function, I was running into a problem, but fairly quickly found the issue was with how the variable for the loop is assigned.
+While the variable will be accessible after the loop completes, apparently the way it is assigned is not enough for the two custom sink functions to grab.
+This was easily addressed by using \textbf{$<<-$} to assign the value to itself.
+It is not actually necessary to do this for the API, as the issue seemed to be more focused on going into folders, but for symmetry and because it would not hurt anything, I added it there too.
+
+\subsubsection{Creating Text Outputs}
+\begin{styleR}
+if	(textFRAM)	sinkOUT("MsBetweenPresents")
+if	(textDISP)	sinkOUT("MsBetweenDisplayChange")
+if	(textREND)	sinkOUT("MsUntilRenderComplete")
+if	(textDRIV)	sinkOUT("MsEstimatedDriverLag")
+message("")
+\end{styleR}
+
+And that is the last bit of code for this section.
+First an \textbf{if} statement checks if the text output is desired for the data types, and if it is, the appropriate \textbf{sinkOUT} command is run.
+After these lines there is the \textbf{message} function, which will write the message passed to it in the console window.
+I have it here just to provide a line break between the text output generated by the \textbf{print} commands in \textbf{sinkTXT} and similar messages I use to identify what graphs are being rendered.
+
+I do want to quickly mention the reason I have placed so much into custom functions is for improved modularity.
+By just adding the appropriate \textbf{aggregate} functions and the appropriate code to \textbf{dataSEL} I can then add another call to \textbf{sinkOUT} to get the text and HTML outputs I want.
+I have similarly put the graphs into custom functions to improve modularity, as we will see next.

@@ -1,0 +1,30 @@
+\section{Introduction}
+
+Once again I return with a Serious Statistics article, and like the previous one where I delved into \href{http://www.overclockersclub.com/reviews/serious_statistics_aliasing/}{anti-aliasing methods}, this is going to be about more than just the data I collect.
+Over the years I have developed my method for collecting and processing data for the reviews and performance analyses, and in this article is to go through them.
+It is my intent to cover not only the statistics but also the scripts I have written for processing the data into those statistics and the graphs I use.
+I have no doubt that many of the statistical concepts I have used and will cover here are understood, but I still want to go through them, if only for reference purposes.
+
+This effort to cover the statistics and graphs is for more than just producing another article, but also to make one kind of article a bit easier on me.
+I will not lie, I have a certain dislike for the performance analyses; specifically the repetitive writing for every section.
+My hope is that by having this article, I will be able to cheat on the writing in the analyses, and instead of writing some comment for every graph and collection of statistics, I can comment just on those of specific interest and summarize the related statistics and graphs.
+(When there is nothing interesting to say about the Frequency and QQ plots, I would like to feel I can just say nothing.)
+
+Another reason I have to do this article is to give myself a good reason to review statistical and probability concepts, broadening my knowledge and understanding of them, so I can better analyze data in the future.
+Already I have picked up a few things that will hopefully prove helpful in analyzing data, but I am also very certain I am going to come across and think of a few more things before I finish this (and almost certainly after I finish too).
+
+My plan for the structure of this article is to have the first half covering the statistics and graphs I use.
+The second half then will be for covering the scripts I have developed for processing the data I collect.
+If you do not know Python or R, the languages I use for these scripts, these sections might be of interest to you.
+If you do know either language, or any other, then I will apologize now, and potentially again later.
+I am self-taught at both and will not doubt my implementations are poor, but they get the jobs I want done.
+Perhaps I should also apologize for what will be my attempt to cover statistics and probability, but I do have a little more confidence in myself for those.
+
+I have one last thing I want to cover before getting to the meat of this article, and that is to address the source of the data I am using.
+After all, this is a Serious Statistics article, so it has to have data, and at least some of that data has to come from \textit{Serious Sam Fusion 2017}.
+The title is a bit of a hint as I am going to repeat the data collection I did with the original \href{http://www.overclockersclub.com/reviews/serious_statistics/}{\textit{Serious Statistics}}, by analyzing how the different graphics APIs it has performs.
+Back in 2017 when that article came out the APIs were OpenGL, DirectX 11, and a beta implementation of Vulkan.
+Since then OpenGL has been dropped, Vulkan has exited beta, and now DirectX 12 has a beta implementation.
+As there has been a host of game updates, driver updates, and I am using a completely different system to collect the data, the data will not be directly comparable between these two articles, but I still like the idea to do a "Reprocessed" version of the original.
+
+Now I think we can get to the interesting stuff.

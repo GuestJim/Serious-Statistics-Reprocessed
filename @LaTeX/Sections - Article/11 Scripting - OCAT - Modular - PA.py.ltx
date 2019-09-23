@@ -1,0 +1,550 @@
+\section{Scripting: OCAT -- Modular -- PA.py}
+
+As the title of this section suggests, we are now working on a Python script.
+I have a certain love-hate relationship with Python, although it might be more accurately described as a satisfied-hate relationship.
+This is mostly because its and my idiosyncrasies do not always align.
+Still, making scripts like this gave me a reason to learn it and I would never describe the time as wasted.
+I cannot imagine trying to recreate this script in something like BATCH, and while it might be possible in R, Python is better designed for being used for this.
+
+While abstractly there are similarities between Python and R, there are also a number of differences, so if you read the previous section, some concepts can be applied, but the semantics also have some important differences.
+One very important thing to know is that when looking up items in a list by indices, R starts counting at 1 while Python starts at 0.
+(Given a list [a, b, c], in R [a] is at 1 and in Python [a] is at 0. It is not much fun to forget that when you are working on both at the same time, and suddenly something stops working.
+
+First up in the script is what modules we are going to be loading.
+(The similar concept in R is libraries.)
+
+import sys, os, shutil
+
+These are the System, Operating System, and Shell Utility modules respectively, and each does have a purpose, but we might not be using them too much throughout the file.
+
+\begin{stylePy}
+droppedPath	=	sys.argv[1].rsplit("\\", 1)[0] + "\\"
+
+scriptPath	=	sys.argv[0].rsplit("\\", 1)[0]
+\end{stylePy}
+
+These two lines are rather important to this script, and a number of others I have written.
+The key is the \textbf{sys.argv} variable.
+This is a list of the argument passed to the Python script, with the first one (index 0) being the path to the script itself.
+I keep the reference R scripts in the same folder, so the path to this script is useful.
+The second element (index 1) is the path of the first file dropped onto the Python script.
+If you drop more than one file on there, then their paths will be the following indices.
+Regardless of the number, this allows me to drag-and-drop a file from the OCAT Data folder or the folders with the data in it, and this script will know where to look.
+
+Following the \textbf{sys.argv[x]} variables is an actual function, \textbf{rsplit}, which stands for Reverse Split and is a string function.
+Both the Split and reverse split functions will split a string at the pattern passed to it, which is "\DBS" here, and results in separating the individual directory names in the path to items in a list.
+These functions can also take a second argument, 1 in both examples here, which is for how many splits to make.
+For many functions in Python, the way you apply them to a variable is by placing a period between the variable and the function name.
+It is also possible to chain together multiple functions like this, as we will see later.
+
+The result here is to split the path and file names, because it is the paths to the files I want.
+This is also why I am using reverse split, as it will start at the end of the path, where the file name is, and go backwards, so the first split will be between the path and file name.
+The result is a list with two elements, and the first element is the one I want, the path.
+I attach "\DBS" at the end of both because it is necessary to close the path, as it were.
+
+\begin{stylePy}
+if "OCAT Data" in droppedPath.rsplit("\\", 3)[2:3]:
+	TYPE	=	"HIGH"
+else:
+	TYPE	=	"GPU"
+\end{stylePy}
+
+This is actually a fairly new addition I made, as it is a way for this script to identify if my purpose requires a single-GPU or multi-GPU set of scripts.
+I accomplish this by having Python check if OCAT Data is in one of two locations in the \textbf{droppedPath} variable.
+I already explained how \textbf{rsplit} works, so we know this is splitting off the last two directories and then we are grabbing just those two.
+The \textbf{if} statement checks to see if "OCAT Data" is in either of these, which would be the case only for the multi-GPU situation.
+(For the single-GPU situation, the splits folder will be the quality.It might be worth noting that the third element in the list \textbf{rsplit} provides is actually going to be empty, because it split at that "\DBS" added at the end of the string earlier.
+
+If OCAT Data is found in the provided element, then the \textbf{TYPE} variable, which will control switches later, will be HIGH, as usually the multi-GPU situation is for gathering the High Quality data.
+If OCAT Data is not found, then the type is GPU because we are working with a single GPU.
+
+I do need to point a couple things out that are important here, and they are the colon at the end of the \textbf{if} statement and after \textbf{else}, as well as the tabbing for the two blocks that are executed based on the test.
+Unlike R where curly brackets are used to identify the blocks of code to be run for \textbf{if} statements, as well as \textbf{for} loops and custom functions, Python uses tab levels to identify these blocks, and the colon indicates when such a block starts.
+While it can be argued this encourages and trains people to use this tabbing that does help to organize and make scripts easier to read (I do use such tabbing normally), personally I like languages that are insensitive to tab levels and line breaks too.
+This opens up many possibilities for organizing your code, but is not so easy to do in Python because there is meaning to both of these.
+(Plus, even though I will do this tabbing normally, I do not always like being forced to do the thing I normally choose to do.)
+
+\begin{stylePy}
+def listclean	(list):
+	return str(list).replace("[", "").replace("]", "").replace("\'", "\"").replace(", ", ",\n").replace(".csv", "");
+\end{stylePy}
+
+This is the first of two custom functions I have in this script.
+Its purpose is to take a list from Python, make it a string, and then format it correctly for printing.
+If all you do is convert a list to a string in Python, you will be left with brackets, single quotes, and the items in the list will be separated by commas and spaces.
+Instead of that, I want a string that has each element on its own line, with a comma and line break separating them.
+You can also see at the end I have it set to remove ".csv" from the string, which is fine because I have this added in the R script.
+(Why do I not want the extension?
+Because when I need to manually change or add a file name, it is just easier to do so without the extension.)
+
+To create a custom function in Python you use the \textbf{def} command, indicating you are defining something, and then you give it a name and the list of arguments.
+As the purpose is to clean up a Python list, \textbf{listclean} is the name I chose and the only input needed is a list, so that is the name of the argument.
+
+Like the \textbf{if} statement before, a colon is used to initiate the code block for what the function will do.
+Instead of using a temporary variable, I use the \textbf{return} command immediately, so the code that follows it is what the function will return as its output.
+
+The first part of this line of code is using the \textbf{str} command to turn the provided list into a string.
+This string must then have some changes made to it, replacing some character patterns with others, so I used the aptly named \textbf{replace} command.
+The first argument is the pattern to be replaced and the second is the pattern to replace it with.
+For those cases where I just want to remove the pattern, I put nothing between the quotes used to denote the beginning and end of a string.
+By the way, while I am using double quotes, Python also accepts single quotes for identifying strings, but the ends must be matching.
+
+To identify the elements to the list were strings, Python will place them in single quotes when making the list itself into a string, but I want double quotes.
+I honestly do not know or remember if R cares between single and double quotes, but I have a preference for double quotes, so I have the single quotes replaced with double quotes here.
+Because quotes are of meaning to Python, and many other languages, it is necessary to escape them, or rather escape their function, which is achieved with the "\SBS" symbol first.
+Separating the elements is the pattern ", " and as I would prefer a line break to just a space, the replacement pattern is ",\n".
+The "\n" symbol means to add a new line in strings in Python and many other languages too.
+There is also "\r" that means carriage return and there is some importance to their differences, but here just "\n" is enough.
+(Different operating systems will use different symbols for marking new lines, and at least on Windows, just this symbol is enough.)
+
+To mark the end of the custom function's definition, a semicolon is used, so we close this out being just one line long.
+The next custom function is a bit longer and a little more complicated.
+
+\begin{stylePy}
+def	CSVlistR	(GPU, API, QUA, CSVlist):
+	if API	==	"NA":
+		API	=	""
+	return str("\
+GPU	=	\"" + GPU + "\"\n\
+CSV	=	c(\n"\
+	+ listclean(CSVlist) + \
+"\n)\n\
+CSV	=	paste0(CSV, \".csv\")\n\
+OCATcomb	=	READ(\"\", \"" + QUA + "\", \"" + API + "\")\n"
+);
+\end{stylePy}
+
+This function is what will generate the R code block necessary for loading in the CSVs, hence its name \textbf{CSVlistR}.
+It has four arguments, GPU, API, QUA for quality, and CSVlist for the actual list of CSVs that will be generated later.
+Like before, a colon and tabbing is necessary to indicate the code block for the function.
+
+The first part of the code block handles the case of if no API is present for the data, which is the most common case actually.
+You will see how I handle it later, but this function benefits from the collection of the files having already been done; I typically collect custom functions at the top of a file, but not always.
+When no API is present, Python actually places NA as its value, so this checks if the value of the API is NA and will then set the value to actually be an empty string.
+This is the simplest solution for how R should deal with a lack of API.
+
+After this we have the return command and then things start getting complicated because of how I want the output formatted and Python being sensitive to formatting.
+ By using the \textbf{str} command, we are indicating what is being built is a string.
+The way to concatenate strings was actually shown earlier but I did not comment on it.
+It is as simple as using the additive symbol.
+
+It may seem odd and even broken that the contents of the \textbf{str} command are not indented to match the tab level for the code block, but this is because of how Python is sensitive.
+If a tab or line break is in the body of the string, as it is written here, then Python will include it in the string itself.
+Keeping things weird though, it is still necessary to use the escape symbol, "\SBS", so Python will properly handle line breaks, which is why the string starts with that character.
+
+The first line of real content for the string needs to have no tab level to it, because I want it flush-left in the R script this will be placed in.
+This line is for identifying the GPU for the data in the R script, and as this information will be a string, we need to place the information in quotes that will get to the R script.
+This is why the double quotes that will surround the information are escaped, so Python will write them instead of acting on them.
+The GPU variable is already a string, so it is just necessary to add the variable, by name, to the string for it to be present.
+At the end of the line, in order to place a new line in the string, "\n" is used and then, so Python does not complain about the line break, another escape character is placed.
+
+The next couple lines are for setting the CSV variable in R, which will hold the list of CSVs so we see the \textbf{listclean} function I defined above is here.
+To tell R it will be a list, we will surround the list by \textbf{c()}, but to keep it easy to read, the actual list of file names starts on the line after we initiate the list in R.
+We then just need to escape the line break in this Python script, add in the cleaned list, then add the remainder of the string.
+Though it may look like the escape character will be added, Python basically will not even read it, or the character that follows.
+Symbols like "\n", which are using the escape character are special so we are not escaping the "n" character.
+Before closing the list in R, another new line is added so the lines with the file names on them will only contain the file names.
+
+I should also point out that while there is a tab on the line for adding the CSV list, this tab is just there for it to be easier to read here, and will not actually be carried over to the R file as it is not in the string.
+By keeping the tabs outside of the quotes for the string, it would be possible to indent the code to look nicer, but I do not feel like messing around with it that much.
+There is already enough going on with the need to escape quotes within the string, using quotes to identify the strings, and escaping the line breaks that I do not want to get more fancy.
+
+After closing the R list of files, another new line is added to the string and then another line break is used to keep things cleaner in the Python code.
+The next line alters the CSV variable in R by pasting the ".csv" extension onto it, as the file names in the list are without this extension.
+Quotes are escaped and another new line is added within the string to get to a custom R function I made named \textbf{OCATcomb}, which is in the \textit{OCAT – Combined – PA.r} script.
+This function asks for the quality and API, so the arguments for this Python function are placed there so they will be supplied to R.
+
+With that done, the \textbf{str} function can be ended with a parenthesis and then the semicolon to end the custom function.
+
+\begin{stylePy}
+RelPath	=	droppedPath.split("OCAT Data")[0] + "OCAT Data\\"
+\end{stylePy}
+
+The \textbf{RelPath} variable is meant for holding a relative path to everything, which would be the path to the OCAT Data folder, as all of the data is within it and its subfolders.
+To get just the path to this folder, we can take advantage of the \textbf{split} function to separate \textbf{droppedPath} at OCAT Data.
+This will produce a list with two elements in it, the first being the portion of \textbf{droppedPath} leading to the OCAT Data folder, while the second is the path after that folder, which might just be an empty string.
+It is the first portion that is wanted, so it is selected by its index of zero, and as the function removes the pattern it splits at, "OCAT Data\DBS" is added.
+
+\begin{stylePy}
+listfile	=	[]
+
+for paths, folders, files in os.walk(droppedPath):
+	for file in files:
+		if file.startswith("OCAT-"):
+			listfile.append((str(paths).replace(RelPath, "") + "\\" + str(file)).replace("\\\\", "\\"))
+\end{stylePy}
+
+Now the chaos that is this script begins.
+First the \textbf{listfile} variable is created and its value is an empty list, indicated by [].
+Next we have a curious \textbf{for} loop and another function that is very special, and a great source of frustration for me; \textbf{os.walk}.
+
+To put it simply, the \textbf{os.walk} function will walk through the folders and sub-folders of the path it is given.
+That sounds nice, but then what is the purpose of the \textbf{for} loop?
+Frustratingly, \textbf{os.walk} is not a function that provides an output but something called a generator function, and the loop is necessary to get the information like the path, list of folders and sub-folders in a path, and the files within each folder it walks into.
+Yes, there are three outputs from \textbf{os.walk} when used, which is why there are three variables created by the \textbf{for} for iterating through the outputs.
+I have these named \textbf{paths}, \textbf{folders}, and \textbf{files}, and if you want the complete path to any file it would be the combination of \textbf{paths} and \textbf{files}, and as that is the information I am interested in, \textbf{folders} goes unused.
+
+By the way, the \textbf{os} portion of this function's name identifies that it comes from the \textbf{os} module I imported at the start of the file.
+Similarly, the \textbf{sys} of the \textbf{sys.argv} variables indicates Python is to look to the imported \textbf{sys} module.
+
+I now start another \textbf{for} loop, with this one going through the individual files found by the \textbf{os.walk} function.
+Within the loop the first thing to do is check the file is an OCAT file, which is fairly easy because they always start with "OCAT-" and Python just happens to have a command that checks if a string starts with a certain pattern.
+The "OCAT-" pattern could be present elsewhere in the string without resulting in a TRUE result.
+
+When it is an OCAT file found, a string of the path and file name will be added to the \textbf{listfile} variable, but first there will be some changes made to the string.
+One is the removal of the \textbf{RelPath} value, which is the path to the OCAT Data folder.
+Another change is that just in case there was any accidental doubling of the \SBS characters, the doubles will be replaced with singles.
+
+\begin{stylePy}
+listsplit	=	[file.split("\\") for file in listfile]
+\end{stylePy}
+
+Now this is a curious construction and honestly I tend to forget it is a feature of Python.
+It is just so different from what I am familiar with in scripts I forget it is a thing, but it works and is nicely compact.
+What this basically does is execute the \textbf{split} function on every entry in the \textbf{listfile} variable, and then that output is saved to the new \textbf{listsplit} variable.
+The exact construction is the thing I usually forget, but it seems to work by first declaring the command to be run, in this case \textbf{split} on the \textbf{file} variable, but then after this is when the \textbf{for} loop is declared and that \textbf{file} is the variable for iterating.
+The fact it is all in square brackets is undoubtedly important to ensuring it is interpreted and executed correctly.
+This splitting of the file names and paths is going to be very important for the following steps, which are also going to get a little complicated.
+
+\begin{stylePy}
+listmap	=	[]
+for line in listsplit:
+	listmapL	=	[line[0], "", "", ""]
+	for i in range(1, len(line)):
+		listmapL[len(listmapL) - i] = line[len(line) - i]
+	listmap.append(listmapL)
+\end{stylePy}
+
+Starting this off we have \textbf{listmap} created and then we get to the interesting part of the \textbf{for} loop, and it is in here I want to explain what \textbf{listmap} is and why it is named that.
+
+The \textbf{for} loop is going to go through each line in the \textbf{listsplit} object that was just made and do stuff.
+The first thing it does is make a variable, \textbf{listmapL}, which stands for listmap Line that is a list with four elements to it.
+The first element here is also the first element of the \textbf{listsplit} line, and this will be the GPU.
+Remembering the folder tree I use, the top folder under the OCAT Data folder, which was removed earlier via \textbf{RelPath}, is the GPU folder.
+If there is an API folder, the second folder is that, and the third is the quality.
+The final element is the file name itself, but you may have just spotted the little problem I can have.
+"If there is an API folder," is the issue because sometimes there is an API folder, but most of the time there is not, so I need this script to handle that, and that is what this list map structure is for.
+
+After creating \textbf{listmapL}, there is a new \textbf{for} loop that will go through the elements in the original line.
+To do this I am using the \textbf{range} function, which will generate a sequence of numbers, with a step of one, from the first argument to the second.
+The step can be changed, but I want it to be one so this default is fine.
+The important thing is that the first argument is 1, but Python actually starts its indexing at 0.
+
+The code within the \textbf{for} loop is a little odd to look at because it is backwards.
+What is happening is the specific elements of \textbf{line} are being placed in the \textbf{listmapL} variable.
+It is being done backwards though, starting at the end with file name, followed by the quality.
+I am reversing this by subtracting the \textbf{i} value created by the loop from the length for \textbf{listmapL} and \textbf{line}, so it looks a little weird, but the result is beautiful, at least to me it is.
+The structure of \textbf{listmap} is fixed, with the first element always being the GPU; the second being API; third Quality; and fourth is file name.
+The structure of the \textbf{listsplit} lines changes though.
+When the API is there, the structure is the same, but when there is no API, then it goes GPU, Quality, and file name.
+The last two elements of \textbf{listsplit} lines are always the last two elements of \textbf{listmap}, so by going backwards these two will values will always be mapped where I want them to be.
+
+Coming back to the \textbf{for} loop, the sequence only goes to the length of the lines in \textbf{listsplit}, which is shorter when there API is not present, so the loop stops instead of trying to write a value to the API position in \textbf{listmap}.
+Because the range starts at 1 instead of 0, the start of the indexing, we also do not need to worry about the GPU value accidentally being mapped somewhere it should not be.
+The result is that \textbf{listmap} will always have the GPU value in the first element, the Quality value in the third, and file name in the fourth, but only when there is an API value will that element not just be an empty string.
+
+Thanks to having \textbf{listmap}, I now have all of the information in a fixed structure, which will make it much easier to manipulate for the remainder of this script.
+Unfortunately, the manipulations to come are still pretty convoluted, but they would be far worse without a standardized \textbf{listmap}.
+
+\begin{stylePy}
+GPUs, APIs, QUAs	=	[], [], []
+
+for item in listmap:
+	GPUs.append(item[0])
+	APIs.append(item[1])
+	QUAs.append(item[2])
+\end{stylePy}
+
+Exactly as we have been seeing, I am first creating variables, and these variables need to be lists, so they are empty lists here.
+I am doing it in a slightly fancy way though, providing a list of variables and then a list of values for them.
+
+The \textbf{for} loop now goes through \textbf{listmap} to build lists of the GPUs, APIs, and qualities in it.
+There will be duplicates in these lists, but the next piece of code addresses this, and the differences the of single and multi-GPU scenarios.
+
+\begin{stylePy}
+if		TYPE	==	"HIGH":
+	GPUs	=	[\
+	'RX 580',\
+	'RX Vega 64',\
+	'GTX 770',\
+	'GTX 980',\
+	'GTX 1070',\
+	'GTX 1080',\
+	'RTX 2060',\
+	'RTX 2080']
+	QUAs	=	["High"]
+elif	TYPE	==	"GPU":
+	GPUs	=	list(set(GPUs))
+	QUAs	=	list(set(QUAs))
+\end{stylePy}
+
+If the situation involves collecting information across the GPUs for the High Quality data, which is when \textbf{TYPE} has a value of "HIGH", then the GPU list used is the one I provided by hand and the value of \textbf{QUAs} is also manually set to "High".
+The \textbf{elif} command is then used to check if the value of \textbf{TYPE} is "GPU."
+The \textbf{elif} command is the combination of \textbf{else...if}, so both the previous \textbf{if} statement needs to return FALSE and this new statement needs to be TRUE for its code to be run.
+
+The code run when \textbf{elif} passes turns the list of GPUs and qualities created earlier into sets, which will remove any duplicates.
+These sets are then turned back into lists, as sets are a different data type and thus are interacted with differently.
+
+Some of you may have correctly realized that either case, the multi-GPU and single-GPU situation, would work fine just with the method of generating the list of GPUs, instead of using the one I manually provided.
+It is only the list of qualities that could be an issue if not explicitly stated, so why I am using a manual list for GPUs?
+Because I feel like it, and that is all the reason I have.
+When first getting the script to work, it would have been useful to use the fixed list, but now it really would not matter.
+If I ever change this list though, I will need to remember to update it here.
+
+For those curious, if I did not explicitly state the quality for the High Quality scenario, then all of the CSVs would be combined together.
+Technically that would not be too bad, collecting all of the data in one file for use, but it would processing specific configurations more annoying.
+Instead I have just the data relevant to what I am doing collected together.
+
+\begin{stylePy}
+if "APIs.txt" in os.listdir(RelPath):
+	APIs	=	open(RelPath + "APIs.txt", 'r').readlines()
+	APIs	=	[line.rstrip('\n') for line in APIs]
+else:
+	APIs	=	list(set(APIs))
+\end{stylePy}
+
+We will see similar code blocks to this later as well.
+This block starts by checking if a file, APIs.txt, is in the OCAT Data folder (which \textbf{RelPath} points to).
+If such a file is there, then it is opened and its contents are read into the \textbf{APIs} variable.
+This information is read in as a string, so a list is produced by splitting at the line breaks.
+If no such file is present, then a list of the unique API values is generated like above.
+
+The reason the APIs.txt file is present is less for this script as it is for others.
+The idea is more to control the ordering of the APIs in the R scripts, but it also impacts the order here, and therefore the order the CSVs for the different APIs are going to be placed in the combined CSV file.
+
+First this code uses an \textbf{if} statement to check if there is an APIs.txt file by using the \textbf{os.listdir} function and \textbf{in} check.
+As its name suggests, \textbf{in} checks if the first value given to it is within the second.
+This second value is a list of everything in the specified directory, hence its name \textbf{listdir}.
+
+If the file is found, then the \textbf{APIs} variable will store a list of the lines from the file.
+The file itself is opened with the \textbf{open} command, which can be used to write files but with the \textbf{'r'} argument is told to just the read the contents.
+The \textbf{readlines} function will then read the lines of the file, making each line an element in the list.
+After this, the new line character is striped from each element using the \textbf{rstrip} function.
+It works by removing every instance of a pattern from the right end of the string it is given.
+The \textbf{lstrip} will do the same thing, but from the left side of the string, and then \textbf{strip} will do it from both.
+
+If no file was found, then it will use a list generated from the folder names.
+
+
+\begin{stylePy}
+grouped	=	[]
+out		=	""
+
+for GPU in GPUs:
+	for API in APIs:
+		for QUA in QUAs:
+			filelist	=	[]
+			for file in listmap:
+				if file[0] == GPU	and file[1] == API	and file[2] == QUA:
+					filelist.append(file[3])
+			if	filelist != []:
+				grouped.append([GPU, API, QUA, filelist])
+				countCSV	=	len(fileList)
+				out	=	out + "\n" + CSVlistR(GPU, API, QUA, filelist)
+\end{stylePy}
+
+Among the reasons I decided to do this article, and these scripting sections, was to effectively perform an audit of the code, making improvements of one kind or another.
+The part of the code I have reached here I have been reworking for a bit now, which also means I have had to rewrite this part of the section covering it.
+I think I am satisfied with it currently, and hope that will remain the case.
+For a little context, the code now does two things at the same time that previously I was doing in two separate code blocks.
+Because of how little data is being worked with, I doubt the process is meaningful faster this way, but it is still the more efficient solution.
+Also, I am aware that one of the things being done is not necessary, but it can be nice to have for troubleshooting nonetheless, so I am keeping it.
+
+Two variables are created first, with one being a list named \textbf{grouped} and the other is a string named \textbf{out}.
+It is the \textbf{grouped} variable that is not necessary, but could be useful to examine in case something breaks.
+(Previously the code had separate blocks for creating the final versions of these variables, which was indeed helpful for finding and fixing issues when I was originally writing the script.)
+
+A series of \textbf{for} loops are created then in order to build every configuration of GPU, API, and Quality.
+There can be situations where not every configuration has CSVs associated with it, such as when testing performance with NVIDIA RTX or Microsoft DXR is enabled, as not all of the GPUs I have support these features.
+(I treat these features like additional APIs in the folder structure.)
+
+After initiating these \textbf{for} loops I create a new empty list named \textbf{filelist}, which exists to hold the list of CSVs for a given configuration.
+By placing this at the start of the code block for the \textbf{for} loops, it will be wiped each time the configuration changes.
+
+Following this variable being created is another \textbf{for} loop for going through the \textbf{listmap} variable.
+Next a complex \textbf{if} statement is used to identify just the files that have the current configuration from the earlier \textbf{for} loops.
+The file name is then added to the \textbf{filelist} variable.
+
+Once the loop finishes going through the \textbf{filemap} list, the \textbf{filelist} variable will be complete for the current configuration.
+Instead of having \textbf{filelist} immediately applied to where it needs to be, an \textbf{if} statement is used to make sure files were actually found.
+If they were, then \textbf{filelist} is added to \textbf{grouped} and the \textbf{out} string is expanded with the addition of the output from the \textbf{CSVlistR} custom function made earlier.
+A \textbf{countCSV} variable is also made here and set to be the length of the \textbf{filelist} variable.
+This variable is used later.
+
+It might be worth noting that the structure of \textbf{grouped} does not match that of the folders, though at one point that was my desire.
+To put it simply, for me to create such a multi-dimensional tree structure would require code far messier than the tree structure would be elegant.
+The code, as it is now, is somewhat elegant, so I will take that.
+
+The next several blocks of code are for getting useful information and assigning it to appropriate variables for placing in the R scripts.
+
+\begin{stylePy}
+droppedGame	=	RelPath.rsplit("\\", 3)[1]	\
+	.replace(" Performance Analysis", "")	\
+	.replace(" Review", "")
+\end{stylePy}
+
+This code is for finding the name of the game, or article.
+The way it works is actually fairly simple by taking advantage of the \textbf{RelPath} variable created earlier.
+This is the path to the OCAT Data folder, which is always contained in the folder for the current project, whether that is a performance analysis, review, or article like this.
+Using \textbf{rsplit} the variable is split into the path leading to the project's folder, the project folder name, and then OCAT Data, so the second element (index 1) is always the name of the project.
+
+After getting this name I then escape the line break so I can have a couple \textbf{replace} functions on a different tab level.
+This makes it a bit easier to read, in my opinion, and fortunately Python is not complaining about this.
+The \textbf{replace} functions are to remove the article type from the folder name, leaving just the name of the game.
+For both reviews and performance analyses I name the folder the game name followed by this article type.
+For projects like this, however, the title is different, but I also feel it is appropriate to use the project name instead of the game name, as I am not always testing the performance of a game, but something more specific, like the API performance in this case.
+
+\begin{stylePy}
+if	"Locations.txt" in os.listdir(RelPath):
+	loc	=	open(RelPath + "Locations.txt", 'r').readlines()
+	loc	=	[line.strip('\n') for line in loc]
+else:
+	loc	=	["Recording "] * countCSV
+	for i in range(countCSV):
+		loc[i]	=	loc[i] + str(i+1)
+locStr	=	listclean(loc)
+\end{stylePy}
+
+This code is fairly similar to what was used for loading in the APIs.txt file earlier, but there are some key differences.
+For one, if the text file does not exist, it needs to generate its own list as the location names are not provided by folder names or anything else.
+The whole point of the Locations.txt file is to have a record of the locations the data is from that can be read by this script, so usually it will be present.
+When it is not, first it creates a list that repeats the string "Recording " as many times as the value of \textbf{countCSV}.
+The number of CSVs for each configuration should be the same for all configurations.
+After this, a \textbf{for} loop is used to add the correct number to the end of these strings.
+
+Once it has a list of locations stored to \textbf{loc}, or a generic list to identify the recordings, the \textbf{listclean} function is used to create a version of the list suitable for R.
+This string is stored in the \textbf{locStr} variable, which will have its contents added to the R scripts later.
+
+\begin{stylePy}
+if	"Locations Short.txt" in os.listdir(RelPath):
+	locsho		=	open(RelPath + "Locations Short.txt", 'r').readlines()
+	locsho		=	[line.strip('\n') for line in locsho]
+	locshoStr	=	listclean(locsho)
+else:
+	locshoStr	=	"NULL"
+\end{stylePy}
+
+Being able to provide accurate names for the locations I make recordings in is important, but sometimes the names are so long that they break out of the formatting of the graphs.
+To address this I set it up so I could also supply short versions of the location names, and this is the code for finding the appropriate file and reading its contents.
+The list of shorter names is then assigned to the \textbf{locshoStr} variable.
+
+If there is no "Locations Short.txt" file, then the \textbf{locshoStr} variable will have the string "NULL" assigned to it.
+This is a special word in R and those scripts have been configured to work appropriately when this is the value given to them.
+
+\begin{stylePy}
+if	"APIs Short.txt" in os.listdir(RelPath):
+	APIsho		=	open(RelPath + "APIs Short.txt", 'r').readlines()
+	APIsho		=	[line.strip('\n') for line in APIsho]
+	APIshoStr	=	listclean(APIsho)
+else:
+	APIshoStr	=	"NULL"
+\end{stylePy}
+
+Same idea, and almost the same code as above, but this time it is for a short version of the API list, such as taking "DirectX 11" and making it "DX11."
+
+\begin{stylePy}
+if		TYPE	==	"HIGH":
+	cGPU	=	"NULL"
+elif	TYPE	==	"GPU":
+	cGPU	=	"\"" + GPUs[0] + "\""
+\end{stylePy}
+
+The \textbf{cGPU} stands for current GPU and this \textbf{if...else} statement is necessary because it does not make sense when working with multi-GPU data.
+When the \textbf{TYPE} is HIGH, which is the multi-GPU scenario, the variable is set to NULL, so the R scripts will do nothing with it.
+When the \textbf{TYPE} is not HIGH but GPU, and with the \textbf{elif} command it will be sure to check, the variable will be the first item in the GPUs list, surrounded by double quotes.
+Remember, for the single-GPU scenario the list of GPUs is generated from the paths to the data, which will result in a list with only one GPU, so it is only necessary to grab the element and not something more complicated.
+The quotes are necessary in the string though, because they are not in the R script to identify the variable as a string.
+
+\begin{stylePy}
+scriptFull	=	scriptPath + "OCAT - Combined - PA.r"
+
+outputName	=	"Combined - PA - " + droppedGame + ".r"
+outputFull	=	droppedPath + "@" + outputName
+
+RPath		=	droppedPath.replace("\\", "/")
+\end{stylePy}
+
+We will see code similar to this later on.
+Its purpose is to create paths and names to the reference and output R scripts.
+The \textbf{scriptFull} variable is the full path and name to the reference R script.
+The \textbf{outputName} will be the file name for the output script and then \textbf{outputFull} is the full path for the output script.
+The @ symbol is added because when I was originally creating the scripts that combine the CSV data into a single file, and then processing that single file, I wanted to distinguish them from the other scripts I had.
+By using this symbol, they not only stood out but would be put at the top of the list when sorted alphabetically.
+
+The \textbf{RPath} variable is there to convert the formatting of the path to the dropped file to what R requires.
+
+\begin{stylePy}
+if not os.path.exists(outputFull):
+	with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
+		for line in fref:
+			fout.write(line	\
+				.replace("!PATH!",		RPath)			\
+				.replace("!GAME!",		droppedGame)	\
+				.replace("!LONG!",		out)			\
+				.replace("!QUA!",		QUAs[0])		\
+				.replace("!LOC!",		locStr)			\
+			)
+		fout.close()
+\end{stylePy}
+
+This code is for creating a new script based on the reference script, but the first thing it does is check if the output script already exists.
+This is accomplished by using the \textbf{os.path.exists} function, which checks to see if something exists at the path provided.
+By using \textbf{not}, the check will be TRUE when the path does not point to anything, and FALSE if it does, meaning the file already exists.
+
+The \textbf{with} command is something fairly powerful, as it was create to provide a cleaner means of dealing with situations involving context managers, such as opening a file.
+This means less needs to be explicitly stated.
+To be completely honest though, I am using it because when I was looking up how to open and read files in Python to edit their contents originally, it was always used.
+
+Anyway, the remainder of the line uses the \textbf{open} function to open first the reference script for reading, and holding that in the \textbf{fref} (file reference) variable, and then open an output file to write to, holding that in \textbf{fout} (file output).
+
+Next a \textbf{for} loop is started to work through the lines in reference file.
+Within the loop the lines from \textbf{fref} are written to \textbf{fout} but with some replacements made.
+To identify what is to be replaced in the R scripts, I use clears name in all caps and surround them in exclamation points.
+There is no reason I would use this formatting for anything else, so it works well enough, though there is one exception we will see later.
+By escaping the line breaks in the script, I have each \textbf{replace} command on its own line, which makes it much easier to read.
+The order of these does not matter, as there is no overlap between terms.
+The only thing that might be an issue is replacing !QUA!
+with the first element in the \textbf{QUAs} list, but because of how I use the scripts and how !QUA!
+is used, this is not significant.
+That is only used for naming the combined CSV file and I only combine data of the same quality, so the lack of an ability to cycle through the elements is not an issue.
+
+After the loop finishes, \textbf{fout} is told to close, which will save the new script with the replacements made in it.
+
+\begin{stylePy}
+scriptFull	=	scriptPath + "OCAT - Combined - Input.r"
+
+outputName	=	"Combined - Input - " + droppedGame + ".r"
+outputFull	=	droppedPath + "@" + outputName
+
+if not os.path.exists(outputFull):
+	with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
+		for line in fref:
+			fout.write(line
+				.replace("!PATH!",		RPath)				\
+				.replace("!GAME!",		droppedGame)		\
+				.replace("!API!",		listclean(APIs))	\
+				.replace("!APISHO!",	APIshoStr)			\
+				.replace("!QUA!",		QUAs[0])			\
+				.replace("!LOC!",		locStr)				\
+				.replace("!LOCSHO!",	locshoStr)			\
+				.replace("!GPU!",		cGPU)
+			)
+		fout.close()
+\end{stylePy}
+
+I doubt it is necessary to explain much here, as it is effectively the same form as above.
+This code is for creating the Input script, which I will cover in the next section and is quite important.
+I use a modular scripting approach, so everything unique to the situation is controlled by the Input script, so things like names, whether I want graphs, and other controls are set there and then passed to the Output script, which will be taken care of last.
+
+\begin{stylePy}
+if not os.path.exists(droppedPath + "OCAT - Combined - Output.r"):
+	shutil.copyfile(scriptPath + "OCAT - Combined - Output.r", droppedPath + "@Combined - Output.r")
+\end{stylePy}
+
+Finally a command to justify the loading of the \textit{shutil} module, and it is just for copying a file.
+At this point I have abstracted the Output script enough that absolutely no replacements are needed for it to function.
+Everything that may be specific to the situation is controlled by Input and Output just works on whatever is passed to it.
+
+Except for a commented out line to pause the script, for some troubleshooting purposes, this concludes the Python script.
+As complicated as it may have been, I have actually cleaned it up some while working on this section, and can even see some ways to make it a little cleaner, but sometimes a little mess helps to keep things straight in my mind, and can provide some teaching opportunities too.
+Next up is the Input R script.

@@ -1,0 +1,43 @@
+\section{Units and Measurments: FPS, ms, and Frame Time}
+
+A good place to start when considering the collection of data, is considering what kind of data you want to collect, and that question is very much related to a long running, if not always loud debate.
+Which is the better to use, FPS or frame time?
+If only the issue itself were as simple as that question seems, but there is some nuance there and I think it needs to be addressed first.
+
+Frames per second, more often referred to as FPS, can be interpreted as one of two things.
+One is as a unit, which is how I use it and the other is as a literal measurement of how many frames are rendered in a second.
+The question of FPS or frame time is mostly associated with the second meaning of FPS I gave.
+(Besides, you cannot compare a unit to a type of measurement.
+The minute has no advantages or disadvantages compared to a stopwatch, after all.In this comparison, there is a pretty clear advantage to frame time, thanks to the tools we have today for measuring performance.
+While the literal count of frames rendered in a second is useful information, thanks to tools like \href{https://github.com/GameTechDev/PresentMon}{PresentMon}, and those that leverage it, we can have the ideal measurement of rendering performance by recording the actual time it takes to render and display each frame.
+My preferred tool is actually \href{https://github.com/GPUOpen-Tools/OCAT}{OCAT, Open Capture and Analytics Tool}, which initially was effectively a convenient front-end for PresentMon, but has since been developed into more.
+
+Anyway, because we have free and open source software for measuring the length of time that passes to render each frame, measurements with a resolution of just one second are clearly inferior.
+However, when representing data I feel FPS is better than the milliseconds used for measurements of frame time.
+I doubt many of us think in terms of milliseconds, so the difference between two values in milliseconds may not mean so much.
+If I were to start talking about 16.667 ms, 11.111 ms, 8.333 ms, and 6.944 ms, how many would recognize their importance?
+Those are the millisecond equivalents of 60 FPS, 90 FPS, 120 FPS, and 144 FPS, which relate to common refresh rates for many displays.
+Of course display refresh rates are reported in Hertz, but FPS and Hertz are directly related as Hertz effectively constitutes the per-second portion of frames per second (1 Hz is $\frac{1}{s}$).
+
+The point I am trying to get at here is that, as a unit, FPS is still very useful because it is something we are comfortable working with, and it is also directly relatable to a key specification of the displays we use.
+There is a significant flaw to FPS though, and I made a graph to demonstrate this.
+
+\image{{Rate Graph}}
+
+I got a bit fancy with this one, highlighting a section of it and then inserting an enlarged view of it.
+This highlight covers from 30 FPS to 120 FPS, which is the range most of us likely play games at.
+Frames per second is on the Y-axis while the X-axis is milliseconds per frame, for frame time.
+As you can see the relationship between FPS and frame time is not linear, as the plot curves quite a bit, including across the highlighted section.
+The green lines in the insert have the same 30 FPS steps, but the frame time distances covered are significantly different.
+This is because of the nonlinearity of FPS, and I have another, more specific example I can give to continue illustrating the problem with nonlinear measures.
+
+Starting with 30 FPS and 60 FPS, we can add 10 FPS to both, and if you want a reason why, say we have lowered the option for some setting or overclocked the graphics card.
+We now have 40 FPS and 70 FPS respectively, but the problem is that one is a much more significant change than the other.
+To get from 30 FPS to 40 FPS, the frame time drops from 33.333 ms to 25.000 ms, a difference of 8.333 ms.
+The difference in frame time from 60 FPS to 70 FPS is 2.381 ms (the difference between 16.667 ms and 14.286 ms), which is a lot less than that 8.333 ms difference.
+It is still a 10 FPS difference in both cases, but a very different 10 FPS.
+(If we applied the 2.381 ms difference to 30 FPS, improving the performance, we would have 32.308 FPS, and applying the 8.333 ms difference to 60 FPS for an improvement gets us to 120 FPS.)
+
+This nonlinearity makes for a less than ideal situation when comparing performance measurements, but as millisecond representations for frame time are linear, those comparisons are fine.
+Still, I prefer FPS as the unit for reporting performance, because at least when the performance differences are small, the impact of nonlinearity will be small too, but I do have the scripts configured to provide everything in milliseconds as well, for any who prefer this other unit.
+(The graphs all use milliseconds instead of FPS, both because of the linearity of the unit, but also so they can all easily have similar axes.)

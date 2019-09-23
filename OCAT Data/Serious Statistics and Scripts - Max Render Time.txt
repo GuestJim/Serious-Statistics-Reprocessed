@@ -1,0 +1,158 @@
+Serious Statistics and Scripts - Max Quality
+Render Time
+
+Mean
+        GPU                   API        Location       Mean Median
+ RX Vega 64            DirectX 11       Hatsheput FPS 238.00 243.61
+   RTX 2060            DirectX 11       Hatsheput FPS 194.51 205.17
+ RX Vega 64            DirectX 12       Hatsheput FPS 143.81 143.68
+   RTX 2060            DirectX 12       Hatsheput FPS 135.27 133.96
+ RX Vega 64                Vulkan       Hatsheput FPS 104.48 107.61
+   RTX 2060                Vulkan       Hatsheput FPS 103.45 106.29
+ RX Vega 64 DirectX 11 - Anti-Lag       Hatsheput FPS 284.28 282.49
+   RTX 2060 DirectX 11 - Anti-Lag       Hatsheput FPS 200.63 206.10
+ RX Vega 64            DirectX 11           Dunes FPS 276.27 285.47
+   RTX 2060            DirectX 11           Dunes FPS 194.09 181.98
+ RX Vega 64            DirectX 12           Dunes FPS 166.86 169.46
+   RTX 2060            DirectX 12           Dunes FPS 162.26 161.11
+ RX Vega 64                Vulkan           Dunes FPS 110.62 110.06
+   RTX 2060                Vulkan           Dunes FPS 111.32 113.05
+ RX Vega 64 DirectX 11 - Anti-Lag           Dunes FPS 330.56 340.60
+   RTX 2060 DirectX 11 - Anti-Lag           Dunes FPS 219.28 222.97
+ RX Vega 64            DirectX 11 Thebes - Karnak FPS 257.22 259.00
+   RTX 2060            DirectX 11 Thebes - Karnak FPS 204.70 220.80
+ RX Vega 64            DirectX 12 Thebes - Karnak FPS 145.15 155.59
+   RTX 2060            DirectX 12 Thebes - Karnak FPS 145.51 146.58
+ RX Vega 64                Vulkan Thebes - Karnak FPS 110.57 114.35
+   RTX 2060                Vulkan Thebes - Karnak FPS 107.34 111.30
+ RX Vega 64 DirectX 11 - Anti-Lag Thebes - Karnak FPS 291.04 293.60
+   RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak FPS 220.17 224.37
+ RX Vega 64            DirectX 11       Hatsheput  ms   4.20   4.11
+   RTX 2060            DirectX 11       Hatsheput  ms   5.14   4.87
+ RX Vega 64            DirectX 12       Hatsheput  ms   6.95   6.96
+   RTX 2060            DirectX 12       Hatsheput  ms   7.39   7.46
+ RX Vega 64                Vulkan       Hatsheput  ms   9.57   9.29
+   RTX 2060                Vulkan       Hatsheput  ms   9.67   9.41
+ RX Vega 64 DirectX 11 - Anti-Lag       Hatsheput  ms   3.52   3.54
+   RTX 2060 DirectX 11 - Anti-Lag       Hatsheput  ms   4.98   4.85
+ RX Vega 64            DirectX 11           Dunes  ms   3.62   3.50
+   RTX 2060            DirectX 11           Dunes  ms   5.15   5.50
+ RX Vega 64            DirectX 12           Dunes  ms   5.99   5.90
+   RTX 2060            DirectX 12           Dunes  ms   6.16   6.21
+ RX Vega 64                Vulkan           Dunes  ms   9.04   9.09
+   RTX 2060                Vulkan           Dunes  ms   8.98   8.85
+ RX Vega 64 DirectX 11 - Anti-Lag           Dunes  ms   3.03   2.94
+   RTX 2060 DirectX 11 - Anti-Lag           Dunes  ms   4.56   4.49
+ RX Vega 64            DirectX 11 Thebes - Karnak  ms   3.89   3.86
+   RTX 2060            DirectX 11 Thebes - Karnak  ms   4.89   4.53
+ RX Vega 64            DirectX 12 Thebes - Karnak  ms   6.89   6.43
+   RTX 2060            DirectX 12 Thebes - Karnak  ms   6.87   6.82
+ RX Vega 64                Vulkan Thebes - Karnak  ms   9.04   8.74
+   RTX 2060                Vulkan Thebes - Karnak  ms   9.32   8.98
+ RX Vega 64 DirectX 11 - Anti-Lag Thebes - Karnak  ms   3.44   3.41
+   RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak  ms   4.54   4.46
+
+Percentiles
+        GPU                   API        Location       0.1%     1%    99%  99.9%
+ RX Vega 64            DirectX 11       Hatsheput FPS 317.73 305.44 177.97 170.16
+   RTX 2060            DirectX 11       Hatsheput FPS 271.14 258.26 135.70 127.28
+ RX Vega 64            DirectX 12       Hatsheput FPS 202.52 172.98 120.86  73.21
+   RTX 2060            DirectX 12       Hatsheput FPS 246.10 226.30 104.25  92.43
+ RX Vega 64                Vulkan       Hatsheput FPS 151.03 125.54  84.08  81.26
+   RTX 2060                Vulkan       Hatsheput FPS 149.58 125.57  80.68  76.00
+ RX Vega 64 DirectX 11 - Anti-Lag       Hatsheput FPS 346.86 338.07 234.08 220.48
+   RTX 2060 DirectX 11 - Anti-Lag       Hatsheput FPS 270.33 258.06 150.42 133.58
+ RX Vega 64            DirectX 11           Dunes FPS 411.54 395.41 164.32 121.67
+   RTX 2060            DirectX 11           Dunes FPS 334.04 310.85 119.53  98.42
+ RX Vega 64            DirectX 12           Dunes FPS 324.25 263.94 116.18  92.10
+   RTX 2060            DirectX 12           Dunes FPS 321.96 307.69 106.61  72.52
+ RX Vega 64                Vulkan           Dunes FPS 152.55 144.07  77.95  65.93
+   RTX 2060                Vulkan           Dunes FPS 156.68 150.92  72.56  62.98
+ RX Vega 64 DirectX 11 - Anti-Lag           Dunes FPS 404.07 391.24 236.10 189.29
+   RTX 2060 DirectX 11 - Anti-Lag           Dunes FPS 332.00 311.33 145.92 119.98
+ RX Vega 64            DirectX 11 Thebes - Karnak FPS 379.31 356.38 178.95 143.99
+   RTX 2060            DirectX 11 Thebes - Karnak FPS 332.27 301.93  79.15  76.93
+ RX Vega 64            DirectX 12 Thebes - Karnak FPS 371.06 270.93  89.30  81.49
+   RTX 2060            DirectX 12 Thebes - Karnak FPS 319.84 301.75  74.15  65.10
+ RX Vega 64                Vulkan Thebes - Karnak FPS 194.50 144.47  77.29  72.91
+   RTX 2060                Vulkan Thebes - Karnak FPS 212.64 142.98  61.07  49.72
+ RX Vega 64 DirectX 11 - Anti-Lag Thebes - Karnak FPS 411.52 373.41 211.92 191.33
+   RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak FPS 336.64 307.58 126.21 106.72
+ RX Vega 64            DirectX 11       Hatsheput  ms   3.15   3.27   5.62   5.88
+   RTX 2060            DirectX 11       Hatsheput  ms   3.69   3.87   7.37   7.86
+ RX Vega 64            DirectX 12       Hatsheput  ms   4.94   5.78   8.27  13.66
+   RTX 2060            DirectX 12       Hatsheput  ms   4.06   4.42   9.59  10.82
+ RX Vega 64                Vulkan       Hatsheput  ms   6.62   7.97  11.89  12.31
+   RTX 2060                Vulkan       Hatsheput  ms   6.69   7.96  12.39  13.16
+ RX Vega 64 DirectX 11 - Anti-Lag       Hatsheput  ms   2.88   2.96   4.27   4.54
+   RTX 2060 DirectX 11 - Anti-Lag       Hatsheput  ms   3.70   3.88   6.65   7.49
+ RX Vega 64            DirectX 11           Dunes  ms   2.43   2.53   6.09   8.22
+   RTX 2060            DirectX 11           Dunes  ms   2.99   3.22   8.37  10.16
+ RX Vega 64            DirectX 12           Dunes  ms   3.08   3.79   8.61  10.86
+   RTX 2060            DirectX 12           Dunes  ms   3.11   3.25   9.38  13.79
+ RX Vega 64                Vulkan           Dunes  ms   6.56   6.94  12.83  15.17
+   RTX 2060                Vulkan           Dunes  ms   6.38   6.63  13.78  15.88
+ RX Vega 64 DirectX 11 - Anti-Lag           Dunes  ms   2.47   2.56   4.24   5.28
+   RTX 2060 DirectX 11 - Anti-Lag           Dunes  ms   3.01   3.21   6.85   8.33
+ RX Vega 64            DirectX 11 Thebes - Karnak  ms   2.64   2.81   5.59   6.94
+   RTX 2060            DirectX 11 Thebes - Karnak  ms   3.01   3.31  12.63  13.00
+ RX Vega 64            DirectX 12 Thebes - Karnak  ms   2.69   3.69  11.20  12.27
+   RTX 2060            DirectX 12 Thebes - Karnak  ms   3.13   3.31  13.49  15.36
+ RX Vega 64                Vulkan Thebes - Karnak  ms   5.14   6.92  12.94  13.72
+   RTX 2060                Vulkan Thebes - Karnak  ms   4.70   6.99  16.37  20.11
+ RX Vega 64 DirectX 11 - Anti-Lag Thebes - Karnak  ms   2.43   2.68   4.72   5.23
+   RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak  ms   2.97   3.25   7.92   9.37
+
+Percentile of FPS
+        GPU                   API        Location 60 FPS 50 FPS 30 FPS 20 FPS 15 FPS
+ RX Vega 64            DirectX 11       Hatsheput   0.00   0.00   0.00      0      0
+   RTX 2060            DirectX 11       Hatsheput   0.00   0.00   0.00      0      0
+ RX Vega 64            DirectX 12       Hatsheput   0.01   0.01   0.01      0      0
+   RTX 2060            DirectX 12       Hatsheput   0.00   0.00   0.00      0      0
+ RX Vega 64                Vulkan       Hatsheput   0.00   0.00   0.00      0      0
+   RTX 2060                Vulkan       Hatsheput   0.00   0.00   0.00      0      0
+ RX Vega 64 DirectX 11 - Anti-Lag       Hatsheput   0.00   0.00   0.00      0      0
+   RTX 2060 DirectX 11 - Anti-Lag       Hatsheput   0.00   0.00   0.00      0      0
+ RX Vega 64            DirectX 11           Dunes   0.00   0.00   0.00      0      0
+   RTX 2060            DirectX 11           Dunes   0.00   0.00   0.00      0      0
+ RX Vega 64            DirectX 12           Dunes   0.00   0.00   0.00      0      0
+   RTX 2060            DirectX 12           Dunes   0.01   0.00   0.00      0      0
+ RX Vega 64                Vulkan           Dunes   0.04   0.00   0.00      0      0
+   RTX 2060                Vulkan           Dunes   0.06   0.00   0.00      0      0
+ RX Vega 64 DirectX 11 - Anti-Lag           Dunes   0.00   0.00   0.00      0      0
+   RTX 2060 DirectX 11 - Anti-Lag           Dunes   0.00   0.00   0.00      0      0
+ RX Vega 64            DirectX 11 Thebes - Karnak   0.00   0.00   0.00      0      0
+   RTX 2060            DirectX 11 Thebes - Karnak   0.00   0.00   0.00      0      0
+ RX Vega 64            DirectX 12 Thebes - Karnak   0.02   0.00   0.00      0      0
+   RTX 2060            DirectX 12 Thebes - Karnak   0.03   0.00   0.00      0      0
+ RX Vega 64                Vulkan Thebes - Karnak   0.00   0.00   0.00      0      0
+   RTX 2060                Vulkan Thebes - Karnak   0.85   0.11   0.03      0      0
+ RX Vega 64 DirectX 11 - Anti-Lag Thebes - Karnak   0.00   0.00   0.00      0      0
+   RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak   0.00   0.00   0.00      0      0
+
+Distribution Stats
+        GPU                   API        Location Mean (ms) StDev (ms) CoV (%)  Skew Kurtosis
+ RX Vega 64            DirectX 11       Hatsheput      4.20       0.52   12.48  0.95     3.93
+   RTX 2060            DirectX 11       Hatsheput      5.14       0.87   16.97  1.21     4.65
+ RX Vega 64            DirectX 12       Hatsheput      6.95       0.77   11.11 21.26  1457.62
+   RTX 2060            DirectX 12       Hatsheput      7.39       0.90   12.20 -0.12     6.99
+ RX Vega 64                Vulkan       Hatsheput      9.57       1.01   10.54  0.79     3.18
+   RTX 2060                Vulkan       Hatsheput      9.67       1.09   11.31  0.78     3.50
+ RX Vega 64 DirectX 11 - Anti-Lag       Hatsheput      3.52       0.29    8.28  0.40     6.62
+   RTX 2060 DirectX 11 - Anti-Lag       Hatsheput      4.98       0.69   13.91 12.36  1074.75
+ RX Vega 64            DirectX 11           Dunes      3.62       0.77   21.21  1.40     7.45
+   RTX 2060            DirectX 11           Dunes      5.15       1.32   25.54  0.46     3.04
+ RX Vega 64            DirectX 12           Dunes      5.99       0.76   12.64  1.19     9.84
+   RTX 2060            DirectX 12           Dunes      6.16       1.17   18.93  0.42     9.99
+ RX Vega 64                Vulkan           Dunes      9.04       1.44   15.91  0.58     3.43
+   RTX 2060                Vulkan           Dunes      8.98       1.61   17.87  0.89     4.20
+ RX Vega 64 DirectX 11 - Anti-Lag           Dunes      3.03       0.35   11.42  2.03     9.46
+   RTX 2060 DirectX 11 - Anti-Lag           Dunes      4.56       0.84   18.50  0.71     3.64
+ RX Vega 64            DirectX 11 Thebes - Karnak      3.89       0.56   14.50  0.87     5.59
+   RTX 2060            DirectX 11 Thebes - Karnak      4.89       1.40   28.72  3.37    17.74
+ RX Vega 64            DirectX 12 Thebes - Karnak      6.89       1.47   21.38  1.42     5.94
+   RTX 2060            DirectX 12 Thebes - Karnak      6.87       2.02   29.43  1.00     5.17
+ RX Vega 64                Vulkan Thebes - Karnak      9.04       1.25   13.79  1.22     4.80
+   RTX 2060                Vulkan Thebes - Karnak      9.32       1.85   19.88  3.72    41.99
+ RX Vega 64 DirectX 11 - Anti-Lag Thebes - Karnak      3.44       0.40   11.70  1.09     5.47
+   RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak      4.54       0.79   17.32  2.15    11.62

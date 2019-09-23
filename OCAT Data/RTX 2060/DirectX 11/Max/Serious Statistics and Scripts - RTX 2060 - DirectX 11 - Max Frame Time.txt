@@ -1,0 +1,32 @@
+Serious Statistics and Scripts - RTX 2060 - DirectX 11 - Max Quality
+Frame Time
+
+Mean
+      GPU        Location       Mean Median
+ RTX 2060       Hatsheput FPS 226.67 226.09
+ RTX 2060           Dunes FPS 259.09 262.88
+ RTX 2060 Thebes - Karnak FPS 238.31 250.38
+ RTX 2060       Hatsheput  ms   4.41   4.42
+ RTX 2060           Dunes  ms   3.86   3.80
+ RTX 2060 Thebes - Karnak  ms   4.20   3.99
+
+Percentiles
+      GPU        Location       0.1%     1%    99%  99.9%
+ RTX 2060       Hatsheput FPS 303.57 288.18 180.34 172.21
+ RTX 2060           Dunes FPS 396.79 315.96 188.08 157.17
+ RTX 2060 Thebes - Karnak FPS 368.79 325.63 129.90 113.32
+ RTX 2060       Hatsheput  ms   3.29   3.47   5.54   5.81
+ RTX 2060           Dunes  ms   2.52   3.17   5.32   6.36
+ RTX 2060 Thebes - Karnak  ms   2.71   3.07   7.70   8.82
+
+Percentile of FPS
+      GPU        Location 60 FPS 50 FPS 30 FPS 20 FPS 15 FPS
+ RTX 2060       Hatsheput      0      0      0      0      0
+ RTX 2060           Dunes      0      0      0      0      0
+ RTX 2060 Thebes - Karnak      0      0      0      0      0
+
+Distribution Stats
+      GPU        Location Mean (ms) StDev (ms) CoV (%) Skew Kurtosis
+ RTX 2060       Hatsheput      4.41       0.46   10.38 0.25     5.09
+ RTX 2060           Dunes      3.86       0.42   10.87 1.55     9.73
+ RTX 2060 Thebes - Karnak      4.20       0.89   21.18 2.17     8.98

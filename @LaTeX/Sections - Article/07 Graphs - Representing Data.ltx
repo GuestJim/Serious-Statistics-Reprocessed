@@ -1,0 +1,353 @@
+\section{Graphs: Representing Data}
+\graphicspath{{Media/@Data/}}
+
+Having covered the various statistics I report, it is time to turn to the graphs I generate.
+Very true to what I stated at the beginning of this article, I have spent time rewriting the scripts I use for this, and while I have not added any new graphs, I have made some modifications to them, to hopefully make them more informative.
+I also want to quickly mention that I try to use the terms 'graph' and 'plot' to refer to specific and different things, in case there has ever been any confusion (especially if I have ever made a mistake).
+When I use the term graph, I am referring to what is effectively the entire image.
+When I am using facets, which will be the case for all of the graphs in this section, I use the term plot to refer to the faceted graphs contained within, so a graph can hold multiple plots.
+
+The data for these graphs comes from \textit{Serious Sam Fusion 2017} and effectively repeats the data I collected in the original \href{https://www.overclockersclub.com/reviews/serious_statistics/}{\textit{Serious Statistics}} article.
+I returned to the same locations I collected data in, and despite the time since that article, I remember the paths I used.
+The system is completely different though, as I used my \href{https://www.overclockersclub.com/reviews/guestjim_test_build/}{test system}, and between updates to the game, the drivers, and the operating system since that original work, the results are not altogether comparable.
+Here are the specifications for the system:
+
+\begin{itemize}
+	\item	Processor: AMD Ryzen 7 2700X with PBO Enabled and -0.0625 V Offset
+	\item	Cooling: AMD Wraith Prism (Box Cooler)
+	\item	Motherboard: MSI B450 Mortar
+	\item	GPU (AMD): Gigabyte Radeon RX Vega 64 Gaming OC 8G (Stock @ 0.950 V +50\% Power Limit, \href{https://github.com/GuestJim/OCC-OCAT/blob/master/Radeon%20Wattman%20Profiles/RX%20Vega%2064/eUV%20and%2050%25%20Power%20Limit%20-%20RMA.xml}{WattMan Profile})
+	\item	GPU (NVIDIA): \href{http://www.overclockersclub.com/reviews/nvidia_geforce_rtx2060_founders_edition/}{NVIDIA RTX 2060}
+	\item	Memory: Corsair 2x8 GB (16 GB) @ 3000 MHz 16-17-17-35
+	\item	PSU: Seasonic FOCUS Plus 650 Gold
+	\item	OS: Windows 10 Home 64-bit 1903
+	\item	Drivers (AMD): Adrenalin 2019 Edition 19.7.1
+	\item	Drivers (NVIDIA): GeForce Game Ready Driver 436.02
+\end{itemize}
+
+Because I was curious, I decided to test more than just the game's supported graphics APIs, which are DirectX 11, Vulkan, and DirectX 12, though the last is only implemented as beta support, at the time of testing.
+The extra testing I did was to enable the new low-latency mode AMD and NVIDIA have added to their drivers recently.
+AMD's is called Radeon Anti-Lag while NVIDIA's is Ultra-Low Latency.
+Radeon Anti-Lag was released first and is what I originally decided to collect data for, so when NVIDIA released its Ultra-Low Latency feature I decided to return and collect data for it as well.
+The reason I am mentioning this is because I use Anti-Lag to label data for both features.
+(Anti-Lag fits better than Ultra-Low Latency and I could not think of a better, more neutral name.)
+
+Both features work to reduce input lag by reducing the time between a CPU queuing a frame and the GPU rendering it.
+They also are both limited in what APIs they can work with, which is why they are only applied to DirectX 11.
+As you will see, the data suggests an minimal impact, but this is hardly surprising because of the great performance of the game to begin with.
+ These features are more for games at reasonable frame rates, like 60 FPS to 90 FPS, so one with arithmetic means above 200 FPS is not where you will see much.
+For such a situation, the input latency will already be minimal so there is little to be done.
+
+
+Another reason to look at these features is that OCAT has a (relatively) new MsEstimatedDriverLag column, which may help catch the impact.
+It should still be expected to be minimal, but it might catch it.
+I may just look at statistics from that data though, and skip the graphs.
+
+I did all of the testing with the game set to use an exclusive fullscreen window at 1920x1080, with the Graphics Settings menu at its maximum configuration.
+(I did not venture into the Performance Settings menu, which offers a wealth of additional settings, including some that can significantly impact performance like super-sampling anti-aliasing.Each run lasted for 300 seconds (five minutes) and were in the Hatsheput, Dunes, and Thebes – Karnak levels, as is labelled in the tables and graphs.
+Hatsheput is the first level in the game, and so does not have many enemies but does take place outside and within structures.
+The Dunes run is filled with combat with various enemies and is entirely outside in a large and open area.
+Thebes – Karnak is a later level in the game, and so there are a number of enemies and it takes place largely within structures, though there are large, walled areas that are open to the sky.
+
+One last thing to note before getting to the graphs is that the RX Vega 64 I used for testing is not the reference card I have been using for quite some time.
+That specific card failed and it was necessary to receive an RMA replacement.
+I have identified the model of the replacement in the specifications list and linked to the undervolting profile I use.
+It may be worth noting that with this profile, the GPU will run at approximately the same frequency as the reference card.
+With some tweaking of the undervolt, I could enable the GPU to run at a higher frequency, but I am comfortable with it being where it is, and with only drawing approximately 200 W, which also helps keep it running cool.
+
+With that covered, we can get to the graphs, starting with the first one I usually share, though with a different name now.
+
+\subsection{Means, Medians, and Percentiles}
+
+\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @Means - Frame Time}}
+
+Previously I had this type of graph labelled as Averages, but as I covered earlier, average can refer to more than one value, so I have changed the name to be more specific.
+
+The graph itself is actually a combination of two types of plots.
+The bar plot is configured so the height of the bars is the mean frame time for the labeled configuration.
+The box and whisker plot, or more simply the box plot, is actually not strictly a box plot because I have modified it.
+Normally a box plot has the sides of its boxes mark the quartiles, so the 25\% and 75\% percentiles, with the center line marking the median, or 50\% percentile.
+The center line is still the median, but the sides of the boxes are the 1\% and 99\% percentiles.
+The whiskers then mark the 0.1\% and 99.9\% percentiles in my configuration, while the whiskers can mark things different things in other plots.
+In some cases they go to the minimum and maximum of the data, but the default has the whiskers end sooner and adds points to mark the outliers.
+
+Typically I report with the graph a table of the values this graph shares, but with the table you are able to see specific values.
+
+\vspace{1.0ex}	\noindent	\resizebox{\columnwidth}{!}{
+\begin{tabular}{| l | l | l | l | l | l | l | l | l | l | l |}
+	GPU			&	API						&	Location		&		&	Mean	&	Median	&	0.1\%	&	1\%		&	99\%	&	99.9\%	&	60 FPS	\\	\hline
+	RX Vega 64	&	DirectX 11				&	Hatsheput		&	FPS	&	270.91	&	267.52	&	393.65	&	365.5	&	226.55	&	209.9	&	0		\\	\hline
+	RTX 2060	&	DirectX 11				&	Hatsheput		&	FPS	&	226.67	&	226.09	&	303.57	&	288.18	&	180.34	&	172.21	&	0		\\	\hline
+	RX Vega 64	&	DirectX 12				&	Hatsheput		&	FPS	&	245.63	&	245.76	&	335.06	&	308.17	&	206.02	&	159.7	&	0.04	\\	\hline
+	RTX 2060	&	DirectX 12				&	Hatsheput		&	FPS	&	217.96	&	217.34	&	357.42	&	281.89	&	175.92	&	162.01	&	0.01	\\	\hline
+	RX Vega 64	&	Vulkan					&	Hatsheput		&	FPS	&	227.04	&	227.12	&	338.93	&	293.69	&	190.99	&	160.5	&	0.04	\\	\hline
+	RTX 2060	&	Vulkan					&	Hatsheput		&	FPS	&	222.26	&	222.67	&	336.33	&	284.5	&	181.39	&	165.78	&	0.03	\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Hatsheput		&	FPS	&	265.71	&	263.78	&	357.96	&	345.42	&	220.65	&	206.17	&	0		\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Hatsheput		&	FPS	&	226.83	&	226.14	&	315.9	&	294.8	&	182.55	&	173.55	&	0		\\	\hline
+	RX Vega 64	&	DirectX 11				&	Dunes			&	FPS	&	326.11	&	330.14	&	498.81	&	410.34	&	231.16	&	184.7	&	0		\\	\hline
+	RTX 2060	&	DirectX 11				&	Dunes			&	FPS	&	259.09	&	262.88	&	396.79	&	315.96	&	188.08	&	157.17	&	0		\\	\hline
+	RX Vega 64	&	DirectX 12				&	Dunes			&	FPS	&	279.54	&	285.88	&	376.94	&	337.72	&	199.77	&	158.42	&	0.01	\\	\hline
+	RTX 2060	&	DirectX 12				&	Dunes			&	FPS	&	251.57	&	256.81	&	336.19	&	301.39	&	181.4	&	125.67	&	0		\\	\hline
+	RX Vega 64	&	Vulkan					&	Dunes			&	FPS	&	256.74	&	258.93	&	416.84	&	299.67	&	199.36	&	156.24	&	0.01	\\	\hline
+	RTX 2060	&	Vulkan					&	Dunes			&	FPS	&	255.56	&	259.34	&	442.23	&	310.37	&	184.72	&	150.38	&	0.01	\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Dunes			&	FPS	&	319.14	&	325.84	&	415.11	&	394.01	&	228.31	&	187.17	&	0		\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Dunes			&	FPS	&	259.75	&	263.37	&	430.65	&	325.52	&	194.55	&	168.01	&	0		\\	\hline
+	RX Vega 64	&	DirectX 11				&	Thebes - Karnak	&	FPS	&	277.6	&	285.14	&	385.41	&	361.4	&	185.64	&	165.46	&	0		\\	\hline
+	RTX 2060	&	DirectX 11				&	Thebes - Karnak	&	FPS	&	238.31	&	250.38	&	368.79	&	325.63	&	129.9	&	113.32	&	0		\\	\hline
+	RX Vega 64	&	DirectX 12				&	Thebes - Karnak	&	FPS	&	249.76	&	265.18	&	379.37	&	322.17	&	159.92	&	132.78	&	0.05	\\	\hline
+	RTX 2060	&	DirectX 12				&	Thebes - Karnak	&	FPS	&	221.66	&	230.47	&	395.95	&	346.26	&	125.67	&	103.2	&	0.02	\\	\hline
+	RX Vega 64	&	Vulkan					&	Thebes - Karnak	&	FPS	&	231.83	&	243.37	&	343.79	&	286.53	&	148.54	&	134.15	&	0.04	\\	\hline
+	RTX 2060	&	Vulkan					&	Thebes - Karnak	&	FPS	&	227.32	&	238.27	&	341.02	&	299.54	&	125.72	&	95.45	&	0.06	\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Thebes - Karnak	&	FPS	&	274.15	&	280.35	&	414.42	&	375.61	&	178.03	&	159.46	&	0		\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Thebes - Karnak	&	FPS	&	241.47	&	251.64	&	356.25	&	327.44	&	133.76	&	113.3	&	0		\\	\hline
+	RX Vega 64	&	DirectX 11				&	Hatsheput		&	ms	&	3.69	&	3.74	&	2.54	&	2.74	&	4.41	&	4.76	&	0		\\	\hline
+	RTX 2060	&	DirectX 11				&	Hatsheput		&	ms	&	4.41	&	4.42	&	3.29	&	3.47	&	5.54	&	5.81	&	0		\\	\hline
+	RX Vega 64	&	DirectX 12				&	Hatsheput		&	ms	&	4.07	&	4.07	&	2.98	&	3.25	&	4.85	&	6.26	&	0.04	\\	\hline
+	RTX 2060	&	DirectX 12				&	Hatsheput		&	ms	&	4.59	&	4.6		&	2.8		&	3.55	&	5.68	&	6.17	&	0.01	\\	\hline
+	RX Vega 64	&	Vulkan					&	Hatsheput		&	ms	&	4.4		&	4.4		&	2.95	&	3.4		&	5.24	&	6.23	&	0.04	\\	\hline
+	RTX 2060	&	Vulkan					&	Hatsheput		&	ms	&	4.5		&	4.49	&	2.97	&	3.52	&	5.51	&	6.03	&	0.03	\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Hatsheput		&	ms	&	3.76	&	3.79	&	2.79	&	2.9		&	4.53	&	4.85	&	0		\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Hatsheput		&	ms	&	4.41	&	4.42	&	3.17	&	3.39	&	5.48	&	5.76	&	0		\\	\hline
+	RX Vega 64	&	DirectX 11				&	Dunes			&	ms	&	3.07	&	3.03	&	2		&	2.44	&	4.33	&	5.41	&	0		\\	\hline
+	RTX 2060	&	DirectX 11				&	Dunes			&	ms	&	3.86	&	3.8		&	2.52	&	3.17	&	5.32	&	6.36	&	0		\\	\hline
+	RX Vega 64	&	DirectX 12				&	Dunes			&	ms	&	3.58	&	3.5		&	2.65	&	2.96	&	5.01	&	6.31	&	0.01	\\	\hline
+	RTX 2060	&	DirectX 12				&	Dunes			&	ms	&	3.98	&	3.89	&	2.97	&	3.32	&	5.51	&	7.96	&	0		\\	\hline
+	RX Vega 64	&	Vulkan					&	Dunes			&	ms	&	3.9		&	3.86	&	2.4		&	3.34	&	5.02	&	6.4		&	0.01	\\	\hline
+	RTX 2060	&	Vulkan					&	Dunes			&	ms	&	3.91	&	3.86	&	2.26	&	3.22	&	5.41	&	6.65	&	0.01	\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Dunes			&	ms	&	3.13	&	3.07	&	2.41	&	2.54	&	4.38	&	5.34	&	0		\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Dunes			&	ms	&	3.85	&	3.8		&	2.32	&	3.07	&	5.14	&	5.95	&	0		\\	\hline
+	RX Vega 64	&	DirectX 11				&	Thebes - Karnak	&	ms	&	3.6		&	3.51	&	2.59	&	2.77	&	5.39	&	6.04	&	0		\\	\hline
+	RTX 2060	&	DirectX 11				&	Thebes - Karnak	&	ms	&	4.2		&	3.99	&	2.71	&	3.07	&	7.7		&	8.82	&	0		\\	\hline
+	RX Vega 64	&	DirectX 12				&	Thebes - Karnak	&	ms	&	4		&	3.77	&	2.64	&	3.1		&	6.25	&	7.53	&	0.05	\\	\hline
+	RTX 2060	&	DirectX 12				&	Thebes - Karnak	&	ms	&	4.51	&	4.34	&	2.53	&	2.89	&	7.96	&	9.69	&	0.02	\\	\hline
+	RX Vega 64	&	Vulkan					&	Thebes - Karnak	&	ms	&	4.31	&	4.11	&	2.91	&	3.49	&	6.73	&	7.45	&	0.04	\\	\hline
+	RTX 2060	&	Vulkan					&	Thebes - Karnak	&	ms	&	4.4		&	4.2		&	2.93	&	3.34	&	7.95	&	10.48	&	0.06	\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Thebes - Karnak	&	ms	&	3.65	&	3.57	&	2.41	&	2.66	&	5.62	&	6.27	&	0		\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Thebes - Karnak	&	ms	&	4.14	&	3.97	&	2.81	&	3.05	&	7.48	&	8.83	&	0		\\	\hline
+\end{tabular}
+}	\vspace{1.0ex}
+
+As you may have noticed, I have changed the table to now also include the median.
+The table does also include the corresponding percentile for 60 FPS, thanks to use of the empirical cumulative distribution function.
+This value is not represented in this graph, but is in a later one, in a way.
+(This other graph is the Frequency graph, as I have a line marking that performance, and you can visually approximate how much of the curve is on one side or the other.)
+
+Looking to the statistics and the graphs, we see the performance was very high under each condition, which is hardly surprising.
+What is surprising is that it appears DirectX 11 out performans both Vulkan and DirectX 12.
+One may expect these newer APIs, with their low level designs to offer superior performance, but that does not appear to be the case here.
+For each location, we see DirectX 11 performing better, both with and without Radeon Anti-Lag enabled.
+The difference is less than one millisecond in all cases though, so while it does occur, it is not something that would negatively impact your experience.
+
+\subsection{Course}
+
+The second graph I usually share I call a Course graph, as it shows the frame time over the course of the test.
+Previously I had lines on it marking the percentiles, but do not anymore as they can be tricky to have work with the facets (what enables me to have multiple plots in a single graph) and I do not think they are strictly necessary.
+What does remain though is a blue smooth line that serves as a kind of trend line, though it does not always react quickly to sudden changes in the data.
+
+\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @Course - Frame Time}}
+
+To be perfectly honest, I include this line in part for aesthetic purposes, and not to provide a representative trend line.
+My knowledge and understanding of statistics and probability does not enable me to select the most appropriate model to generate such a trend line.
+Instead, I identified the method used by default for the data I provide the software, and have it explicitly set to use it, instead of relying on the automatic selection of the method.
+This method is "gam" for generalized additive models, which are similar to generalized linear models, but with a smoothing function applied.
+There is also usually an indication of the confidence interval around the smooth line, but it is not visible in these plots.
+I suspect this is because of the large amount of data provided shrinking the interval, or just being so zoomed out compared to the data that this interval is not visible.
+
+Turning to certain decisions I made for how this data is represented, the data is drawn as points, typically mostly transparent points, and the X-axis is the time.
+When I originally designed these plots, I had considered using lines to connect the data, and even having the lines in addition to the points.
+I decided to only use the points because the lines really make it too busy a plot to interpret.
+This data is strongly consistent, at least at the scale these plots are at, so the lines would not be so bad here, but for other games and datasets, this might not be true.
+
+The reason the points are mostly transparent, is so the density of the data can be interpreted from the plot.
+Typically the data, regardless of the game, will have a core on these plots that most of the points are on, and this is completely true here.
+The result is this core being completely black as the density of the points sum the limited opacity up to be completely opaque.
+The result is also that the outliers, placed far from this core are still visible but are much lighter, which is appropriate because outliers do not necessarily have a heavy impact on the experience.
+They can, but it actually comes down to the person analyzing the data to determine how significant their impact is.
+In this case, the outliers definitely have a minor impact, which we could tell from the statistics provided above, where it was a percent of a percent of the time, at most, that the frame time dropped below the 60 FPS target.
+
+Finally, I use time for the X-axis for a couple reasons, with one being that time is the ultimate independent variable.
+The other reason, or perhaps it is more accurately a consequence of using time on this axis, is that it enables easy comparison between the runs at the same locations.
+While these are manual runs, and so there can be differences because I do something differently, when something occurs repeatedly, like entering a new area that impacts performance, this will appear at (approximately) the same location along the course plots, and are not stretched compared to each other.
+This makes it easier to recognize similar performance patterns across the course plots.
+Of course this is only relevant when it is the same run used between runs, which would not be the case for the reviews.
+
+There is one last thing to mention, and that is just the inclusion of a red line marking 16.67 ms, which is the frame time equivalent to 60 FPS.
+As this is a performance target important to, I suspect most people, I think this reference line is valuable.
+As I have changed the upper limit for the frame time, these lines are at the top of the plots.
+
+\subsection{Frequency}
+
+In a previous section I had talked about distributions, and that is what these Frequency plots show us for the performance data.
+These plots draw a curve based on how much data is contained within bins.
+It is possible to control the number of bins or the width of the bins, with that latter being what I chose to set.
+The bin width I decided on after trying different values is 0.03 as the resulting appearance of the plots looked good to me, being neither too jagged nor too smooth.
+
+\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @Freq - Frame Time}}
+
+It might be worth noting that these curves are not depicting the probability distribution function of the data, but the distribution function itself.
+This matters most because it means the sizes of the curves are not normalized, making the Y-axis important to check.
+Within any faceted graph, like the large one I have here, the scales are consistent across the plots, but this is not necessarily true between separate graphs.
+If these were probability distribution functions, then the total area under the each curve would have to total to one, as there is certainty any value within the data is within that curve.
+
+Getting into the specifics of such graphs, typically what we are looking for are clearly defined peaks, and unless we can expect the performance to be inconsistent across the test run, then there is ideally just one peak.
+We can see in the Dunes plots that they are predominately single peaks, which makes sense as the runs exist in a very consistent area.
+There can be some variation based on where I am looking, but it is still always large, open, outside areas.
+The Hatsheput location, for contrast, starts outside and then has inside locations of differing sizes.
+In the Hatsheput plots we can see multiple peaks.
+Though none of these peaks are very large, they are there and makes sense for the different locations.
+The Thebes – Karnak location has more variation than Dunes but not quite as much as Hatsheput, which we can see here as there are not exactly clear secondary peaks, but we can still see the distributions are wider and each has a noticeable tail on the right side.
+
+Something I have added to these plots is a pair of lines, with the solid line marking the mean and the dotted line identifying the median.
+As the expectation is for these distributions to be skewed to the right, toward longer frame times, one would expect the mean to be on the right and the median on the left, but we can see there are times this is not the case, or where the lines are on top of each other.
+It is interesting to see the hypothesis not always be true, but I still think it can stand as a general expectation for video game performance.
+
+\subsection{Quantile-Quantile (QQ)}
+
+First off, technically what I use are not quantile-quantile, or QQ plots because they only contain a single quantile plot.
+Normally a QQ plot has both axes as quantiles, so one can compare two distributions, for such purposes as seeing how similar sample data is to the normal distribution.
+What I do instead is have a single axis be quantiles and the other is the actual sample value, so we can instead observe characteristics of the distribution.
+I guess that means they are Q plots instead, but I will continue to refer to them and label them as QQ plots, if only because that is the name of the layer used to create these graphs.
+
+\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @QQ - Frame Time}}
+
+Looking at this graph, we can see I have made some changes compared to how they have been in most recent articles.
+This is because adding these additional layers, like the rectangles marking certain percentiles here and the lines in the Frequency plots, is a bit tricky to do with faceted graphs.
+Luckily I have learned a few tricks since I originally put these faceted graphs together, and am now able to add these layers.
+(I could use the same trick to add the percentile lines to the Course plots, but do not feel they are necessary.)
+
+The colored rectangles actually were part of the original QQ plots I made when they were not faceted.
+Their purpose is to help you see the differences between the values for the different percentiles, by drawing lines over to the Y-axis.
+By utilizing transparency and different colors, there is a layering effect, to make them each easier to stand out.
+
+Something I have added just now (as in literally earlier today) is a dotted green line and text describing it.
+Just as the software I use has a layer for creating the QQ plot, it also has this layer for drawing a line between two points on this plot.
+Normally the line connects the first and third quartile (25\% and 75\% percentiles) but I have changed it to instead connect the 1\% and 99\% percentiles.
+An argument can be made this is too wide, as that expanse may start to include outliers that should not be allowed to influence the line, but fortunately it would be very easy to change this.
+
+The reason I have added this line is because I have commented on the flatness of the QQ plots in performance analyses previously.
+This makes having a way to clearly mark such a line useful, and I also added a label for what the slope of this line is.
+Between different run locations, the slope is not necessarily valuable to compare, but between software and hardware configurations for the same location, comparing them is appropriate, at least in relative terms.
+Ideally the slope of this line will be near zero, but I will be honest that I do not know what too large a value would be.
+(It is likely worth noting I have changed the labels for the X-axis on these graphs to show percentiles, instead of the Z-scores that would normally be there.
+The Z-score is the number of standard deviations away from the mean.
+This means the slope does not directly translate to the axes on the plot, but the value is still valid for comparison with the other values shown.)
+
+In the Statistics section I had discussed some values I said I would likely not be sharing in the future, but will still have them computed for me.
+These values relate to the shape of the distribution, and as we have just covered the second of two ways to graph the distribution, I want to share them now.
+I have also waited until after covering the QQ graph because I think skewness and kurtosis values are more apparent with it than the Frequency graph.
+
+\vspace{2.0ex}	\noindent	\resizebox{\columnwidth}{!}{
+\begin{tabular}{| l | l | l | l | l | l | l | l |}
+	GPU			&	API						&	Location		&	Mean (ms)	&	StDev (ms)	&	CoV (\%)	&	Skew	&	Kurtosis	\\	\hline
+	RX Vega 64	&	DirectX 11				&	Hatsheput		&	3.69		&	0.37		&	10.03		&	-0.5	&	4.89		\\	\hline
+	RTX 2060	&	DirectX 11				&	Hatsheput		&	4.41		&	0.46		&	10.38		&	0.25	&	5.09		\\	\hline
+	RX Vega 64	&	DirectX 12				&	Hatsheput		&	4.07		&	1.28		&	31.47		&	114.28	&	18116.88	\\	\hline
+	RTX 2060	&	DirectX 12				&	Hatsheput		&	4.59		&	0.54		&	11.79		&	30.76	&	3169.09		\\	\hline
+	RX Vega 64	&	Vulkan					&	Hatsheput		&	4.4			&	1.05		&	23.86		&	93.91	&	12759.66	\\	\hline
+	RTX 2060	&	Vulkan					&	Hatsheput		&	4.5			&	1.05		&	23.43		&	88.32	&	11332.17	\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Hatsheput		&	3.76		&	0.35		&	9.38		&	-0.19	&	5.38		\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Hatsheput		&	4.41		&	0.52		&	11.76		&	29.35	&	3692.25		\\	\hline
+	RX Vega 64	&	DirectX 11				&	Dunes			&	3.07		&	0.36		&	11.76		&	1.59	&	9.6			\\	\hline
+	RTX 2060	&	DirectX 11				&	Dunes			&	3.86		&	0.42		&	10.87		&	1.55	&	9.73		\\	\hline
+	RX Vega 64	&	DirectX 12				&	Dunes			&	3.58		&	0.51		&	14.33		&	32.83	&	3024.94		\\	\hline
+	RTX 2060	&	DirectX 12				&	Dunes			&	3.98		&	0.48		&	12.01		&	6.95	&	248.91		\\	\hline
+	RX Vega 64	&	Vulkan					&	Dunes			&	3.9			&	0.44		&	11.42		&	32.16	&	2743.69		\\	\hline
+	RTX 2060	&	Vulkan					&	Dunes			&	3.91		&	0.48		&	12.37		&	13.89	&	958.78		\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Dunes			&	3.13		&	0.36		&	11.47		&	1.6		&	8.07		\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Dunes			&	3.85		&	0.43		&	11.16		&	13.28	&	1235.55		\\	\hline
+	RX Vega 64	&	DirectX 11				&	Thebes - Karnak	&	3.6			&	0.55		&	15.22		&	1.45	&	5.74		\\	\hline
+	RTX 2060	&	DirectX 11				&	Thebes - Karnak	&	4.2			&	0.89		&	21.18		&	2.17	&	8.98		\\	\hline
+	RX Vega 64	&	DirectX 12				&	Thebes - Karnak	&	4			&	1.11		&	27.68		&	54.2	&	6180.23		\\	\hline
+	RTX 2060	&	DirectX 12				&	Thebes - Karnak	&	4.51		&	1			&	22.19		&	3.95	&	79.95		\\	\hline
+	RX Vega 64	&	Vulkan					&	Thebes - Karnak	&	4.31		&	1.09		&	25.31		&	61.52	&	7648.03		\\	\hline
+	RTX 2060	&	Vulkan					&	Thebes - Karnak	&	4.4			&	1.06		&	24.15		&	9.62	&	264.01		\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Thebes - Karnak	&	3.65		&	0.55		&	15.04		&	7.79	&	507.76		\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Thebes - Karnak	&	4.14		&	0.82		&	19.71		&	2.25	&	10.17		\\	\hline
+\end{tabular}
+}	\vspace{1.0ex}
+
+Just as a quick reminder, the coefficient of variability (CoV) is the standard deviation (StDev) divided by the mean, though in this case I also converted the coefficient into a percentage.
+Neither skew nor kurtosis have units to them.
+
+Unfortunately I do not have nearly the understanding necessary to determine how influenced the formula used here for skewness is impacted by outliers.
+It is very possible it is not just coincidence that greater kurtosis values also have greater skewness scores here too.
+Because of that, I am going to mildly ignore skew for the moment, and instead focus on kurtosis, which does appear to have a relationship with the plots.
+
+Kurtosis is a score of how heavy the tails of a distribution are, so when there are more outliers, the score is greater.
+As we can see in the graph, the DirectX 12 and Vulkan plots especially have significant turns around or past the 99.9\% percentile mark.
+The DirectX 11 plots, both with and without the Anti-Lag features enabled, do not have such severe bends.
+When we look at the values in the table, we see the greatest kurtosis scores correspond with the plots that have these turns.
+
+
+Since these plots already show these turns, or lack thereof, I do not think sharing the kurtosis score is necessary.
+Similarly, skewness is also going to be visible from the graphs.
+Potentially the standard deviation may be useful to share, but at this time I have not invested the time to include it in the compact/combined table I share.
+(Whether it appears in the future will tell you if I decided to spend the time tweaking things to add it.)
+
+\subsection{Consecutive Difference}
+
+Now for what might be the most unusual of the graphs I use, which might not be surprising because I thought of it, unlike the others being more or less standard graphs.
+Basically one day I heard the question posed of how to better present performance data to readers, because the balance between compactness and detailed descriptions can be tricky to achieve.
+The solution that came to me was to create a graph that will show both the specific performance values as well as the trend for the performance.
+To achieve this goal, one axis is the measured frame time while the other is the difference between consecutive measurements.
+To be specific, this is the difference between the current and next frame, so that coordinate is telling you where the performance is going, instead of where it was.
+
+\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @Diff - Frame Time}}
+
+Because I changed the scale on the X-axis with the frame time measurements, these plots are very stretched in that dimension.
+I could also reduce the scale of the Y-axis, but as we can already see there is cropping for some plots, I did not want to cut out even more data.
+
+I already stated the difference is between the current and next frame, which we will see again later when in the code for this graph type.
+Another feature of these plots is the heat map, to indicate the density of the data.
+Like the Course plots, the points are mostly transparent, but with so much of the data concentrated together, the heat maps are valuable to distinguish the density within the dark blobs.
+Previously I had it set so the transparency of the heat maps would also vary with the density, but I have disabled that, so now it is just the color that indicates density.
+
+If you look back to some examples of these graphs without facets, you will see I had boxes drawn to mark the 0.1\%-99.9\% and 1\%-99\% ranges for both axes.
+The reason I have dropped those rectangles was because they did not work well with the facets originally, but I have since spent the time to get them working.
+However, I am not going to include them because I think they make the plots too busy, especially with the heat map.
+(The code too is quite messy.Getting it to work was useful though, because I do not fully understand how the levels of the heat maps are determined.
+I noticed when the rectangles were there that the 1\% to 99\% box approximately bounded the heat map.
+It was not necessarily perfect, but does suggest the heat maps contain approximately 98% of the data.
+This is not completely true in previous articles though, because of the maps becoming less opaque as the density decreased, so you cannot see all of the heat maps clearly.
+
+I am not sure if it counts as an advantage or disadvantage to designing these plots (at least to the best of my knowledge, as I cannot recall having encountered a similar plot previously), but I also get to set the terminology for their characteristics.
+For better or worse, the term I use most is blob, because that is what they all kind of look like.
+The blob is the main concentration of the data, which is evident because it will appear as black surrounding the heat map.
+In some cases there are additional satellite blobs that are present near the primary one.
+What is more common though is the presence of wings on the blobs.
+These plots do not have wings, but when they do appear they are regions that stretch out from the blob in a roughly triangular shape.
+I wish I had a clear idea of what causes them, as I suspect their presence could be informative, but at the moment the only theories I have are completely speculation.
+
+It would probably be a good idea if I spend some time interpreting these plots, since I have not really covered what it is these plots and the points they contain tell us.
+After all, that is part of the impetus for this article; to explain it here instead of in each article repeatedly.
+(Also at least once I myself forgot how to interpret these graphs.)
+
+The coordinates of the points tell us the frame time for the current frame and the difference between it and the next frame.
+What this means is that when you look at one point, you can know both how long it took to render the frame it represents, but also the time it took to render the next frame, by adding the X value and Y value.
+When a point is near 0 on the Y-axis, the consecutive difference axis, this means the frame time of the next frame was nearly the same as the current frame.
+When the point is farther away from this zero, then the frame time for the next frame was either longer, if the point is above 0, or shorter, if the point is below 0.
+This means single-frame stutters will impact two points.
+
+Consider a scenario where we have a large number of frames taking approximately 10 ms to render, which will produce a blob around Y = 0, but one frame in the middle of this scenario takes 20 ms to render and the one after just 5 ms.
+ The sequence then is 10 ms, 10 ms, 20 ms, 5 ms, and 10 ms.
+
+\graphicspath{{Media/}}
+\image{Diff Example}
+
+The first point is at $X = 10$, $Y = 0$ because the first and second frames both took just 10 ms to render.
+The third frame taking 20 ms, however, means the second point is at $X = 10$, $Y = 10$, as the sum is 20 ms.
+The third point will be at $X = 20$, $Y = -15$ because the frame after it took just 5 ms to render and $20 + (-15) = 5$.
+The fourth point is at $X = 5$, $Y = 5$ because while it only took 5 ms to render, the next takes 10 ms, giving a difference of 5.
+
+In this data it seems that scenario of single frames having significantly longer frame times than those around them, but in plenty of other games we see frame times bouncing between two values happening quite a bit.
+This is not exactly good, but not necessarily bad either, depending on how significant the bouncing is.
+The result can be the heat map indicating two denser regions, if the bouncing is not too severe, but when it is more significant we can have the wings.
+While this behavior may appear in the plot that does not necessarily mean it is apparent when playing.
+Your experience will depend on how often this happens and also on the display time, the time between frames being displayed, and not just the time between the frames being prepared.
+Typically when I observe a significant difference between the frame time graphs and what the experience felt like to me, I will generate and share display time graphs too, but I still want to make the point to not always be worried about bouncing frame times.
+The desire still is to have minimal bouncing, but it is not the worst thing.
+
+As I doubt I will be adding any more graphs, that nearly concludes the half of this article concerned with the statistics and graphs.
+Before getting to the second half will be focused on the Python and R scripts I have developed for processing the performance data, I will go through the statistics and graphs again, more like I would in a performance analysis.
+Before getting to that though, I want to repeat an apology I gave at the beginning of the article for any mistakes and mischaracterizations I committed in these earlier sections.
+While I hope I was at least close to correctly describing the statistics and probability concepts, I do acknowledge I do not have the requisite background to ensure correctness, so if you do, please forgive me.

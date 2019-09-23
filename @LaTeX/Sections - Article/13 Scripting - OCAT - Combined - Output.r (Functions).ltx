@@ -1,0 +1,495 @@
+\section{Scripting: OCAT -- Combined -- Output.r (Functions and Statistics)}
+\subCustomFunction
+At last we are at the Output script, where all of the data processing is done, the output text and HTML files are generated, and the graphs are made.
+Because of everything it does, and all that work involves, I am splitting its contents across three sections.
+This first section will cover the code and custom functions concerned with getting the statistics, and a few other things.
+The second section will address the production of the text and HTML files, and the third and final section will be for the graphs.
+This first bit of code is for the graphs though, as I like collecting certain manually set things near the top of my scripts.
+
+\begin{styleR}
+yrates	=	c(120, 60, 30, 20, 15, 12, 10)
+yrates	=	sort(c(yrates,-yrates))
+ytimes	=	sort(1000/yrates)
+\end{styleR}
+
+It is possible to set the breaks and labels on the graphs and I decided that instead of using some regular pattern for the frame rate-related scales I wanted to make sure certain values were present.
+The \textbf{yrates} variable is what holds these, as originally most graphs had frame rates on the Y-axis.
+As you can see the rates I am interested in are 120, 60, 30, 20, 15, 12, and 10, and as these values will likely not need to change, there is no need to have them in Input script.
+
+The second line here does something that might seem odd, as I am combining \textbf{yrates} with its opposite.
+This is because I need negative values for the Y-scale of the Consecutive Difference graph and it makes sense to me to use these same values there.
+Creating the new vector is easy enough, by just opening a new vector with \textbf{c()} and placing the \textbf{yrates} vector inside, along with its opposite.
+Vectors will not be multi-level, so the elements are all placed into a single vector together.
+The order actually can matter in some circumstances with the graphs, but really it will prove most useful when you need to look at the values when testing something.
+
+The last bit of this code is to create the \textbf{ytimes} variable, which is just a conversion of \textbf{yrates} from frame rates to frame times.
+Frame rates really are only used in this script for display purposes, and not for the work involved, making the frame times values necessary.
+I also have these sorted because of an issue I encountered with something in the next block of code, but now I have a solution in both places
+
+\subsubsection{Labeling Functions}
+\begin{styleR}
+# labelRound	=	function(breaks)	sprintf("%.1f", breaks)
+labelRound	=	function(breaks)	round(breaks, 1)
+labelBreak	=	function(breaks)	paste0(rep(c("", "\n"), length.out = length(breaks)), sort(breaks))
+labelDisp	=	function(breaks)	round(breaks * 60/1000, 1)
+\end{styleR}
+
+Here we have four custom functions, though the first one is commented.
+Because of how simple these functions are, I just have them all on single lines, which means the curly brackets are not necessary.
+It is also not necessary here for the \textbf{return} function to be used as R will correctly return the results of the code I have provided.
+
+When we get to the graphs, we will see that the breaks can be controlled, which are the tick marks and identified values on an axis.
+In some cases you want the label for these values to be different, so you can also provide labels for these breaks, or a function that will be applied to the breaks to create the labels.
+That is what these functions are for, with \textbf{labelRound} rounding the breaks to a single digit after the decimal point, \textbf{labelBreak} adding line breaks on alternating values, and \textbf{labelDisp} for converting display time to refresh rate cycle count, assuming a 60 Hz refresh rate.
+This last function also rounds the output to a single digit past the decimal point.
+
+The way the \textbf{labelBreak} works is to repeat a list of two strings and paste it onto the front of the input.
+The two strings in the list are an empty string and then the new line symbol, \n, which are repeated with the \textbf{rep} function enough times to have the same length as the input.
+The \textbf{paste0} function then attaches this output onto the front of the input, the labels will alternate between lines.
+Typically this is for labels that will be strings of text, like GPU names, so rounding is neither necessary nor appropriate.
+
+A quirk to \textbf{labelBreak} is that the order of elements for its input does matter, which I encountered with a graph for something else.
+When the scales are drawn, the breaks will be properly ordered, but they are passed to the label function without any ordering, though the labels will be correctly paired.
+This can result in breaking the desired pattern of alternating line breaks, but the solution is as easy as having the input sorted.
+I also have the \textbf{ytimes} list sorted, but by having \textbf{sort} applied within \textbf{labelBreak} I know it will work, whatever the breaks are.
+No rounding is necessary because typically the breaks this is applied to will be strings, like GPU names.
+
+In case you are wondering about the function that is commented out, it will also round the breaks to one digit past the decimal point, but it will pad the result as well.
+This means a value of 1 will be shown as 1.0, and while a uniformity of format is desirable, I have come to prefer the \textbf{round} function.
+I keep it there as a comment though, so I can always remember how to do it, and to maybe use it in the future.
+
+\subsubsection{Custom Box Plot Function}
+\begin{styleR}
+BoxPerc	=	function (DATA)	{
+	out			=	quantile(DATA, c(0.001, 0.01, 0.5, 0.99, 0.999))
+	names(out)	=	c("ymin", "lower", "middle", "upper", "ymax")
+	return(out)
+}
+\end{styleR}
+
+Now we have a custom function for processing data.
+Actually the \textbf{BoxPerc} function is for the Means graph to change the structure of the box plots on it.
+Normally a box plot marks the quartiles with the box and the length of the whiskers, but I want the 0.1%, 1%, 99%, and 99.9% percentiles to be shown.
+Fortunately it is possible to provide a custom function to \textit{ggplot2} to create a custom box plot, and that is the purpose of this function.
+The \textbf{DATA} input has the \textbf{quantile} function run on it, which returns the values at the provided probabilities.
+The difference between quantiles and percentiles is just the percent unit, so, for example, instead of 1% we use 0.01 to get the value we want.
+
+The results of the \textbf{quantile} function is assigned to \textbf{out} and then the \textbf{names} function is used.
+If all you do is run \textbf{names} on an object, it will return what the names for the elements in the object are, but you can also assign new names to it, as I am here.
+The names are to identify the quantile values for the plot later, with \textbf{ymin} and \textbf{ymax} being the ends of the whiskers, \textbf{lower} and \textbf{upper} are the top and bottom of the box, and \textbf{middle} is where the middle line is drawn, which I am keeping as the median, like a normal box plot.
+
+With the names set for \textbf{out}, all that is left is to state what the function should return.
+
+\subsubsection{Arithmetic Mean and Median Function}
+\begin{styleR}
+meanMS	=	function(DATA)	{
+	out			=	c(mean(DATA), median(DATA))
+	names(out)	=	c("Mean", "Median")
+	return(out)
+}
+\end{styleR}
+
+Though the name is \textbf{meanMS}, this custom function provides both the arithmetic mean and the median, in milliseconds.
+The reason for this is because if it only returned the mean, I would not be able to set the name of the value as I wish, which seems to be a quirk of R's with its \textbf{aggregate} function that shows up later.
+In any case, the function has a \textbf{DATA} argument and it creates a vector holding the arithmetic mean and the median of that data.
+These values are stored in the \textbf{out} variable and then the names, "Mean" and "Median," are applied to the vector before it is returned by the function.
+The built-in \textbf{mean} function R has is for the arithmetic mean and it seems R lacks a built-in geometric mean function, which is why I wrote one, even if I do not intend to regularly use it.
+
+\subsubsection{Geometric Mean and Normalizing Functions}
+\begin{styleR}
+meanGEO	=	function(DATA)	{
+	out			=	exp(mean(log(DATA)))
+	names(out)	=	"ms"
+	return(out)
+}
+\end{styleR}
+
+The algorithm I am using to get the geometric mean is to take the arithmetic mean of the logarithm of the data, and then use the exponent function to undo the log.
+The name is set to be "ms," the unit for the performance data it is provided, but because R will not actually apply the name, it hardly matters.
+
+Since one of the advantages to using the geometric means is the equal weight of percentage changes between results, it makes sense to normalize the data to percentages for easy reading.
+To that end, I made a function to do that.
+
+\begin{styleR}
+normGEO	=	function(DATA)	{
+	out	=	DATA / max(DATA) * 100
+	names(out)	=	"Normalized (%)"
+	return(out)
+}
+\end{styleR}
+
+Though not limited to working on geometric means, this function is intended for that purpose.
+It divides the values it receives by the maximum of those values, which would be the longest frame time in the data.
+This means lower values are better, as that indicates shorter frame times and faster rendering.
+To make them a percentage, the value is multiplied by 100 and then the name is applied.
+It is possible to make this function fancier, so the value normalized by is not always the longest frame time, but as I do not intend to deploy the geometric mean often, I do not feel the need to make this function that much more complicated.
+
+\subsubsection{Percentiles Function}
+\begin{styleR}
+percMS	=	function(DATA, listPERC = c(0.1, 1, 99, 99.9))	{
+	if	(max(listPERC) > 1)	listPERC = listPERC/100
+	out			=	quantile(DATA, listPERC)
+	names(out)	=	paste0(listPERC * 100, "%")
+	return(out)
+}
+\end{styleR}
+
+This function is to provide the percentile values, in milliseconds, and is a bit more complicated than the last.
+First off it is using two arguments and the second, the list of the percentiles to be calculated, has default values provided.
+
+The \textbf{quantile} function that will actually be used by R will not accept these percentile values, needing its values to be between 0 and 1, so the first part of the function is an \textbf{if} statement that checks if the values are above one, and then dividing them by one hundred, to no longer be percentages.
+The \textbf{quantile} function is then used to find the quantiles for the provided probabilities, which are in \textbf{listPERC}.
+After this the percentages for these values are applied as names to the results, by multiplying the list of probabilities by one hundred and pasting the percent symbol on the end.
+
+By having an argument for \textbf{listPERC} it is possible for me to change the probabilities this function will test, but I doubt I will feel the need to do this in the future.
+If I do ever wish such a change, I would most likely just change the default list.
+
+\subsubsection{ECFD Function}
+\begin{styleR}
+ecdfFPS	=	function(DATA, listFPS = NULL, r = 2)	{
+	default		=	c(60, 50, 30, 20, 15)
+	listFPS		=	unique(sort(c(default, listFPS), decreasing = TRUE))
+	out			=	100 * (1 - ecdf(DATA)(1000 / listFPS))
+	names(out)	=	paste0(listFPS, " FPS")
+
+	return(round(out, r))
+}
+\end{styleR}
+
+The empirical cumulative distribution function, \textbf{ecdf}, is the reverse of the \textbf{quantile} function, so instead of providing the value that corresponds to the probability you ask for, it returns the probability for a given value.
+This is very helpful for finding how often a recording is below certain performance targets, and because the targets of interest can change, I got a bit fancy with this function.
+
+The arguments for this function are \textbf{DATA}, like we have been seeing, \textbf{listFPS}, and an argument named just \textbf{r}.
+That last argument is for controlling the rounding of the output, and by default I use two places, but I can change this if I want.
+
+The \textbf{listFPS} argument is set to NULL, which may seem odd as it would seem to be the list of frame rates to have their corresponding probabilities found for, but there is a reason for this.
+The default list of frame rates I want checked is provided within the function on the first line, and at the second line the \textbf{listFPS} variable can be changed to have additional values added to it.
+These added frame rates to test, and potentially more, will then be added to the compact table I produce, as my adding them for this function implies they are of interest.
+
+To combine the lists on the second line, the first thing I do is actually combine them by setting \textbf{default} and \textbf{listFPS} to be the elements of a new vector.
+This vector is then has the \textbf{sort} function applied to it, with the \textbf{decreasing} argument set to true, placing the greatest values at the front of the list.
+In case the list I provide has any overlap with the default, the \textbf{unique} function is used to clean out any duplicates.
+Actually it can be beneficial to pass a value I know overlaps, because this will cause it to be included in the compact table but will not disrupt any other outputs.
+
+The third line is where we finally get to seeing the \textbf{ecdf} function used, and it works in a different method than other functions.
+The reason is that it is not actually producing values as an output, but building the empirical cumulative distribution function for the data it is provided.
+This means that to get the output for specific values, you need to supply them like arguments for a function.
+This is why they are in parentheses next to the \textbf{ecdf} function.
+
+The purpose of multiplying by 100 and subtracting the output of the \textbf{ecdf} function from 1 is to have outputs as the percentage of time spent below a certain value.
+The function would normally provide the time spent above that value, so subtracting that from one gets the time spent below, and the multiplication coverts the result from a decimal representation to a percentage.
+(The data itself is in time, so a lower value means better performance, and ECDF works from the left, lower values and goes right, to greater values.)
+
+The names are now applied to the list of results and that list, when it is returned by the \textbf{ecdfFPS} function, will be rounded to the number of places set.
+
+\subsubsection{Miscellaneous Statistics Function}
+\begin{styleR}
+statMS	=	function(DATA, r = 2)	{
+	out			=	c(mean(DATA), sd(DATA), sd(DATA)/mean(DATA) * 100, skewness(DATA), kurtosis(DATA))
+	names(out)	=	c("Mean (ms)", "StDev (ms)", "CoV (%)", "Skew", "Kurtosis")
+	return(round(out, r))
+}
+\end{styleR}
+
+This function is for providing some miscellaneous statistics from the data that chances are I will not use, but may still prove nice to examine in the future.
+This \textbf{statMS} function works pretty simply as it takes a \textbf{DATA} argument, and like the previous function has an \textbf{r} argument that will control rounding the output.
+
+Once inside the function, the \textbf{out} variable is assigned a vector where the elements are a collection of statistics.
+The first of these is the arithmetic mean, followed by the standard deviation using the \textbf{sd} function.
+After this is the coefficient of variability, which is the standard deviation divided by the mean, and I have it here as a percentage.
+The final two statistics are the skew and kurtosis of the data, calculated by the \textbf{skewness} and \textbf{kurtosis} functions from the \textit{moments} library.
+
+After creating this vector of statistics for \textbf{out}, the names for \textbf{out} are applied to make it easy to remember what each value is.
+With that done, all that is left is to apply the \textbf{round} function and have that result returned by the function.
+
+\subsubsection{QQ Line Slope Function}
+\begin{styleR}
+qqslope	=	function (DATA, r = 2, quan = QUAN)	{
+	y		=	quantile(DATA, quan)
+	x		=	qnorm(quan)
+	slope	=	diff(y)/diff(x)
+	return(round(slope, r))
+}
+\end{styleR}
+
+As was seen in an earlier section, I have made changes to the QQ graphs to include a line between two quantiles, helping to see the behavior of the data on the plots, and a label with the slope printed for easy comparison.
+This function is what calculates the slope for use in that label.
+Its arguments are \textbf{DATA}, the rounding place, and the two quantiles to use, which are stored in the \textbf{QUAN} variable set in the Input script.
+
+Within the function, the Y and X values are determined for the two points the QQ line will connect.
+The Y values are found by using the \textbf{quantile} function on \textbf{DATA} with the provided probabilities.
+The X values are determined by having the \textbf{qnorm} function return the Z-scores for the two provided probabilities.
+Finally the slope of the line is calculated by dividing the difference between the Y values by the difference between the X values.
+The output is then this slope value rounded to two places after the decimal point.
+
+\subsubsection{Statistics for Graphs Function}
+\begin{styleR}
+statGRAPH	=	function(DATA, ...)	{
+	out			=	c(mean(DATA), median(DATA), median(diff(DATA)), qqslope(DATA, ...), quantile(DATA, c(0.1, 1, 99, 99.9)/100))
+	names(out)	=	c("Mean", "Median", "DiffMedian", "Slope", "0.1", "1", "99", "99.9")
+	return(out)
+}
+\end{styleR}
+
+This \textbf{statGRAPH} function is for calculating certain statistics that will be made use of in graphs, and not for any text output.
+Its arguments are a bit different than we have been seeing, as the "..." symbol is present.
+This tells the function to also accept arbitrary arguments, which is helpful when there are functions to be called within it.
+This lower function is the \textbf{qqslope} function I just described, which is why we see the ellipsis as an argument there.
+If I want to change the rounding or the \textbf{QUAN} variable, I can still supply the values to \textbf{statGRAPH}, with the appropriate argument names, and they will be passed on to the \textbf{qqslope} function.
+
+Besides getting the slope for the QQ line, this function also provides the arithmetic mean, the median, the median of the consecutive differences, and the quantiles corresponding to 0.1\%, 1\%, 99\%, and 99.9\%.
+These percentiles are written into the function and cannot be altered by an argument because they are for use with a graph, and this graph expects these values, not others.
+
+Lastly the names are provided and then the output is returned.
+These names are very important because they are what the graphs will use to identify the data they are to use.
+
+This is the last custom function I have for actually calculating statistics from the data.
+What follows are functions for completing various tasks, with this next one addressing a quirk of the \textbf{aggregate} function that will be used later.
+
+\subsubsection{Separating Columns Function}
+\begin{styleR}
+sepCOL	=	function(tab)	{
+	out	=	as.data.frame(as.matrix(tab))
+	for (i in grep("x", names(out)))	{
+		out[, i]	=	as.numeric(as.character(out[, i]))
+	}
+	colnames(out)	=	gsub("x.", "", colnames(out))
+	return(out)
+}
+\end{styleR}
+
+The \textbf{aggregate} function will group data together according to what you tell it to and then apply a function to these groups, providing a data frame as an output.
+While this is exceptionally useful for what I do, it has a quirk with functions that provide vectors as outputs, and that is these vectors are combined together into a matrix that then exist as a single column in the data frame.
+This means the data frame is more than two dimensional and that makes selecting specific columns more difficult, so I made this function to solve the issue.
+It separates the columns from each other and places them in the data frame, which is why I named it \textbf{sepCOL}
+
+The first thing done within the function is to take the input, \textbf{tab}, and make it into a matrix using \textbf{as.matrix}, which will actually do the thing I want on its own, and then make this into a data frame with \textbf{as.data.frame}.
+Unfortunately there is more to do than just place the data into separate columns.
+
+To address the multi-level design to the original data frame, R labels the column holding the matrix with "x" and the names for the columns of the matrix get that as a prefix.
+The first line does separate the columns, but the names still have that prefix.
+Also the data type for the columns is factor instead of numeric, which I need them to be later.
+
+The first issue addressed is converting the data to be numerics, and this is achieved with the \textbf{for} loop that goes through just the columns with "x" in their names.
+The \textbf{grep} function will search a vector of strings for a pattern and returns the index of those elements containing the pattern.
+To convert factors to numerics, you first need to make them strings with \textbf{as.character}, another quirk to R as just applying \textbf{as.numeric} will return the factor index.
+The conversion to a string first will look up what the appropriate factor level is, and then that can be converted to a numeric.
+
+After this, the \textbf{gsub} function will remove the "x."
+pattern from the column names and save them back to the output.
+All that is left is to return the output with the desired formatting.
+
+\subsubsection{Adding FPS Values Function}
+\begin{styleR}
+addFPS	=	function(DATA, r = 2)	{
+	lab		=	DATA[1:grep("Location", colnames(DATA))]
+	val		=	DATA[-(1:grep("Location", colnames(DATA)))]
+
+	tFPS	=	cbind(lab, "FPS", round(1000/val, r))
+	names(tFPS)[ncol(lab) + 1]	=	""
+	tMS		=	cbind(lab, "ms", round(val, r))
+	names(tMS)[ncol(lab) + 1]	=	""
+
+	out	=	rbind(tFPS, tMS)
+	return(out)
+}
+\end{styleR}
+
+Almost all of the functions that concerned statistical calculations earlier produce outputs in milliseconds, which is fine but I do want to also present values in FPS, and that is what this function is for.
+This function also applies the rounding to the millisecond outputs that is not present in most of the earlier functions.
+It takes a data frame input as \textbf{DATA} and an argument for rounding, and then creates two versions of \textbf{DATA}, one for each unit, before binding them together for the new output.
+
+The first two lines within the function split the input into two tables, with one holding the labels and the other holding the actual data.
+I am taking advantage of the fact that the output of \textbf{aggregate} has the names concerning the groups it uses on the left, and as Location is always the rightmost of these, I can look for that to separate these labels and the data.
+Using \textbf{grep} to find the Location column and the shorthand for a sequence, only the columns containing labels are assigned to \textbf{lab}.
+To grab the other columns, I take advantage of a feature of the system for grabbing columns by their indices.
+You can subtract the index to exclude that column, so I subtract the sequence of indices for the labelling columns, leaving just those with the data in them and assign them to the \textbf{val}, for values, variable.
+
+The next bit of code is for creating the \textbf{tFPS} and \textbf{tMS} frames.
+The \textbf{cbind} function is used for both to combine the \textbf{lab} frame and then a new column to identify the unit.
+By supplying just a single value instead of a list, \textbf{cbind} understands to repeat it for every value in that column.
+The last object given to \textbf{cbind} is either the \textbf{val} frame with the data rounded, or that same data but converted to FPS and then rounded.
+The names for the columns are preserved, so those do not need to be altered, but I do set the new unit column to have a blank name, as I feel it does not need a name.
+Also the \textbf{rbind} function wants to combine rows and have the columns match up, so ensuring the names are the same before using it is important.
+
+\subsubsection{Compact Combined Table Function}
+\begin{styleR}
+compTAB	=	function(MEAN, PERC, ECDF)	{
+	if	(is.null(listFPS))	{
+		listECDF	=	grep("60 FPS", colnames(ECDF))
+	}	else	{
+		begECDF		=	grep(paste0(max(c(listFPS, 60)), " FPS"), colnames(ECDF))
+		endECDF		=	grep(paste0(min(c(listFPS, 60)), " FPS"), colnames(ECDF))
+
+		listECDF	=	begECDF:endECDF
+	}
+
+	out	=	cbind(
+		addFPS(MEAN),
+		addFPS(PERC)[-(1:grep("0.1%", colnames(addFPS(PERC))) - 1)],
+		ECDF[listECDF]
+	)
+	
+	colnames(out)[grep("Var.", colnames(out))]	=	""
+	
+	return(out)
+}
+\end{styleR}
+
+This is the function responsible for creating the compact tables I share in articles, which is why I named it \textbf{compTAB}.
+It takes as arguments \textbf{MEAN}, \textbf{PERC}, and \textbf{ECDF} which will be the outputs from using \textbf{aggregate} and the custom functions created earlier.
+
+The beginning of the function is an \textbf{if...else} statement that checks if the \textbf{listFPS} value set in the Input script is not NULL.
+If it is, then \textbf{grep} is used to find the column named "60 FPS" and stores its index in the \textbf{listECDF} variable.
+If \textbf{listFPS} is not NULL though, then things get a little more complicated as we must find the beginning and end of \textbf{listECDF}, which identifies the columns from the ECDF data frame to be included in the compact table.
+
+To find the beginning of the list, we need to first find the maximum value of \textbf{listFPS} and 60.
+Similarly the end of the list will be the minimum value between \textbf{listFPS} and 60.
+I always want to include the 60 FPS column, so it is necessary to include it.
+With the ends found, the string " FPS" is pasted onto it so \textbf{grep} can find the pattern in the column names of \textbf{ECDF}.
+It actually does not need that " FPS" string attached to it, but being more specific protects against false positives.
+
+With the \textbf{begECDF} and \textbf{endECDF} values found, \textbf{listECDF} is created as a sequence from one value to the other.
+It is important to have \textbf{begECDF} first because it will generate the list reversed, and order does matter when calling columns by their index.
+It may be worth noting that this solution will include any FPS values in the default list that are also between the minimum and maximum.
+For example, 50 is on that list so if I have \textbf{listFPS} set to be 45, the columns for both 50 and 45 will be selected.
+
+With \textbf{listECDF} created we can get to actually pulling together the compact table using \textbf{cbind}.
+As I want the mean and median first, \textbf{MEAN} is the first frame passed to \textbf{cbind}.
+The frame first has the \textbf{addFPS} function run on it, so we get both FPS and milliseconds in the table.
+The next frame added is the one with the percentile information, \textbf{PERC}, which is also run through \textbf{addFPS}.
+This frame includes the same labels as \textbf{MEAN} though, so it is necessary to remove them first.
+This is accomplished by using \textbf{grep} to find the column named 0.1\%, as this is the first column with data in it.
+A sequence is made then from 1 to one less than that column's index, and then the columns with indices in this sequence are excluded.
+It is important to subtract one from the 0.1\% column's index, as otherwise this column will be removed as well.
+Last the \textbf{ECDF} frame is added and the columns we want to include in it are identified by \textbf{listECDF}.
+The \textbf{addFPS} function is not used on \textbf{ECDF}, as it would not be appropriate to use here, but as the length between this and the other two parts do not match, the \textbf{ECDF} values are repeated.
+This results in the same values being shared for both the FRPS and millisecond sections of the output frame.
+
+Before the output can be returned, it is necessary to use \textbf{grep} to identify any column names with the "Var."
+pattern, so the name can be made an empty string.
+R does not seem to like having column names that are empty strings, so ones of the steps here places that prefix and a number as the name for the column identifying units.
+I do not want this, so it gets removed.
+
+\subsubsection{Custom Graph Saving Function}
+\begin{styleR}
+customSave	=	function(type="", device=ggdevice, plot = last_plot(), width=gWIDTH, height=gHEIGH, dpi=DPI)	{
+	if	(device	==	"png"	|	device == "both")	{
+		ggsave(filename=paste0(gameGAQF, " - ", type, ".png"), plot = plot, device="png", width=width, height=height, dpi=dpi)
+	}
+	if	(device	==	"pdf"	|	device == "both")	{
+		ggsave(filename=paste0(gameGAQF, " - ", type, ".pdf"), plot = plot, device="pdf", width=width, height=height)
+	}
+}
+\end{styleR}
+
+This function exists to simplify the saving of the graphs.
+The \textit{ggplot2} library has the \textbf{ggsave} function for saving graphs, and it can even save them as different file types, but it also has a lot of arguments.
+Since I want these arguments to be the same across all of the graphs and the names to be similar, I made this to effectively set my own defaults, though I can still change them by providing the right arguments.
+The naming system is all but automatic, only needing the type of the graph to be provided, as the game name, GPU, API, and quality are applied by the function for me.
+
+The arguments for my \textbf{customSave} function are \textbf{type}, \textbf{device}, \textbf{plot}, \textbf{width}, \textbf{height}, and \textbf{dpi}.
+These arguments all have default values and most of them are variables set in the Input script.
+This allows me to control those arguments, \textbf{device}, \textbf{width}, \textbf{height}, and \textbf{dpi}, all from the other script without needing to touch this one.
+The \textbf{type} argument is used in setting the name and as this is always given, it does not need a default value.
+The \textbf{plot} argument is actually a very important one as a means of saving some time, and its default is \textbf{last\_plot()}, which is also its default for the original \textbf{ggsave} function.
+
+When set to be \textbf{last\_plot()}, \textbf{ggsave} will save whatever the last plot drawn by \textit{ggplot2} to the appropriate file, but it is also possible to directly provide the plot.
+This is helpful as it allows the original drawing of the plot to be skipped, saving a decent amount of time.
+This only really matters when running the code in the GUI, as the console will not render the graph anyway.
+By default I do want the most recent plot to be used, so I can use \textbf{customSave} for more than just this script, but I do have it configured to have the desired plot always identified.
+
+The \textbf{device} argument is also worth discussing as it can be one of three values.
+The first two it can be are "png" and "pdf," which are normal values for it to be in \textbf{ggsave}, but I have added "both."
+Though I likely would not use it for these graphs, "both" will tell \textbf{customSave} to create both a PNG and PDF version of the graph.
+This is why I am using the or symbol in the \textbf{if} statements.
+
+In case you are wondering, the reason I do not want to make PDFs of these graphs is that they tend to be near the size of the original data.
+For some articles that is over 100 MB (311 MB for this article) while the PNGs will not even be 1 MB.
+
+Within the \textbf{ggsave} function, we can see I am using the \textbf{paste0} function to create the desired string for the file name.
+This uses the \textbf{gameGAQF} variable made in the Input script to be a file name safe string identifying the game, GPU, API, and quality.
+
+That is the last custom function for this section, but there is still a bit more to cover.
+
+\subsubsection{Aggregate Function Configuration}
+\begin{styleR}
+if	(testAPI)	{
+	GROUPS	=	list(GPU = results$GPU, API = results$API, Location = results$Location)
+}	else	{
+	GROUPS	=	list(GPU = results$GPU, Location = results$Location)
+}
+\end{styleR}
+
+Here we have an \textbf{if...else} statement to check if there are multiple APIs to be compared.
+Either way, an actual list, not just a vector but a list is created and assigned to \textbf{GROUPS}.
+This variable is for telling the \textbf{aggregate} functions, the next block of code, how to group together the data for executing functions on.
+While it would accept a vector just as well, by using a list we can tell it the names we want for the columns identifying the groups.
+
+I always want to group the data by GPU and location, so if I wanted to use a vector instead of a list, I would just place \textbf{results\$GPU} and \textbf{results\$Location} in a vector.
+By using a list and setting these equal to "GPU" and "Location," respectively, \textbf{aggregate} will use "GPU" and "Location" as the column names.
+Having it group by API is as easy as adding another element to the list.
+Order does matter for this, which is why API is placed between GPU and Location, as I want GPU first and Location last for the order in the output frames.
+
+\begin{styleR}
+if	(textFRAM	|	graphFRAM)	{
+	dataMEAN	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, meanMS))
+	dataPERC	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, percMS))
+	dataECDF	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, ecdfFPS, listFPS))
+	dataSTAT	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statMS))
+	graphSTATS	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statGRAPH))
+	graphSTATS$GPU	=	factor(graphSTATS$GPU, levels = listGPU, ordered = TRUE)
+}
+if	(textDISP	|	graphDISP)	{
+	dispMEAN	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, meanMS))
+	dispPERC	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, percMS))
+	dispECDF	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, ecdfFPS, listFPS))
+	dispSTAT	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statMS))
+	dispgSTATS	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statGRAPH))
+	dispgSTATS$GPU	=	factor(dispgSTATS$GPU, levels = listGPU, ordered = TRUE)
+}
+if	(textREND	|	graphREND)	{
+	rendMEAN	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, meanMS))
+	rendPERC	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, percMS))
+	rendECDF	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, ecdfFPS, listFPS))
+	rendSTAT	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statMS))
+	rendgSTATS	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statGRAPH))
+	rendgSTATS$GPU	=	factor(rendgSTATS$GPU, levels = listGPU, ordered = TRUE)
+}
+if	(textDRIV	|	graphDRIV)	{
+	drivMEAN	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, meanMS))
+	drivPERC	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, percMS))
+	drivECDF	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, ecdfFPS, listFPS))
+	drivSTAT	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statMS))
+	drivgSTATS	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statGRAPH))
+	drivgSTATS$GPU	=	factor(rendgSTATS$GPU, levels = listGPU, ordered = TRUE)
+}
+\end{styleR}
+
+Checking to see if the text or graph outputs for each data type, the \textbf{aggregate} functions are run, passed to \textbf{sepCOL}, and the output stored in an appropriately named variable.
+The data frame produced using the \textbf{statGRAPH} function, regardless of data type, has its GPU column altered a little to apply the desired order to it.
+This is necessary for the faceting of graphs to be correct later.
+
+Because the code for the different data types is similar, as is the use of the \textbf{aggregate} function, I am just going to cover that for creating the value for \textbf{dataECDF}.
+
+\begin{styleR}
+dataECDF	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, ecdfFPS, listFPS))
+\end{styleR}
+
+The \textbf{aggregate} function is first given the object it is to group and run some function on.
+Even though what I am passing it is a single column from the \textbf{results} data frame, it knows to consider the entire frame for grouping, but only applies the function to the column specified.
+
+The next argument is the \textbf{GROUPS} variable set a little bit ago.
+Using the information in the columns it specifies, it determines every combination of these grouping elements.
+The combinations are identified in the output data frame, as I have mentioned before.
+
+The next argument is also the last argument for each \textbf{aggregate} function but the \textbf{dataECDF} and similar ones.
+It is the name of the function to be applied on the grouped data.
+It works just as well with the custom functions I made as it does built-in functions, and indeed I designed some of the functions to work with \textbf{aggregate} by not needing any special arguments of their own.
+The \textbf{ecdfFPS} function is the lone exception, as it has the \textbf{listFPS} argument, but as you can see, arguments for the function to be run are the next argument for \textbf{aggregate}.
+
+The \textbf{aggregate} function is a very powerful one and discovering it definitely came to shape these scripts.
+There is one more trick I know for it, and that is you can provide a name to the column containing the function's output.
+All it takes is to use a list, like we do for \textbf{GROUPS} but for the object the function is to be run on.
+You can also use a list (not vector) to have it run the function on more than one column, but for my purposes, that would get a bit more complicated than I prefer.
+(That might be saying something too, considering how complicated some of this stuff has been, and is about to become.)

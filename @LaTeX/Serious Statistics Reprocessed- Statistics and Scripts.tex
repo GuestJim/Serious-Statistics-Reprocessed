@@ -1,0 +1,108 @@
+% !TEX program = XeLaTeX
+% !TEX encoding = UTF-8 Unicode
+
+\documentclass[11pt, letterpaper]{article}
+
+\title{Serious Statistics Reprocessed: Statistics and Scripts}
+\author{Jim Pitchford}
+
+\input{"Preamble.tex"}
+
+\usepackage{multicol}
+
+% \usepackage[backend=biber]{biblatex}
+% \addbibresource{Sources.bib}
+
+\begin{document}
+\graphicspath{{Media/}}
+
+\pagenumbering{Roman}
+
+\pdfbookmark{\contentsname}{toc}	%adds a bookmark of the TOC to the file but not the list itself
+\tableofcontents
+%	need to check on how to have \part skipped, so \section is the top level
+
+
+\cleardoublepage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\Part{Introduction}
+\input{"Sections - Article/01 Introduction.ltx"}
+
+\cleardoublepage
+\input{"Sections - Article/02 Units and Measurements.ltx"}
+
+\cleardoublepage
+\input{"Sections - Article/03 Making Measurements.ltx"}
+
+\cleardoublepage
+\Part{Statistics}
+\input{"Sections - Article/04 Characterizing Data - Averages.ltx"}
+
+\cleardoublepage
+\input{"Sections - Article/05 Characterizing Data - Percentiles.ltx"}
+
+\cleardoublepage
+\input{"Sections - Article/06 Characterizing Data - Distribution Properties.ltx"}
+
+\cleardoublepage
+\Part{Graphs}
+\input{"Sections - Article/07 Graphs - Representing Data.ltx"}
+
+\cleardoublepage
+\Part{API Test Results}
+\input{"Sections - Article/08 API Test Results.ltx"}
+
+\cleardoublepage
+\Part{Scripting}
+\input{"Sections - Article/09 Scripting - Tools and Situations.ltx"}
+
+\cleardoublepage
+\input{"Sections - Article/09.1 Scripting - Common Concepts.ltx"}
+
+\cleardoublepage
+\input{"Sections - Article/10 Scripting - OCAT - Combined - PA.r.ltx"}
+\listingfile{R}{Scripts}{OCAT - Combined - PA.r}
+
+\cleardoublepage
+\input{"Sections - Article/11 Scripting - OCAT - Modular - PA.py.ltx"}
+\listingfile{Python}{Scripts}{OCAT - Modular - PA.py}
+
+\cleardoublepage
+\input{"Sections - Article/12 Scripting - OCAT - Combined - Input.r.ltx"}
+\listingfile{R}{Scripts}{OCAT - Combined - Input.r}
+
+\cleardoublepage
+\input{"Sections - Article/13 Scripting - OCAT - Combined - Output.r (Functions).ltx"}
+\listingfrag{R}{Scripts}{OCAT - Combined - Output.r}{1}{170}
+
+\input{"Sections - Article/14 Scripting - OCAT - Combined - Output.r (Text).ltx"}
+\listingfrag{R}{Scripts}{OCAT - Combined - Output.r}{175}{301}
+
+\input{"Sections - Article/15 Scripting - OCAT - Combined - Output.r (Graphs).ltx"}
+\listingfrag{R}{Scripts}{OCAT - Combined - Output.r}{304}{683}
+\listingfile{R}{Scripts}{OCAT - Combined - Output.r}
+
+\cleardoublepage
+\input{"Sections - Article/16 Scripting - Graph Renaming.py.ltx"}
+\listingfile{R}{Scripts}{Graph Renaming.py}
+
+\cleardoublepage
+\Part{Wrap Up}
+\input{"Sections - Article/17 Wrap Up.ltx"}
+
+\nocite{*}
+% \phantomsection
+% \addcontentsline{toc}{section}{References}
+% \printbibliography
+
+% \vspace{\fill}
+	% \begin{center}
+	% \vfill
+		% {\changeurlcolor{black}\qrcode[height=2cm, level=Quality]{https://github.com/GuestJim/Serious-Statistics-The-Aliasing-Adventure/releases}}
+		
+		% \vspace{0.25cm}
+		% \href{https://github.com/GuestJim/Serious-Statistics-The-Aliasing-Adventure/releases}{Presentation and Article}
+	% \end{center}
+\end{document}

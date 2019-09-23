@@ -1,0 +1,52 @@
+\section{Statistics: Characterizing Data (Distribution Properties)}
+This is going to be a somewhat unusual section compared to the others, because while I have added the code to the scripts to generate the values I will describe here, it is not currently my intent to include them in future analyses.
+Each of the statistics I am about to cover serve to describe the shape of the distribution, such as how wide it is, its symmetry or lack thereof, and how heavy the tails are.
+The first of these I want to cover is the Standard Deviation.
+
+\subsection{Standard Deviation}
+
+The standard deviation is calculated by finding the sum of the square of the difference between each value and the mean, multiplied by one divided by the count of values less one, and then the square root of all of that.
+If you do not take the square root, then you have the Variance, so it does represent a similar concept, but the units of the standard deviation match that of the data, while variance does not.
+(For this data, that means the variance is milliseconds-squared.)
+
+Either value though is meant to describe how much variation there is from the central tendency of the data.
+I already explained that there is more than one statistic that can describe the central tendency, or average, but as the formula includes the mean that should be the central value it refers to.
+
+Unfortunately I do not think we can apply the assumption that the performance data is a Normal distribution, but if we do anyway, then we could also apply the 68-95-99.7 rule.
+This rule is an approximation of how much of the data is contained within a certain number of standard deviations from the mean.
+Within a radius of one standard deviation from the mean is approximately 68\% of the data.
+Within a radius of two standard deviations there is 95\% of the data, and then within three standard deviations is 99.7\% of the data.
+Even without assuming the Normal distribution can be applied to the data, the standard deviation is still a useful value for performance data as a measure of variation in the data.
+
+
+Another value that could be used here is the Coefficient of Variation, which is actually just the standard deviation divided by the average of the data.
+This results in a unitless ratio or percentage that may be easier to interpret in some circumstances as it does not require checking the mean when making comparisons.
+(For example, I have some data where the standard deviation for two runs is 0.44 ms and 0.36 ms, but because of what the means are for these runs, the coefficient of variation are 11.42\% and 11.47\% respectively.
+Ignoring the low significance of the values themselves, we see the greater deviation has the lesser coefficient.)
+
+\subsection{Skewness}
+
+This and the next statistic I will cover are both interesting values, but I doubt I will include them as the specific values they provide may be meaningless.
+The relative values (which is greater and by roughly how much) is useful, but we can also see the same in the frequency graphs I use.
+This first value is Skewness, and just as the name suggests, it is a measure of how skewed or bias the distribution is.
+
+I previously mentioned that it is very fair to expect performance data to have a right skew, or a bias toward longer frame rates because while computer hardware and software will have a maximum performance limit, there really is no minimum.
+This means that if I were to provide the skewness score, we would typically expect it to be positive, indicating a right skew, leaving the question to be how positive or large a value it is.
+Amusingly though, I am looking at the skewness for the data I collected for this article, which I will get to later, and some of the skewness values are very near zero, indicating the distributions are symmetrical.
+In fact a couple of them are even negative, but just barely (-0.5 is not significantly negative).
+
+As it likely will not come up too much for many, I am skipping what the formula is for calculating skewness.
+
+\subsection{Kurtosis}
+
+With a name like Kurtosis, it may not be too easy to guess what it means, but it is a score for the heaviness of a distribution's tails.
+The Normal distribution has a kurtosis of 3, so in some cases it is the excess kurtosis people use, where they subtract three from the value so it is compared to the Normal.
+
+Anyway, by heaviness of the tails, that is how much data is contained in the tails, so with larger values, the more data is in the tails.
+A smaller values means less data is in the tails.
+Another way to think of this is how many outliers there are, so smaller values means fewer outliers and greater values means more outliers.
+It may be worth remembering that as there are typically no or very few short-frame time outliers, this is mostly going to be concerned with long-frame time outliers.
+
+For both Skewness and Kurtosis, having looked at the values I have and the graphs, it does not appear they are very meaningful for the Frequency plots, but are for the QQ plots.
+Kurtosis especially is useful here as it can indicate if there is a serious turn at the end, resulting from outliers.
+Still, as this information is already presented by these graphs, I do not think it will be necessary to provide the values in the future, but I will continue to have them calculated for me so I can review them if I so desire.

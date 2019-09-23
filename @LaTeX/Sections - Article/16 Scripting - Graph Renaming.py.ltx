@@ -1,0 +1,173 @@
+\section{Scripting -- Graph Renaming.py}
+This last script does not contribute to the processing of the data or anything, but I felt like sharing it anyway, because it is relevant to the work and might be interesting to someone.
+A requirement for putting up an article on Overclockers Club is that the images have file names consisting only of numbers.
+When you can have a large number of similar graphs, just using sequential numbers is not exactly ideal.
+My solution was to craft another Python script that would be able to read the file names of the graphs and encode it as a number based on the names and the contents of some text files.
+
+\begin{stylePy}
+import sys, os, shutil
+
+droppedPath	=	sys.argv[1].rsplit("\\", 1)[0] + "\\"
+
+droppedGPU	=	droppedPath.split("OCAT Data")[1].split("\\")[1]
+droppedOCAT	=	droppedPath.split("OCAT Data")[0] + "OCAT Data\\"
+
+os.chdir(droppedPath)
+
+Z	=	1
+\end{stylePy}
+
+Like the other Python script, I am using the \textit{sys}, \textit{os} and \textit{shutil} modules, so those need to be imported.
+Using \textbf{sys.argv} I get the path to the file dropped on it, so all I need is to drop a file from the folder with the graphs in it for this to work.
+The script also needs to know the location of the OCAT Data folder and the name of the GPU folder, if the graphs are under it, and we can get this information from that \textbf{droppedPath} variable.
+
+Always the first folders under OCAT Data are the GPU folders, so if I apply \textbf{split} on \textbf{droppedPath}, with it splitting at "OCAT Data," then the second element will be the portion of the path that has the GPU name at the beginning.
+Splitting again by "\DBS" and selecting the second element will get the GPU name.
+(The first element is the nothing as there is nothing before "\DBS.")
+The path to the OCAT data folder is that first element when splitting \textbf{droppedPath} at "OCAT Data," making it fairly easy to get, but because \textbf{split} removes the pattern, we need to add it back.
+Easy enough to do and we get the two variables we need.
+
+If the file I drop onto this script is in the OCAT Data folder, then \textbf{droppedGPU} will be an empty string, which is not a problem.
+
+After setting these variables, the working directory is changed using \textbf{os.chdir} to whatever the path to the file dropped on the script is.
+Another variable needs to be set too, and it could be earlier, but I left it here.
+When encoding text to numbers, it may be helpful to pad the numbers with zeroes, so the \textbf{Z} variable is to control how many digits to pad to.
+
+\begin{stylePy}
+if	"Locations.txt"	in	os.listdir(droppedOCAT):
+	LOCs	=	open(droppedOCAT + "Locations.txt", 'r').readlines()
+	LOCs	=	[line.rstrip('\n') for line in LOCs]
+
+if	"APIs.txt"		in	os.listdir(droppedOCAT):
+	APIs	=	open(droppedOCAT + "APIs.txt", 'r').readlines()
+	APIs	=	[line.rstrip('\n') for line in APIs]
+	APIs	=	[API + " -" for API in APIs]
+else:
+	APIs	=	[""]
+
+if	"Qualities.txt"	in	os.listdir(droppedOCAT):
+	QUAs	=	open(droppedOCAT + "Qualities.txt", 'r').readlines()
+	QUAs	=	[line.rstrip('\n') for line in QUAs]
+else:
+	QUAs =	[\
+		"Minimum Acceptable",\
+		"High",\
+		"Max"]
+\end{stylePy}
+
+These blocks of code will check for and then read the appropriate text files for the lists of locations, APIs, and qualities.
+After reading the lists in, the new line symbols need to be removed.
+I do not have a check for if there is no Locations.txt file, such as to use generic "Recording \#," partly because I have not thought of how to have this file count the number of CSVs to determine the number of locations.
+This is a little dangerous, but I am not too concerned because I either will always have such a file, and if I do not, I could always make one with the generic labels I use for the graphs.
+
+It is much more likely for an APIs.txt file to not be present, and when that is the case, the list is just an empty string.
+I also need to change the list of APIs a little, because sometimes there is overlap between names.
+This article is an example of that, as "DirectX 11" would catch both files with that in the name and "DirectX 11 - Anti-Lag."
+My solution involves two things, with the first visible here.
+I add a hyphen to the end of the elements in \textbf{APIs}, as that is normally the end of the API name in the file name.
+That is not enough here though, as I am using a hyphen in the name, but the other solution catches it, and that is to work through the list of the API names backwards.
+Once found the search stops, so the shorter name is never found to be in the file name.
+
+If there is no Qualities.txt file, then I already have a default list to use that includes the three most likely quality configurations I will run into.
+I know I will always have High data, so that needs to be on the list.
+With the GTX 770 there is a good chance I will have some performance data for the Minimum Acceptable quality configuration, and then the RTX 2080 is likely to go to Max, since I do my testing at 1920x1080.
+
+The other lists that will need to be checked do not need to be read from any files though, as they are very unlikely to change.
+
+\begin{stylePy}
+GPUs	=	[\
+'RX 580',\
+'RX Vega 64',\
+'GTX 770',\
+'GTX 980',\
+'GTX 1070',\
+'GTX 1080',\
+'RTX 2060',\
+'RTX 2080']
+
+DATAs	=	[\
+'Frame',\
+'Display',\
+'Render'\,
+'Driver,]
+
+TYPEs	=	[\
+'Means',\
+'Course',\
+'Freq',\
+'QQ',\
+'Diff']
+\end{stylePy}
+
+If the GPU list ever changes I can easily edit what I have here.
+I can also add to different data types if necessary.
+The \textbf{TYPEs} list covers the types of the graphs I make.
+I use to have another graph, a frequency graph for frame rate instead of frame time, and this required a little work around, but as I have since dropped the graph, I have dropped the work around.
+
+\begin{stylePy}
+def numFind	(filename, list):
+	if list == [""]:
+		return(0)
+	for i in reversed(range(len(list))):
+		if list[i] in filename:
+			return(i+1)
+	return(0)
+\end{stylePy}
+
+There are two custom functions in this script, and this is the first.
+Given a \textbf{filename} and a \textbf{list} it will work through the list to see if its elements are in the file name.
+If an element is, the value returned will be one plus the index, and as the \textbf{return} command terminates the function and the \textbf{for} loop, the search stops.
+As you can see I also have it going through the list backwards by applying \textbf{reversed} to the \textbf{range} function that generates the list of indices to try.
+
+If the list provided is just an empty string or if no element from the list is in the file name, then a zero will be returned.
+Ideally then, a zero means there was no list and not that I missed adding something to the appropriate text file.
+
+\begin{stylePy}
+def numGen (filename, GPU = droppedGPU):
+	if GPU not in GPUs:
+		gpu	=	""
+	else:
+		gpu	=	numFind(droppedGPU, GPUs)
+	if APIs == [""]:
+		api	=	""
+	else:
+		api		=	numFind(filename, APIs)
+	loc		=	numFind(filename, LOCs)
+	qua		=	numFind(filename, QUAs)
+	data	=	numFind(filename, DATAs)
+	type	=	numFind(filename, TYPEs)
+
+	code	=	""
+	for x in [gpu, api, qua, loc, data, type]:
+		if x != "":
+			code	=	code + str(x).zfill(Z)
+
+	return(code)
+\end{stylePy}
+
+This second custom function is the one that will actually find the numbers and build the code name.
+The code is built within a \textbf{for} loop by concatenating onto what starts as an empty string.
+The loop goes through a list of values in the order GPU, API, quality, location, data type, and graph type.
+If the value is an empty string, it will not be added to the code name, which is important as I twice use empty strings for certain situations.
+First is if \textbf{droppedGPU} is not in the list of GPUs, which is the case when it is an empty string, as for the multi-GPU graphs, and second is if the API list is empty.
+This does mean the multi-GPU graphs have one less digit than the others, but that is actually helpful for distinguishing them.
+
+Going back to the top of the function, we see the checks for if the GPU is not in the list, but if it is the \textbf{numFind} function is run.
+The API list is also checked for if it does not exist, and if it does that function is run.
+After these checks \textbf{numFind} is just run for the other values, with only the location value, \textbf{loc} potentially returning a zero.
+Then we come to the code for building the code name which will then be returned by the function.
+
+As the object type for the \textbf{x} variable made by the \textbf{for} loop is a number, it is necessary to make it into a string before adding it to the other string. The \textbf{zfill} function will also pad the string with the appropriate number of zeroes.
+
+\begin{stylePy}
+if not os.path.exists("Graphs"):
+	os.mkdir("Graphs")
+
+for file in os.listdir(droppedPath):
+	if file.endswith(".png"):
+		shutil.copyfile(file, "Graphs\\" + numGen(file) + ".png")
+\end{stylePy}
+
+These two blocks of code end out the file.
+The first creates a folder named Graphs if it does not already exist.
+The second goes through each file in \textbf{droppedPath} and if it is a PNG file then it will copy the file into the Graphs folder, but change its name using \textbf{numGen} to get the code.

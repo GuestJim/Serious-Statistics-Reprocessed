@@ -1,0 +1,55 @@
+\section{Statistics: Characterizing Data (Percentiles)}
+
+Another type of statistic used to report performance is percentiles.
+When I get to the R scripts you will find the function is labelled quantiles, which are effectively the same but with a different unit.
+While percentiles would accept probabilities from 0 to 100, like percentages, quantiles go from 0 to 1, so the corresponding decimal value of percentages.
+By either name, the concept is the same; they are the specific value for the given probability, represented as either a percentage or the decimal value.
+
+\subsection{Percentiles}
+Percentiles are used for a host of applications, but in reporting game performance it is typically for providing a lower performance bound, without having to worry about outliers.
+Suppose a game and computer that is able to maintain 10 ms frame time (100 FPS) for almost all of its frames, but there is just one frame that take 100 ms (10 FPS) to render.
+This 100 ms frame would be an outlier, but if all you did was ask for the longest frame time, that would be the answer.
+While it is technically true the game can drop to that low of performance, it happened once and so is not representative.
+By using percentiles, you can find out what the game spends 99\% or 99.9\% of its time at, which would be 10 ms (100 FPS) in this example.
+
+Given that a number of games can have momentary spikes in frame times, related to something like saving or loading, just reporting the maximum frame time is not the best way to represent the performance.
+It ignores the larger behavior of the game by focusing on an outlier.
+If a game suffers from these spikes too often, then more of the time is spent at longer frame times, shifting the percentile, so it is not as though it removes long frame times from the results.
+What percentiles are used are at the analyzers discretion and personally I use 0.1\%, 1\%, 99\%, and 99.9\% because it is what I saw as being somewhat common among others, though I have also seen 95\% used by some.
+It is completely discretionary.
+
+
+In case you have ever wondered why I also use 1\% and 0.1\%, it is because I report both the frame time in milliseconds and frame rate in FPS.
+As these are inverses of each other, the 99\% percentile of one is the 1\% of the other, so to make sure I would get the desired values, I just include them all.
+Ever since though, I have come to like that I have them, because it is also nice to know about the upper-end of performance.
+
+Turning back to the distributions I discussed in the previous section, the percentile or quantile returns the value such that the area under the curve matches the probability provided.
+In other words, the 99\% percentile drawn out on a distribution looks like, starting from the left, 99\% of the distribution has been colored in, and wherever 99\% stops is the sample value returned.
+The median is the 50\% percentile, so filling in from the left, once half of the distribution is filled in, the value stopped at is the median.
+
+\image{{Quantile Example - 0.001}}
+\image{{Quantile Example - 0.01}}
+\image{{Quantile Example - 0.5}}
+\image{{Quantile Example - 0.99}}
+\image{{Quantile Example - 0.999}}
+
+For these graphs I used the Normal distribution with a mean of 0 and standard deviation of 1, which are the default arguments in R for the relevant commands.
+
+\subsection{Empirical Cumulative Distribution Function}
+
+With a name like Empirical Cumulative Distribution Function (ECDF), this probably sounds more complicated than its concept is.
+Basically, ECDF is the reverse to percentiles as it will return the probability for the sample value given to it.
+Instead of filling up the area under the distribution to get a value, it starts at a value and sees how much of the distribution is below it.
+This is the function I use to get the 60 FPS Percentile result, which lets us know how much time was spent above or below that performance target.
+While the percentiles are definitely valuable statistics, I think that this ability to determine the corresponding percentile for certain performance targets can be even more informative.
+
+\image{{ECDF Example - -3}}
+\image{{ECDF Example - -2}}
+\image{{ECDF Example - 0}}
+\image{{ECDF Example - 2}}
+\image{{ECDF Example - 3}}
+
+For these graphs I again used the Normal distribution from before, but with the corresponding ECDF function in green on top of it.
+It should be noted the fill beneath the green line is only there for aesthetic purposes, as the output of ECDF is the percentage of the area under the distribution, up to that point.
+In this graph, that corresponds to the Y-axis.
+(By the way, the Y-values should not be percentages for the Normal distribution, but the original decimal values.This means, for example, ECDF of the median (0 for this distribution) returns 0.5 or 50\%.

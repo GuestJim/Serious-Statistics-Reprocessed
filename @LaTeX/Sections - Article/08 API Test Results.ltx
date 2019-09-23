@@ -1,0 +1,191 @@
+\section{API Test Results}
+\graphicspath{{Media/@Data/}}
+
+If you made it through the Statistics and Graphs sections, then you have already seen these data and graphs for the frame time.
+I still feel it may be worth pulling them all together without the lengthy paragraphs, and for those who may have just been interested in the results.
+I also decided, because I could, to add something to these results.
+
+\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @Means - Frame Time}}
+
+\vspace{1.0ex}	\noindent	\resizebox{\columnwidth}{!}{
+\begin{tabular}{| l | l | l | l | l | l | l | l | l | l | l |}
+	GPU			&	API						&	Location		&		&	Mean	&	Median	&	0.1\%	&	1\%		&	99\%	&	99.9\%	&	60 FPS	\\	\hline
+	RX Vega 64	&	DirectX 11				&	Hatsheput		&	FPS	&	270.91	&	267.52	&	393.65	&	365.5	&	226.55	&	209.9	&	0		\\	\hline
+	RTX 2060	&	DirectX 11				&	Hatsheput		&	FPS	&	226.67	&	226.09	&	303.57	&	288.18	&	180.34	&	172.21	&	0		\\	\hline
+	RX Vega 64	&	DirectX 12				&	Hatsheput		&	FPS	&	245.63	&	245.76	&	335.06	&	308.17	&	206.02	&	159.7	&	0.04	\\	\hline
+	RTX 2060	&	DirectX 12				&	Hatsheput		&	FPS	&	217.96	&	217.34	&	357.42	&	281.89	&	175.92	&	162.01	&	0.01	\\	\hline
+	RX Vega 64	&	Vulkan					&	Hatsheput		&	FPS	&	227.04	&	227.12	&	338.93	&	293.69	&	190.99	&	160.5	&	0.04	\\	\hline
+	RTX 2060	&	Vulkan					&	Hatsheput		&	FPS	&	222.26	&	222.67	&	336.33	&	284.5	&	181.39	&	165.78	&	0.03	\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Hatsheput		&	FPS	&	265.71	&	263.78	&	357.96	&	345.42	&	220.65	&	206.17	&	0		\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Hatsheput		&	FPS	&	226.83	&	226.14	&	315.9	&	294.8	&	182.55	&	173.55	&	0		\\	\hline
+	RX Vega 64	&	DirectX 11				&	Dunes			&	FPS	&	326.11	&	330.14	&	498.81	&	410.34	&	231.16	&	184.7	&	0		\\	\hline
+	RTX 2060	&	DirectX 11				&	Dunes			&	FPS	&	259.09	&	262.88	&	396.79	&	315.96	&	188.08	&	157.17	&	0		\\	\hline
+	RX Vega 64	&	DirectX 12				&	Dunes			&	FPS	&	279.54	&	285.88	&	376.94	&	337.72	&	199.77	&	158.42	&	0.01	\\	\hline
+	RTX 2060	&	DirectX 12				&	Dunes			&	FPS	&	251.57	&	256.81	&	336.19	&	301.39	&	181.4	&	125.67	&	0		\\	\hline
+	RX Vega 64	&	Vulkan					&	Dunes			&	FPS	&	256.74	&	258.93	&	416.84	&	299.67	&	199.36	&	156.24	&	0.01	\\	\hline
+	RTX 2060	&	Vulkan					&	Dunes			&	FPS	&	255.56	&	259.34	&	442.23	&	310.37	&	184.72	&	150.38	&	0.01	\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Dunes			&	FPS	&	319.14	&	325.84	&	415.11	&	394.01	&	228.31	&	187.17	&	0		\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Dunes			&	FPS	&	259.75	&	263.37	&	430.65	&	325.52	&	194.55	&	168.01	&	0		\\	\hline
+	RX Vega 64	&	DirectX 11				&	Thebes - Karnak	&	FPS	&	277.6	&	285.14	&	385.41	&	361.4	&	185.64	&	165.46	&	0		\\	\hline
+	RTX 2060	&	DirectX 11				&	Thebes - Karnak	&	FPS	&	238.31	&	250.38	&	368.79	&	325.63	&	129.9	&	113.32	&	0		\\	\hline
+	RX Vega 64	&	DirectX 12				&	Thebes - Karnak	&	FPS	&	249.76	&	265.18	&	379.37	&	322.17	&	159.92	&	132.78	&	0.05	\\	\hline
+	RTX 2060	&	DirectX 12				&	Thebes - Karnak	&	FPS	&	221.66	&	230.47	&	395.95	&	346.26	&	125.67	&	103.2	&	0.02	\\	\hline
+	RX Vega 64	&	Vulkan					&	Thebes - Karnak	&	FPS	&	231.83	&	243.37	&	343.79	&	286.53	&	148.54	&	134.15	&	0.04	\\	\hline
+	RTX 2060	&	Vulkan					&	Thebes - Karnak	&	FPS	&	227.32	&	238.27	&	341.02	&	299.54	&	125.72	&	95.45	&	0.06	\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Thebes - Karnak	&	FPS	&	274.15	&	280.35	&	414.42	&	375.61	&	178.03	&	159.46	&	0		\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Thebes - Karnak	&	FPS	&	241.47	&	251.64	&	356.25	&	327.44	&	133.76	&	113.3	&	0		\\	\hline
+	RX Vega 64	&	DirectX 11				&	Hatsheput		&	ms	&	3.69	&	3.74	&	2.54	&	2.74	&	4.41	&	4.76	&	0		\\	\hline
+	RTX 2060	&	DirectX 11				&	Hatsheput		&	ms	&	4.41	&	4.42	&	3.29	&	3.47	&	5.54	&	5.81	&	0		\\	\hline
+	RX Vega 64	&	DirectX 12				&	Hatsheput		&	ms	&	4.07	&	4.07	&	2.98	&	3.25	&	4.85	&	6.26	&	0.04	\\	\hline
+	RTX 2060	&	DirectX 12				&	Hatsheput		&	ms	&	4.59	&	4.6		&	2.8		&	3.55	&	5.68	&	6.17	&	0.01	\\	\hline
+	RX Vega 64	&	Vulkan					&	Hatsheput		&	ms	&	4.4		&	4.4		&	2.95	&	3.4		&	5.24	&	6.23	&	0.04	\\	\hline
+	RTX 2060	&	Vulkan					&	Hatsheput		&	ms	&	4.5		&	4.49	&	2.97	&	3.52	&	5.51	&	6.03	&	0.03	\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Hatsheput		&	ms	&	3.76	&	3.79	&	2.79	&	2.9		&	4.53	&	4.85	&	0		\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Hatsheput		&	ms	&	4.41	&	4.42	&	3.17	&	3.39	&	5.48	&	5.76	&	0		\\	\hline
+	RX Vega 64	&	DirectX 11				&	Dunes			&	ms	&	3.07	&	3.03	&	2		&	2.44	&	4.33	&	5.41	&	0		\\	\hline
+	RTX 2060	&	DirectX 11				&	Dunes			&	ms	&	3.86	&	3.8		&	2.52	&	3.17	&	5.32	&	6.36	&	0		\\	\hline
+	RX Vega 64	&	DirectX 12				&	Dunes			&	ms	&	3.58	&	3.5		&	2.65	&	2.96	&	5.01	&	6.31	&	0.01	\\	\hline
+	RTX 2060	&	DirectX 12				&	Dunes			&	ms	&	3.98	&	3.89	&	2.97	&	3.32	&	5.51	&	7.96	&	0		\\	\hline
+	RX Vega 64	&	Vulkan					&	Dunes			&	ms	&	3.9		&	3.86	&	2.4		&	3.34	&	5.02	&	6.4		&	0.01	\\	\hline
+	RTX 2060	&	Vulkan					&	Dunes			&	ms	&	3.91	&	3.86	&	2.26	&	3.22	&	5.41	&	6.65	&	0.01	\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Dunes			&	ms	&	3.13	&	3.07	&	2.41	&	2.54	&	4.38	&	5.34	&	0		\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Dunes			&	ms	&	3.85	&	3.8		&	2.32	&	3.07	&	5.14	&	5.95	&	0		\\	\hline
+	RX Vega 64	&	DirectX 11				&	Thebes - Karnak	&	ms	&	3.6		&	3.51	&	2.59	&	2.77	&	5.39	&	6.04	&	0		\\	\hline
+	RTX 2060	&	DirectX 11				&	Thebes - Karnak	&	ms	&	4.2		&	3.99	&	2.71	&	3.07	&	7.7		&	8.82	&	0		\\	\hline
+	RX Vega 64	&	DirectX 12				&	Thebes - Karnak	&	ms	&	4		&	3.77	&	2.64	&	3.1		&	6.25	&	7.53	&	0.05	\\	\hline
+	RTX 2060	&	DirectX 12				&	Thebes - Karnak	&	ms	&	4.51	&	4.34	&	2.53	&	2.89	&	7.96	&	9.69	&	0.02	\\	\hline
+	RX Vega 64	&	Vulkan					&	Thebes - Karnak	&	ms	&	4.31	&	4.11	&	2.91	&	3.49	&	6.73	&	7.45	&	0.04	\\	\hline
+	RTX 2060	&	Vulkan					&	Thebes - Karnak	&	ms	&	4.4		&	4.2		&	2.93	&	3.34	&	7.95	&	10.48	&	0.06	\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Thebes - Karnak	&	ms	&	3.65	&	3.57	&	2.41	&	2.66	&	5.62	&	6.27	&	0		\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Thebes - Karnak	&	ms	&	4.14	&	3.97	&	2.81	&	3.05	&	7.48	&	8.83	&	0		\\	\hline
+\end{tabular}
+}	\vspace{1.0ex}
+
+It is probably easier to see in the table of stats than in the graph, but it is interesting to see that DirectX 11 does better than both DirectX 12 and Vulkan, despite it being the oldest API of the three.
+The Anti-Lag feature being enabled does seem to have an impact, hurting performance a little, but it still is doing better than the two newer, low-level APIs.
+To be fair though, this is likely not a title that calls for a low-level API, or the Anti-Lag features.
+These technologies help in CPU limited scenarios, and when you can have average frame rates well exceeding 200 FPS at the game's highest configuration, it is hard to imagine there being any real limitation.
+
+\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @Course - Frame Time}}
+
+\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @Freq - Frame Time}}
+
+\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @QQ - Frame Time}}
+
+The Course plots I do not think were too interesting, while the Frequency plots do nicely show the differences between the APIs, but it is the QQ plots I think that deserve a bit more focus.
+We can clearly see in them the different outlier behavior for both DirectX 12 and Vulkan, compared to the two DirectX 11 configurations.
+While the outliers for DX11 follow the same linear trend of the QQ plot, the other plots show a sudden and significant turn for their outliers.
+This is true for each location, and while I do not know why this is the case and these sudden changes did not necessarily impact the experience, I am left thinking DirectX 11 is the best API to use currently.
+(It is worth remembering the upper bound of the QQ graph is 16.67 ms, which corresponds to 60 FPS, so while the outliers do turn to longer frame times, we are still beating that target.
+We can also see in the statistics above that it was at most five percent of one percent of the time, at most, spent below 60 that target.
+The 99.9\% values all beat 130 FPS.)
+
+\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @Diff - Frame Time}}
+
+I do not think there is much to say about the Consecutive Difference plots.
+While we do see the sporadic points around the blobs for the DirectX 12 and Vulkan runs, these are likely the results of the outliers we saw in the QQ plots, and being outliers, are not indicative of the trend.
+Overall, the performance for any of these configurations, DX11, DX12, Vulkan, and DX11 with Radeon Anti-Lag enabled, is very good and very solid.
+The statistics and graphs do suggest DirectX 11 is the superior API for this scenario though, which is with my system configuration and the settings configuration I used for the game, both of which were described in an earlier section.
+
+I had mentioned the MsEstimatedDriverLag data before, and here are the statistics I have for it.
+
+\vspace{1.0ex}	\noindent	\resizebox{\columnwidth}{!}{
+\begin{tabular}{| l | l | l | l | l | l | l | l | l | l | l |}
+	GPU			&	API						&	Location		&		&	Mean	&	Median	&	0.1\%	&	1\%		&	99\%	&	99.9\%	&	16.7 ms ECDF	\\	\hline
+	RX Vega 64	&	DirectX 11				&	Hatsheput		&	ms	&	4.2		&	4.11	&	3.15	&	3.27	&	5.62	&	5.88	&	0				\\	\hline
+	RTX 2060	&	DirectX 11				&	Hatsheput		&	ms	&	5.14	&	4.87	&	3.69	&	3.87	&	7.37	&	7.86	&	0				\\	\hline
+	RX Vega 64	&	DirectX 12				&	Hatsheput		&	ms	&	6.95	&	6.96	&	4.94	&	5.78	&	8.27	&	13.66	&	0.01			\\	\hline
+	RTX 2060	&	DirectX 12				&	Hatsheput		&	ms	&	7.39	&	7.46	&	4.06	&	4.42	&	9.59	&	10.82	&	0				\\	\hline
+	RX Vega 64	&	Vulkan					&	Hatsheput		&	ms	&	9.57	&	9.29	&	6.62	&	7.97	&	11.89	&	12.31	&	0				\\	\hline
+	RTX 2060	&	Vulkan					&	Hatsheput		&	ms	&	9.67	&	9.41	&	6.69	&	7.96	&	12.39	&	13.16	&	0				\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Hatsheput		&	ms	&	3.52	&	3.54	&	2.88	&	2.96	&	4.27	&	4.54	&	0				\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Hatsheput		&	ms	&	4.98	&	4.85	&	3.7		&	3.88	&	6.65	&	7.49	&	0				\\	\hline
+	RX Vega 64	&	DirectX 11				&	Dunes			&	ms	&	3.62	&	3.5		&	2.43	&	2.53	&	6.09	&	8.22	&	0				\\	\hline
+	RTX 2060	&	DirectX 11				&	Dunes			&	ms	&	5.15	&	5.5		&	2.99	&	3.22	&	8.37	&	10.16	&	0				\\	\hline
+	RX Vega 64	&	DirectX 12				&	Dunes			&	ms	&	5.99	&	5.9		&	3.08	&	3.79	&	8.61	&	10.86	&	0				\\	\hline
+	RTX 2060	&	DirectX 12				&	Dunes			&	ms	&	6.16	&	6.21	&	3.11	&	3.25	&	9.38	&	13.79	&	0.01			\\	\hline
+	RX Vega 64	&	Vulkan					&	Dunes			&	ms	&	9.04	&	9.09	&	6.56	&	6.94	&	12.83	&	15.17	&	0.04			\\	\hline
+	RTX 2060	&	Vulkan					&	Dunes			&	ms	&	8.98	&	8.85	&	6.38	&	6.63	&	13.78	&	15.88	&	0.06			\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Dunes			&	ms	&	3.03	&	2.94	&	2.47	&	2.56	&	4.24	&	5.28	&	0				\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Dunes			&	ms	&	4.56	&	4.49	&	3.01	&	3.21	&	6.85	&	8.33	&	0				\\	\hline
+	RX Vega 64	&	DirectX 11				&	Thebes - Karnak	&	ms	&	3.89	&	3.86	&	2.64	&	2.81	&	5.59	&	6.94	&	0				\\	\hline
+	RTX 2060	&	DirectX 11				&	Thebes - Karnak	&	ms	&	4.89	&	4.53	&	3.01	&	3.31	&	12.63	&	13		&	0				\\	\hline
+	RX Vega 64	&	DirectX 12				&	Thebes - Karnak	&	ms	&	6.89	&	6.43	&	2.69	&	3.69	&	11.2	&	12.27	&	0.02			\\	\hline
+	RTX 2060	&	DirectX 12				&	Thebes - Karnak	&	ms	&	6.87	&	6.82	&	3.13	&	3.31	&	13.49	&	15.36	&	0.03			\\	\hline
+	RX Vega 64	&	Vulkan					&	Thebes - Karnak	&	ms	&	9.04	&	8.74	&	5.14	&	6.92	&	12.94	&	13.72	&	0				\\	\hline
+	RTX 2060	&	Vulkan					&	Thebes - Karnak	&	ms	&	9.32	&	8.98	&	4.7		&	6.99	&	16.37	&	20.11	&	0.85			\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	Thebes - Karnak	&	ms	&	3.44	&	3.41	&	2.43	&	2.68	&	4.72	&	5.23	&	0				\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	Thebes - Karnak	&	ms	&	4.54	&	4.46	&	2.97	&	3.25	&	7.92	&	9.37	&	0				\\	\hline
+\end{tabular}
+}	\vspace{1.0ex}
+
+The two things we can see here are that both DirectX 12 and Vulkan have the greatest amount of driver lag, and the other is that the Anti-Lag features did reduce this by about 1 ms, or less.
+As DirectX 11 was doing better than these newer APIs on general performance, it is perhaps not too surprising it wins in driver lag too.
+
+Now for the extra thing I decided to add because I could.
+For a performance analysis, I do not think it is necessary or completely appropriate for what I try to do with them, but here the geometric mean makes sense to share.
+Because it is looking at frame time, the longest frame time is what the values are normalized by, so smaller percentages are better.
+
+\vspace{1.0ex}	\noindent	%\resizebox{\columnwidth}{!}{
+\begin{center}
+\begin{tabular}{| l | l | l | l |}
+	GPU			&	API						&	Geometric Mean (ms)	&	Normalized (\%)	\\	\hline
+	RX Vega 64	&	DirectX 11				&	3.39				&	79.14			\\	\hline
+	RTX 2060	&	DirectX 11				&	4.1					&	95.56			\\	\hline
+	RX Vega 64	&	DirectX 12				&	3.83				&	89.29			\\	\hline
+	RTX 2060	&	DirectX 12				&	4.29				&	100				\\	\hline
+	RX Vega 64	&	Vulkan					&	4.15				&	96.91			\\	\hline
+	RTX 2060	&	Vulkan					&	4.2					&	98.04			\\	\hline
+	RX Vega 64	&	DirectX 11 - Anti-Lag	&	3.46				&	80.65			\\	\hline
+	RTX 2060	&	DirectX 11 - Anti-Lag	&	4.08				&	95.11			\\	\hline
+\end{tabular}
+\end{center}
+
+Here are the geometric means for frame time when grouping by GPU and API.
+This allows us to see how well the two GPUs handled the APIs over the three locations.
+
+\vspace{1.0ex}	\noindent	%\resizebox{\columnwidth}{!}{
+\begin{center}
+\begin{tabular}{| l | l | l | l |}
+	API						&	Geometric Mean (ms)	&	Normalized (\%)	\\	\hline
+	DirectX 11				&	3.7					&	88.44			\\	\hline
+	DirectX 12				&	4.04				&	96.64			\\	\hline
+	Vulkan					&	4.18				&	100				\\	\hline
+	DirectX 11 - Anti-Lag	&	3.73				&	89.25			\\	\hline
+\end{tabular}
+\end{center}
+
+This drops the GPU so we are just looking at how the APIs performed and it confirms DirectX 11 beat both DirectX 12 and Vulkan.
+The difference is not too large, but it is there.
+
+\vspace{1.0ex}	\noindent	%\resizebox{\columnwidth}{!}{
+\begin{center}
+\begin{tabular}{| l | l | l | l |}
+	GPU			&	Geometric Mean (ms)	&	Normalized (\%)	\\	\hline
+	RX Vega 64	&	3.67				&	88.19			\\	\hline
+	RTX 2060	&	4.16				&	100				\\	\hline
+\end{tabular}
+\end{center}
+
+In case anyone was curious about how the two GPUs compare, the RX Vega 64 is shown to be faster.
+Of course a difference of about 0.5 ms is hardly going to impact anyone's experience, but across the APIs and Locations, it is present.
+
+\vspace{1.0ex}	\noindent	%\resizebox{\columnwidth}{!}{
+\begin{center}
+\begin{tabular}{| l | l | l | l |}
+	Location			&	Geometric Mean (ms)	&	Normalized (\%)	\\	\hline
+	Hatsheput			&	4.17				&	100				\\	\hline
+	Dunes				&	3.59				&	86.04			\\	\hline
+	Thebes - Karnak		&	4					&	96.1			\\	\hline
+\end{tabular}
+\end{center}
+
+With this table we can see the relative performance between the three locations.
+That Dunes was the fastest is actually not too surprising, because while it does have the most action going on, it has the least environmental geometry to be concerned with.
+That Hatsheput took longer the Thebes – Karnak does surprise me a little, but then the difference is also very little, but the locations are somewhat similar.
+
+Technically I could use the geometric mean like I did here in performance analyses to compare the performance between the GPUs, but that is not exactly the purpose I have for these analyses.
+I am not looking to compare the performance of the GPUs, but to report how they perform in the game so you can estimate what you can expect if you have the same or similar GPU, and other hardware.
+The High Quality data I include does allow the GPUs to be compared against each other, and I do include it to be a common and reasonable point of reference, but as the purpose of the analysis is to report on each GPU, including the geometric mean specifically to directly compare the performance of GPUs is a little misaligned.
+Another way to put it is I am not reviewing the performance of the GPUs, but the performance of the game, but if I were to do a graphics card review, I would use the geometric mean.
+I may also include it in other articles in the future, if they are like this where I am directly comparing the performance and not just reporting the performance.
