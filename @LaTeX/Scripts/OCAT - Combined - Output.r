@@ -270,7 +270,7 @@ sinkHTML	=	function(datatype, COL = "")	{
 	if	(COL	!=	"")		SUB		=	paste0(eval(parse(text = COL)), " - ")
 
 	FOLD	=	""
-	if	(COL	!=	"GPU")	FOLD	=	eval(parse(text = COL))
+	if	(COL	==	"GPU")	FOLD	=	eval(parse(text = COL))
 
 	writeOCC(addFPS(MEAN),				dataNAME = paste0(SUB, typeSHORT, "MEAN"),	fold = FOLD)
 	writeOCC(addFPS(PERC),				dataNAME = paste0(SUB, typeSHORT, "PERC"),	fold = FOLD)
