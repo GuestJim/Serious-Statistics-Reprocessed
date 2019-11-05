@@ -1,0 +1,20 @@
+Serious Statistics Reprocessed - DirectX 11 - High Quality
+Frame Time
+
+Mean
+      GPU  Location       Mean Median
+ RTX 2060 Hatsheput FPS 226.67 226.09
+ RTX 2060 Hatsheput  ms   4.41   4.42
+
+Percentiles
+      GPU  Location       0.1%     1%    99%  99.9%
+ RTX 2060 Hatsheput FPS 303.57 288.18 180.34 172.21
+ RTX 2060 Hatsheput  ms   3.29   3.47   5.54   5.81
+
+Percentile of FPS
+      GPU  Location 60 FPS 50 FPS 30 FPS 20 FPS 15 FPS
+ RTX 2060 Hatsheput      0      0      0      0      0
+
+Distribution Stats
+      GPU  Location Mean (ms) StDev (ms) CoV (%) Skew Kurtosis
+ RTX 2060 Hatsheput      4.41       0.46   10.38 0.25     5.09

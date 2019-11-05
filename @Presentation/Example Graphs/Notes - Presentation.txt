@@ -1,0 +1,9 @@
+Example graph sources:
+
+LevelTechs		https://www.level1techs.com/article/radeon-5700-5700xt-launch-coverage-testing
+	https://www.level1techs.com/sites/default/files/field/image/1440%20and%201080%20chart%20with%20error%20bars.jpg
+HUB/Techspot	https://www.techspot.com/review/1935-nvidia-geforce-gtx-1660-super/
+	https://static.techspot.com/articles-info/1935/images/1440p_TR.png
+Gamers Nexus	https://www.gamersnexus.net/hwreviews/3512-powercolor-rx-5700-red-dragon-review-benchmark-overclocking-thermals
+	https://www.gamersnexus.net/images/media/2019/GPUs/pcs-red-dragon/9_tomb-raider-1440p-5700-red-dragon-review.png
+Phoronix		https://www.phoronix.com/scan.php?page=article&item=nvidia-rtx-super&num=6

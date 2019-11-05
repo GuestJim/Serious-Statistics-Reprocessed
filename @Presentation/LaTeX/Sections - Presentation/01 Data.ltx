@@ -1,0 +1,69 @@
+\section{Problem}
+\subsection{Data}
+\graphicspath{{Media/}}
+
+\begin{frame}
+\frametitle{Problem:\newline
+Summarizing Data in Representative Way}
+
+\vspace{1.0ex}	\noindent	\resizebox{\columnwidth}{!}{
+\begin{tabular}{l || r | r | r | r | r | r | r | r | r | r | r | r | r | r | r | r | r | r | r | r}
+Line	&	Application	&	ProcessID	&	SwapChainAddress	&	Runtime	&	SyncInterval	&	PresentFlags	&	AllowsTearing	&	PresentMode	&	WasBatched	&	DwmNotified	&	Dropped	&	TimeInSeconds	&	MsBetweenPresents	&	MsBetweenDisplayChange	&	MsInPresentAPI	&	MsUntilRenderComplete	&	MsUntilDisplayed	&	MsEstimatedDriverLag	&	Width	&	Height \\ \hline
+1		&	Sam2017.exe	&	1812	&	0x0000000004372630	&	DXGI	&	0	&	0	&	1	&	Hardware Composed: Independent Flip	&	1	&	0	&	0	&	0.005609	&	4.257	&	3.884	&	0.166	&	3.284	&	3.284	&	7.446	&	1920	&	1080	\\	\hline
+2		&	Sam2017.exe	&	1812	&	0x0000000004372630	&	DXGI	&	0	&	0	&	1	&	Hardware Composed: Independent Flip	&	1	&	0	&	0	&	0.009513	&	3.904	&	3.729	&	0.080	&	3.109	&	3.109	&	6.847	&	1920	&	1080	\\	\hline
+3		&	Sam2017.exe	&	1812	&	0x0000000004372630	&	DXGI	&	0	&	0	&	1	&	Hardware Composed: Independent Flip	&	1	&	0	&	0	&	0.012988	&	3.475	&	3.628	&	0.072	&	3.262	&	3.262	&	6.658	&	1920	&	1080	\\	\hline	\hline
+	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	\\	
+\vdots	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	\\	
+	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	&	\\	\hline
+81356	&	Sam2017.exe	&	1812	&	0x0000000004372630	&	DXGI	&	0	&	0	&	1	&	Hardware Composed: Independent Flip	&	1	&	0	&	0	&	300.306738	&	3.682	&	3.687	&	0.362	&	4.023	&	4.023	&	7.343	&	1920	&	1080	\\	\hline
+81357	&	Sam2017.exe	&	1812	&	0x0000000004372630	&	DXGI	&	0	&	0	&	1	&	Hardware Composed: Independent Flip	&	1	&	0	&	0	&	300.310425	&	3.687	&	3.690	&	0.363	&	4.026	&	4.026	&	7.351	&	1920	&	1080	\\	\hline
+\end{tabular}
+}
+
+\vspace{2.0ex}
+\begin{itemize}
+	\item	Video game performance measurements can result in rather large recordings
+\end{itemize}
+
+\pause
+
+\vspace{1.0ex}	\noindent	\resizebox{\columnwidth}{!}{
+\begin{tabular}{l || r || c || r | r | r | r | r | r | r | r | r}
+Line	&	Application	&	\ldots	&	TimeInSeconds	&	MsBetweenPresents	&	MsBetweenDisplayChange	&	MsInPresentAPI	&	MsUntilRenderComplete	&	MsUntilDisplayed	&	MsEstimatedDriverLag	&	Width	&	Height \\ \hline
+1		&	Sam2017.exe	&	&	0.005609	&	4.257	&	3.884	&	0.166	&	3.284	&	3.284	&	7.446	&	1920	&	1080	\\	\hline
+2		&	Sam2017.exe	&	&	0.009513	&	3.904	&	3.729	&	0.080	&	3.109	&	3.109	&	6.847	&	1920	&	1080	\\	\hline
+3		&	Sam2017.exe	&	&	0.012988	&	3.475	&	3.628	&	0.072	&	3.262	&	3.262	&	6.658	&	1920	&	1080	\\	\hline	\hline
+	&	&	&	&	&	&	&	&	&	&	&	\\	
+\vdots	&	&	&	&	&	&	&	&	&	&	&	\\	
+	&	&	&	&	&	&	&	&	&	&	&	\\	\hline
+81356	&	Sam2017.exe	&	\ldots	&	300.306738	&	3.682	&	3.687	&	0.362	&	4.023	&	4.023	&	7.343	&	1920	&	1080	\\	\hline
+81357	&	Sam2017.exe	&	&	300.310425	&	3.687	&	3.690	&	0.363	&	4.026	&	4.026	&	7.351	&	1920	&	1080	\\	\hline
+\end{tabular}
+}
+
+\vspace{2.0ex}
+\begin{itemize}
+	\item	Even after ignoring developer-oriented data, there can still be a lot
+	\item	Clear statistics and graphs to provide representative summaries of data are necessary
+\end{itemize}
+
+\end{frame}
+
+\subsection{Measurements and Units}
+\begin{frame}
+\frametitle{Problem: FPS vs milliseconds}
+
+How you measure the data and the units the statistics are in also matter
+
+\begin{center}
+	\image[width = \textwidth, height = 0.5\textheight]{Rate Graph}
+\end{center}
+
+\pause
+
+\begin{itemize}
+	\item	FPS is a \textbf{non-linear} measurement but \textbf{clear}
+	\item	milliseconds is \textbf{linear} but not as \textbf{clear}
+\end{itemize}
+
+\end{frame}
