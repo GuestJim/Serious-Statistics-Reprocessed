@@ -4,7 +4,8 @@ ytimes	=	sort(1000/yrates)
 
 # labelRound	=	function(breaks)	sprintf("%.1f", breaks)
 labelRound	=	function(breaks)	round(breaks, 1)
-labelBreak	=	function(breaks)	paste0(rep(c("", "\n"), length.out = length(breaks)), sort(breaks))
+labelBreakF	=	function(breaks)	paste0(rep(c("", "\n"), length.out = length(breaks)), breaks)
+labelBreakN	=	function(breaks)	paste0(rep(c("", "\n"), length.out = length(breaks)), sort(breaks))
 labelDisp	=	function(breaks)	round(breaks * 60/1000, 1)
 
 BoxPerc	=	function (DATA)	{
@@ -357,7 +358,7 @@ graphMEANS	=	function(datatype)	{
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
 	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
 	facet_grid(rows = vars(API), cols = vars(Location), switch = "y") +
-	scale_x_discrete(labels = labelBreak) +
+	scale_x_discrete(labels = labelBreakF) +
 	scale_Y +
 	guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
 }
@@ -410,7 +411,7 @@ graphCOURSE	=	function(datatype)	{
 	geom_point(alpha = ALPHA) +
 	geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) +
 	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
-	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreak, expand=c(0.02, 0)) +
+	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreakD, expand=c(0.02, 0)) +
 	scale_Y
 }
 
@@ -602,7 +603,7 @@ graphQQ	=	function(datatype)	{
 	geom_label(data = STATS, aes(x = Inf, y = -Inf, label = paste0("Slope: ", Slope)), parse = TRUE, hjust="right", vjust="bottom", fill = "darkgrey", color = "green") +
 	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
-	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=labelBreak(c("0.1", "1", "50", "99", "99.9")), minor_breaks=NULL, expand=c(0.02, 0))
+	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=labelBreakD(c("0.1", "1", "50", "99", "99.9")), minor_breaks=NULL, expand=c(0.02, 0))
 }
 
 
@@ -636,7 +637,7 @@ graphOUT	=	function(datatype, graphtype, OUT = TRUE, diffLim = NULL, ...)	{
 results$API	=	factor(results$API, levels = rev(listAPI))
 
 #Means
-if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphMEANS)
+if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphMEANS, OUT = FALSE)
 if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphMEANS)
 if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphMEANS)
 if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphMEANS)
