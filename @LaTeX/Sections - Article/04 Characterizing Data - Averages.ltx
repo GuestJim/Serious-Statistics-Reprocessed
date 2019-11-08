@@ -55,7 +55,7 @@ In other cases though, it would be to multiply each value by its own probability
 This can also be called a Weighted mean, but it is the same concept as what I described above, which applies the same probability to each value.
 
 \begin{equation}
-	\sum\limits^n	\frac{x_n}{n}
+	\sum\limits_{i}^{n} \frac{x_i}{n}
 \end{equation}
 
 \subsection{Geometric Mean}
@@ -65,7 +65,7 @@ There are actually more algorithms than that to calculate the geometric mean, wi
 This is the algorithm I have placed in my scripts, because I like the look of it in R better.
 
 \begin{equation}
-	\prod\limits^n	\sqrt[n]{x_n} ~~\textnormal{or}~~ \exp(\textnormal{mean}(\log{(x)}))
+	\prod\limits_{i}^{n}	\sqrt[n]{x_i} ~~\textnormal{or}~~ \exp(\textnormal{mean}(\log{(x)}))
 \end{equation}
 
 \subsection{Harmonic Mean}
@@ -106,7 +106,6 @@ If I wanted to formally compare the GPUs in those sections, then I would want to
 
 The geometric mean is also less sensitive to outliers than the arithmetic, but I am less worried about outliers, than I am the idea of time volumes.
 Plus, by taking data samples as large as I do, the outliers should be significantly outweighed.
-
 
 \subsection{Median}
 
