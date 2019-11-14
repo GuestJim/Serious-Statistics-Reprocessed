@@ -1,7 +1,65 @@
 \section{Problem}
-\subsection{Data}
+
 \graphicspath{{Media/}}
 
+\subsection{Measurements and Units}
+\begin{frame}
+\frametitle{Problem:}
+\framesubtitle{FPS vs milliseconds}
+
+How you measure the data and the units the statistics are in also matter
+
+\begin{center}
+	\image[width = \textwidth, height = 0.5\textheight]{Rate Graph}
+\end{center}
+
+\pause
+
+\begin{itemize}
+	\item	FPS is a \textbf{non-linear} measurement but \textbf{clear}
+	\item	milliseconds is \textbf{linear} but \textbf{not as clear}
+\end{itemize}
+
+\end{frame}
+
+
+\setlength{\columnseprule}{0.5pt}
+\subsection{Recording Method}
+\begin{frame}
+\frametitle{Problem:}
+\framesubtitle{Recording Method}
+\vspace{-3ex}
+\begin{multicols*}{2}
+\small{\textbf{Short Period, Multiple Runs}}
+\only<2->	{
+\begin{itemize}
+	\item[$+$]	Confidence from repetition
+	\item[$+$]	Focused, reproducible sample
+	\item[$-$]	Sensitivity to outliers
+\end{itemize}
+}
+\only<3>	{
+Good for Hardware Testing
+}
+
+\columnbreak
+\small{\textbf{Long Period, Single Run}}
+\only<2->	{
+\begin{itemize}
+	\item[$+$]	Confidence from sample size
+	\item[$+$]	Increased representation
+	\item[$-$]	Less reproducible
+	\item[$+$]	Less sensitive to outliers
+\end{itemize}
+}
+\only<3>	{
+Good for Software Testing
+}
+\end{multicols*}
+\end{frame}
+
+
+\subsection{Data}
 \begin{frame}
 \frametitle{Problem:}
 \framesubtitle{Summarizing Data in Representative Way}
@@ -45,26 +103,6 @@ Line	&	Application	&	\ldots	&	TimeInSeconds	&	MsBetweenPresents	&	MsBetweenDispl
 \begin{itemize}
 	\item	Even after ignoring developer-oriented data, there can still be a lot
 	\item	Clear statistics and graphs to provide representative summaries of data are necessary
-\end{itemize}
-
-\end{frame}
-
-\subsection{Measurements and Units}
-\begin{frame}
-\frametitle{Problem:}
-\framesubtitle{FPS vs milliseconds}
-
-How you measure the data and the units the statistics are in also matter
-
-\begin{center}
-	\image[width = \textwidth, height = 0.5\textheight]{Rate Graph}
-\end{center}
-
-\pause
-
-\begin{itemize}
-	\item	FPS is a \textbf{non-linear} measurement but \textbf{clear}
-	\item	milliseconds is \textbf{linear} but \textbf{not as clear}
 \end{itemize}
 
 \end{frame}
