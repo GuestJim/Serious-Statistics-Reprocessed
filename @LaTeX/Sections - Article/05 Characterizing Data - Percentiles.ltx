@@ -18,7 +18,6 @@ If a game suffers from these spikes too often, then more of the time is spent at
 What percentiles are used are at the analyzers discretion and personally I use 0.1\%, 1\%, 99\%, and 99.9\% because it is what I saw as being somewhat common among others, though I have also seen 95\% used by some.
 It is completely discretionary.
 
-
 In case you have ever wondered why I also use 1\% and 0.1\%, it is because I report both the frame time in milliseconds and frame rate in FPS.
 As these are inverses of each other, the 99\% percentile of one is the 1\% of the other, so to make sure I would get the desired values, I just include them all.
 Ever since though, I have come to like that I have them, because it is also nice to know about the upper-end of performance.
@@ -41,7 +40,7 @@ With a name like Empirical Cumulative Distribution Function (ECDF), this probabl
 Basically, ECDF is the reverse to percentiles as it will return the probability for the sample value given to it.
 Instead of filling up the area under the distribution to get a value, it starts at a value and sees how much of the distribution is below it.
 This is the function I use to get the 60 FPS Percentile result, which lets us know how much time was spent above or below that performance target.
-While the percentiles are definitely valuable statistics, I think that this ability to determine the corresponding percentile for certain performance targets can be even more informative.
+While the percentiles are definitely valuable statistics, I think this ability to determine the corresponding percentile for certain performance targets can be even more informative.
 
 \image{{ECDF Example - -3}}
 \image{{ECDF Example - -2}}

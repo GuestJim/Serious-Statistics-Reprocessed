@@ -18,7 +18,6 @@ Within a radius of one standard deviation from the mean is approximately 68\% of
 Within a radius of two standard deviations there is 95\% of the data, and then within three standard deviations is 99.7\% of the data.
 Even without assuming the Normal distribution can be applied to the data, the standard deviation is still a useful value for performance data as a measure of variation in the data.
 
-
 Another value that could be used here is the Coefficient of Variation, which is actually just the standard deviation divided by the average of the data.
 This results in a unitless ratio or percentage that may be easier to interpret in some circumstances as it does not require checking the mean when making comparisons.
 (For example, I have some data where the standard deviation for two runs is 0.44 ms and 0.36 ms, but because of what the means are for these runs, the coefficient of variation are 11.42\% and 11.47\% respectively.
@@ -26,6 +25,17 @@ Ignoring the low significance of the values themselves, we see the greater devia
 
 \begin{equation}
 	\sqrt{\frac{1}{n - 1}\sum\limits^n (x_n - \overline{x})^2}
+\end{equation}
+
+\subsection{Standard Error}
+
+Another value that may come up from time to time, though not enough for me to bother formally adding it to the scripts is Standard Error.
+It is related tom the Standard Deviation as it is actually that value divided by the square root of the sample size.
+This is important as it means the larger the sample size, the smaller the Standard Error, and that implies the sample is more accurate.
+It does have a relation to the mean, as it would be a way to compare means from multiple samples.
+
+\begin{equation}
+	\sqrt{\frac{1}{n - 1}\sum\limits^n (x_n - \overline{x})^2} * \frac{1}{sqrt{n}}
 \end{equation}
 
 \subsection{Skewness}

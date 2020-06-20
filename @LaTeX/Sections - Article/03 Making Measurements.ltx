@@ -1,8 +1,8 @@
 \section{Making Measurements: \href{https://github.com/GameTechDev/PresentMon}{PresentMon} and \href{https://github.com/GPUOpen-Tools/OCAT}{OCAT}}
 This section should not be too long, and maybe I could have rolled it into the previous, but I kind of like the idea of having it be its own.
-I did already mention these two pieces of software, but I feel they deserve some time on their own.
+I have already mentioned these two pieces of software, but I feel they deserve some time on their own.
 First up is PresentMon, a piece of open source software that has been on GitHub since March 2016.
-It is a tool for tracking Event Tracing for Windows, ETW, events on Windows to capture and analyze performance metrics.
+It is a tool for tracking Event Tracing for Windows, ETW, to capture and analyze performance metrics.
 It was actually created by Intel as a resource for game developers, and is supposedly difficult to work with.
 I have never worked with it directly myself, but at one point years ago I did research how it, and it would involve the creation of scripts to initialize it, have it hook into an application, and then make its recording.
 This was more than I was comfortable doing at the time, but thankfully OCAT was then developed and released, making it very easy to get the exact same data.
@@ -12,7 +12,7 @@ As I stated in the previous section, OCAT initially served almost as a front-end
 Instead of requiring scripts to collect data, you could launch OCAT, press the appropriate hotkey, and get PresentMon data.
 OCAT also had the ability to provide an overlay with real-time frame rate and frame time information shown to you, though I personally rarely used it.
 Today it has gained a number of additional features, including the ability to visualize the collected data, inject a special overlay that changes color with each frame, for video capture and analysis similar to \href{https://www.geforce.com/hardware/technology/fcat}{NVIDIA's Frame Capture and Analysis Tool} (\href{https://www.overclockersclub.com/reviews/frame_capture_and__analysis_tools/}{reviewed by ccokeman in 2013}), a lag indicator overlay, and the quite useful audio indicator for when a recording starts and stops.
-(I do still need to start a timer to make sure I am following my path at the right speed, but at least if I forget to, I know when I can stop.These features are definitely nice and helpful to have, but a review of PresetMon's GitHub page may prove useful.
+(I do still need to start a timer to make sure I am following my path at the right speed, but at least if I forget to, I know when I can stop.These features are definitely nice and helpful to have, but a review of PresetMon's GitHub page may prove informative.
 This is where you can learn about the different types of measurement it makes, such as the MsBetweenPresents measurement typically interpreted as frame time and MsBetweenDisplayChange, which I refer to as display time.
 
 The MsBetweenPresents measurement is the time between Present() API calls, which I understand to be the call to render a new frame.

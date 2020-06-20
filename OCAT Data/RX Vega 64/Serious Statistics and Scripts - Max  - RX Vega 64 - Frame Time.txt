@@ -56,19 +56,19 @@ Percentiles
  RX Vega 64 DirectX 11 - Anti-Lag Thebes - Karnak  ms   2.41   2.66   5.62   6.27
 
 Percentile of FPS
-        GPU                   API        Location 60 FPS 50 FPS 30 FPS 20 FPS 15 FPS
- RX Vega 64            DirectX 11       Hatsheput   0.00   0.00   0.00   0.00   0.00
- RX Vega 64            DirectX 12       Hatsheput   0.04   0.03   0.02   0.01   0.01
- RX Vega 64                Vulkan       Hatsheput   0.04   0.02   0.01   0.01   0.00
- RX Vega 64 DirectX 11 - Anti-Lag       Hatsheput   0.00   0.00   0.00   0.00   0.00
- RX Vega 64            DirectX 11           Dunes   0.00   0.00   0.00   0.00   0.00
- RX Vega 64            DirectX 12           Dunes   0.01   0.01   0.00   0.00   0.00
- RX Vega 64                Vulkan           Dunes   0.01   0.01   0.00   0.00   0.00
- RX Vega 64 DirectX 11 - Anti-Lag           Dunes   0.00   0.00   0.00   0.00   0.00
- RX Vega 64            DirectX 11 Thebes - Karnak   0.00   0.00   0.00   0.00   0.00
- RX Vega 64            DirectX 12 Thebes - Karnak   0.05   0.03   0.01   0.00   0.00
- RX Vega 64                Vulkan Thebes - Karnak   0.04   0.02   0.01   0.00   0.00
- RX Vega 64 DirectX 11 - Anti-Lag Thebes - Karnak   0.00   0.00   0.00   0.00   0.00
+        GPU                   API        Location 90 FPS 60 FPS 50 FPS 30 FPS 20 FPS 15 FPS
+ RX Vega 64            DirectX 11       Hatsheput   0.00   0.00   0.00   0.00   0.00   0.00
+ RX Vega 64            DirectX 12       Hatsheput   0.06   0.04   0.03   0.02   0.01   0.01
+ RX Vega 64                Vulkan       Hatsheput   0.06   0.04   0.02   0.01   0.01   0.00
+ RX Vega 64 DirectX 11 - Anti-Lag       Hatsheput   0.00   0.00   0.00   0.00   0.00   0.00
+ RX Vega 64            DirectX 11           Dunes   0.00   0.00   0.00   0.00   0.00   0.00
+ RX Vega 64            DirectX 12           Dunes   0.02   0.01   0.01   0.00   0.00   0.00
+ RX Vega 64                Vulkan           Dunes   0.02   0.01   0.01   0.00   0.00   0.00
+ RX Vega 64 DirectX 11 - Anti-Lag           Dunes   0.00   0.00   0.00   0.00   0.00   0.00
+ RX Vega 64            DirectX 11 Thebes - Karnak   0.00   0.00   0.00   0.00   0.00   0.00
+ RX Vega 64            DirectX 12 Thebes - Karnak   0.07   0.05   0.03   0.01   0.00   0.00
+ RX Vega 64                Vulkan Thebes - Karnak   0.08   0.04   0.02   0.01   0.00   0.00
+ RX Vega 64 DirectX 11 - Anti-Lag Thebes - Karnak   0.00   0.00   0.00   0.00   0.00   0.00
 
 Distribution Stats
         GPU                   API        Location Mean (ms) StDev (ms) CoV (%)   Skew Kurtosis

@@ -12,11 +12,26 @@ theme_set(theme_grey(base_size = 16))
 DPI			=	120
 ggdevice	=	"png"
 
+useSHORT	=	TRUE
+testAPI		=	FALSE
+listFPS		=	NULL
+#	for adding to the FPS Percentile list
+diffLim		=	NULL
+QUAN		=	c(0.01, 0.99)
+FtimeLimit	=	1000/15
+yratesEXT	=	NULL
+
+gWIDTH	=	8
+gHEIGH	=	9
+app.BREAK	=	FALSE
+#	switch for if line breaks should be used in the labels
+#		can be changed prior to graphs being created for selective application
+testQUA		=	FALSE
+
 textOUT		=	TRUE
 HTMLOUT		=	TRUE
 graphs		=	TRUE
 graphs_all	=	FALSE
-useSHORT	=	TRUE
 
 textFRAM	=	TRUE
 graphFRAM	=	TRUE
@@ -38,22 +53,6 @@ textDiff	=	FALSE
 graphDiff	=	FALSE
 #	cannot be DIFF because of naming conflict in Output
 
-listFPS		=	NULL
-#	for adding to the FPS Percentile list
-QUAN		=	c(0.01, 0.99)
-FtimeLimit	=	1000/15
-
-gWIDTH	=	8
-gHEIGH	=	9
-
-if (!graphs){
-	graphFRAM	=	FALSE
-	graphDISP	=	FALSE
-	graphREND	=	FALSE
-	graphDRIV	=	FALSE
-	graphDiff	=	FALSE
-}
-
 if (interactive())	{
 	setwd("!PATH!")
 }	else	{
@@ -62,7 +61,13 @@ if (interactive())	{
 #	checks if the script is being run in the GUI or not
 #		prevents rplots.pdf from being generated
 
-resultsFull	=	read_csv("@Combined - !QUA!.csv")
+relPath	=	paste0(unlist(strsplit(getwd(), "OCAT Data"))[1], "OCAT Data")
+
+txtFIND	=	function(TXT, rel.Path = relPath)	{
+	locFILE	=	paste0(rel.Path, "/", TXT)
+	if (file.exists(locFILE))	return(readLines(locFILE, warn = FALSE))
+	return(NULL)
+}
 
 listGPU		=	c(
 "RX 580",
@@ -75,142 +80,125 @@ listGPU		=	c(
 "RTX 2080"
 )
 
-listQUA		=	c(
-"!QUA!"
-)
+listQUA		=	txtFIND("Qualities.txt")
 
-listLOC		=	c(
-!LOC!
-)
+listLOC		=	txtFIND("Locations.txt")
+shortLOC	=	txtFIND("Locations Short.txt")
+levsLOC		=	listLOC
+if	(useSHORT	&	!is.null(shortLOC))	levsLOC	=	shortLOC
 
-shortLOC	=	c(
-!LOCSHO!
-)
+listAPI		=	txtFIND("APIs.txt")
+shortAPI	=	txtFIND("APIs Short.txt")
+levsAPI		=	listAPI
+if	(useSHORT	&	!is.null(shortAPI))	levsAPI	=	shortAPI
 
-listAPI		=	c(
-!API!
-)
 
-shortAPI	=	c(
-!APISHO!
-)
-
-if	(textDiff	|	graphDiff)	{
-	DIFF	=	as.data.frame(NULL)
-	colIN	=	c("MsBetweenPresents",		"MsBetweenDisplayChange")
-	colOUT	=	c("MsDifferencePresents",	"MsDifferenceDisplayChange")
-
-	for (gpu in unique(resultsFull$GPU))		{
-	for (qua in unique(resultsFull$Quality))	{
-	for (loc in unique(resultsFull$Location))	{
-	for (api in unique(resultsFull$API))		{
-		if (paste0(unique(resultsFull$API)[1]) == "NA")	{
-			temp	=	resultsFull[resultsFull$GPU == gpu & resultsFull$Quality == qua & resultsFull$Location == loc, colIN]
-		}	else	{
-			temp	=	resultsFull[resultsFull$GPU == gpu & resultsFull$Quality == qua & resultsFull$Location == loc & resultsFull$API == api, colIN]
-		}
-		tempD	=	rbind(as.data.frame(sapply(temp, diff)), 0)
-
-		if (nrow(tempD) > 1)	{
-			DIFF	=	rbind(DIFF, tempD)
-		}
-	}	}	}	}
-	colnames(DIFF)	=	colOUT
-
-	resultsFull	=	cbind(resultsFull, DIFF)
+if (file.exists("@Combined - !QUA!.csv.bz2"))	{
+	resultsFull	=	read_csv("@Combined - !QUA!.csv.bz2")
+}	else	{
+	resultsFull	=	read_csv("@Combined - !QUA!.csv")
 }
 
 
-resultsFull$GPU		=	factor(resultsFull$GPU, levels = listGPU, ordered = TRUE)
-resultsFull$Quality	=	factor(resultsFull$Quality, levels = listQUA)
-if (length(listLOC[1]) != 0) {
-	resultsFull$Location	=	factor(resultsFull$Location, levels = listLOC, ordered = TRUE)
-}
-resultsFull$API		=	factor(resultsFull$API, levels = listAPI, ordered = TRUE)
+resultsFull$GPU		=	ordered(resultsFull$GPU,		levels = listGPU)
+resultsFull$Quality	=	ordered(resultsFull$Quality)
+if	(!is.null(listQUA))	resultsFull$Quality		=	ordered(resultsFull$Quality,	levels = listQUA)
 
-results = resultsFull
+resultsFull$Location	=	ordered(resultsFull$Location)
+if	(!is.null(listLOC)) resultsFull$Location	=	ordered(resultsFull$Location,	levels = listLOC)
 
-reLoc	=	function(DATA, shortLOC = NULL)	{
-	if (!is.null(shortLOC)	&	length(unique(DATA$Location)) > 1)	{
-		for (i in length(shortLOC):1)	{
-			DATA$Location	=	gsub(listLOC[i], shortLOC[i], DATA$Location)
-		}
-		DATA$Location	=	factor(DATA$Location, levels = shortLOC, ordered = TRUE)
-	}
-	return(DATA)
-}
+resultsFull$API		=	ordered(resultsFull$API)
+if	(!is.null(listAPI)) resultsFull$API			=	ordered(resultsFull$API,		levels = listAPI)
 
-reAPI	=	function(DATA, shortAPI = NULL)	{
-	if (!is.null(shortAPI)	&	testAPI)	{
-		for (i in length(shortAPI):1)	{
-			DATA$API	=	gsub(listAPI[i], shortAPI[i], DATA$API, fixed=TRUE)
-		}
-		DATA$API	=	factor(DATA$API, levels = shortAPI, ordered = TRUE)
-	}
-	return(DATA)
-}
-#	reversed the order for going through the lists to address an issue with names being changed because they are a common substring
+lockBinding("resultsFull", .GlobalEnv)
+#	locks the variable in the Global Environment, preventing it from being altered
+
+results	=	resultsFull
+#	protects the original data, after having been formatted
+#	not so necessary, as all edits to it occur within function environments
 
 multiGPU	=	is.null(cGPU)
+labsGPU		=	labs(caption = cGPU)
+if	(multiGPU)	labsGPU	=	labs()
+if	(!testAPI)	testAPI		=	(length(unique(results$API)) >= 2)
 
-testAPI		=	(length(unique(results$API)) >= 2)
+GROUPS	=	list(GPU = results$GPU, API = results$API, Quality = results$Quality, Location = results$Location)
+if	(!testAPI)	GROUPS$API		=	NULL
+if	(!testQUA)	GROUPS$Quality	=	NULL
+#	this way I can start with a full GROUPS and then remove the unnecesary components
+#		this is easier than trying to build it up
 
-if (levels(results$Quality)[1] != "Review")	{
-	QUA	=	paste0(levels(results$Quality)[1], " Quality")
-	qua	=	paste0(levels(results$Quality)[1])
-}	else	{
-	QUA	=	"Review"
-	qua	=	"Review"
+diff.CONS	=	function(DATA, DIR = "Forward", lag = 1)	{
+	if	(DIR == "Forward")	return(c(diff(DATA, lag = lag), rep(0, lag)))
+	if	(DIR == "Backward")	return(c(rep(0, lag), diff(DATA, lag = lag)))
 }
 
-gameQ		=	paste0(game, " - ", QUA)
-gameGAQ		=	game
-gameGAQF	=	gameF
-
-if	(!multiGPU)	{
-	gameGAQ		=	paste0(gameGAQ, " - ", cGPU)
-	gameGAQF	=	paste0(gameGAQF, " - ", cGPU)
+if (textDiff	|	graphDiff)	{
+	results$MsDifferencePresents		=	unlist(by(results$MsBetweenPresents, GROUPS, diff.CONS))
+	results$MsDifferenceDisplayChange	=	unlist(by(results$MsBetweenDisplayChange, GROUPS, diff.CONS))
 }
-if	(!testAPI	&	!is.null(listAPI))	{
-	gameGAQ		=	paste0(gameGAQ, " - ", unique(results$API))
-	gameGAQF	=	paste0(gameGAQF, " - ", unique(results$API))
-}
-gameGAQ		=	paste0(gameGAQ, " - ", QUA)
-gameGAQF	=	paste0(gameGAQF, " - ", qua)
 
+DESC	=	function(ITEM = NULL)	{
+	descs	=	list(GPU = unique(as.character(results$GPU)), API = unique(as.character(results$API)), Location = unique(as.character(results$Location)), Quality = unique(as.character(results$Quality)))
+	
+	if	(length(descs$GPU)		> 1)	descs$GPU		=	NULL
+	if	(length(descs$API)		> 1)	descs$API		=	NULL
+	if	(length(descs$Location)	> 1)	descs$Location	=	NULL
+	if	(length(descs$Quality)	> 1)	descs$Quality	=	NULL
+	
+	gameQ	=	game
+	if	(!is.null(descs$Quality))	gameQ	=	paste0(game,	" - ",	descs$Quality,	" Quality")
+	
+	gameGAQF	=	paste0(gameF,	" - ",	paste0(descs,	collapse = " - ")	)
+	gameGAQ		=	paste0(game,	" - ",	paste0(descs,	collapse = " - ")	)
+	if	(!is.null(descs$Quality))	gameGAQ	=	paste0(gameGAQ, " Quality")
+	
+	if	(!is.null(ITEM))	{
+		gameGAQF	=	paste0(gameGAQF,	" - ",	ITEM)
+		gameGAQ		=	paste0(gameGAQ,		" - ",	ITEM)
+	}
+	return(c(gameGAQF,	gameGAQ, gameQ))
+}
+gameGAQF	=	DESC()[1]	;	gameGAQ		=	DESC()[2]	;	gameQ	=	DESC()[3]
+
+INDIV	=	function(COL, SUBS, useSHORT = useSHORT, gWIDTH = gWIDTH, gHEIGH = gHEIGH)	{
+	if	(COL != "GPU")	dir.create(paste0("@", COL))
+
+	for	(ITEM in SUBS)	{
+		# COL	<<-	COL
+		# SUBS	<<-	SUBS
+		# ITEM	<<-	ITEM
+		#	helpful for troubleshooting
+		
+		
+		message(paste0("\n", ITEM))
+		results	=	resultsFull[resultsFull[, COL] == ITEM, ]
+		if (nrow(results)	==	0)	next
+		if (COL == "GPU" & length(unique(results$API)) == 1)	next
+
+		if	(COL != "GPU")	{
+			FOLD	=	paste0("@", COL, "/", ITEM)
+			dir.create(FOLD)
+		}
+
+		gameGAQF	=	DESC(ITEM)[1]	;	gameGAQ		=	DESC(ITEM)[2]	;	gameQ	=	DESC(ITEM)[3]
+		if (COL == "GPU")	{
+			gameGAQF	=	paste0(ITEM, "/", gameGAQF)
+		}	else	{
+			gameGAQF	=	paste0(FOLD, "/", gameGAQF)
+		}
+
+		perGPU	=	FALSE
+		source("@Combined - Output.r",	local = TRUE)
+	}
+}
+
+perGPU	=	TRUE	#	used for creating stats files in each GPU in their folders
+if (!multiGPU)	perGPU	=	FALSE
 source("@Combined - Output.r")
 
-
 if	(graphs_all)	{
-textFRAM	=	FALSE
-textDISP	=	FALSE
-textREND	=	FALSE
-textDRIV	=	FALSE
-HTMLOUT		=	FALSE
-textDiff	=	FALSE
-#	because the statistics for the individual runs are not needed; just the graphs
-
-for	(loc in listLOC)	{
-
-	message(paste0("\n", loc))
-	results	=	resultsFull[resultsFull$Location == loc, ]
-#	would want to change this to be for the GPU when dealing with the multi-GPU data. Location would be for the single-GPU results and is the normal use for this
-#		with a GPU version, having it change the work directory may not be a bad idea, so it sticks the files in the appropriate places
-
-	gameQ		=	paste0(game, " - ", QUA, " - ", loc)
-	gameGAQ		=	game
-	gameGAQF	=	gameF
-
-	if	(!multiGPU)	{
-		gameGAQ		=	paste0(gameGAQ, " - ", cGPU)
-		gameGAQF	=	paste0(gameGAQF, " - ", cGPU)
-	}
-	if	(!testAPI	&	!is.null(listAPI))	{
-		gameGAQ		=	paste0(gameGAQ, " - ", unique(results$API))
-		gameGAQF	=	paste0(gameGAQF, " - ", unique(results$API))
-	}
-	gameGAQ		=	paste0(gameGAQ, " - ", QUA, " - ", loc)
-	gameGAQF	=	paste0(gameGAQF, " - ", qua, " - ", loc)
-
-	source("@Combined - Output.r")
-}	}
+# INDIV("GPU",		listGPU,	useSHORT = TRUE,	gWIDTH = gWIDTH * 1.25,	gHEIGH = gHEIGH * 2)
+# INDIV("Location",	listLOC,	useSHORT = FALSE,	gWIDTH = gWIDTH * 1.25,	gHEIGH = gHEIGH * 1)
+# INDIV("API",		listAPI,	useSHORT = TRUE,	gWIDTH = gWIDTH * 1.25,	gHEIGH = gHEIGH * 1)
+}

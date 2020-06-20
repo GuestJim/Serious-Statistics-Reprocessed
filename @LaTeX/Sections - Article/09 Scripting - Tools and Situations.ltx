@@ -1,11 +1,11 @@
 \section{Scripting: The Tools and Situations}
-At last we are into the scripting half of this article, and because of how I tend to go in and edit my scripts when I have a new idea, it is hard to say how long the specific code will remain as I present them here.
+At last we are into the scripting half of this article, and because of how I tend to go in and edit my scripts when I have a new idea, it is hard to say how long these sections will remain accurate.
 There are certain things I strongly doubt will change though, and that is the software tools I use, certain logistical structures, and the fact I collect data on five minute (300 second) runs.
 Before getting too far though, I would like to remind everyone that I taught myself practically everything about to be covered, so for those of you who actually know how to write scripts in the languages I use, I am so sorry for what you are going to see.
 
 Starting from the beginning, I use \href{https://github.com/GPUOpen-Tools/OCAT}{OCAT} to collect the data.
 This is the Open Capture and Analytics Tool released as part of AMD's GPUOpen platform.
-The simplest way to think of it is as a convenient front-end to PresenMon, but there is more to it than that now, and one of my personally favorite changes in recent versions was a tone playing at the start and stop of each run.
+The simplest way to think of it is as a convenient front-end to PresentMon, but there is more to it than that now, and one of my personally favorite changes in recent versions was a tone playing at the start and stop of each run.
 While I still will use a timer to help me keep consistent timing during the course of a run, hearing that notification the data collection has stopped is very satisfying.
 
 I have OCAT set to collect for 300 seconds, as I mentioned above, but something I feel I should mention about my methodology is that I do not repeat my runs under the same configuration, without special reason to do so.
@@ -15,7 +15,7 @@ A 'good section' is one where I expect to not trigger a cutscene or need to ente
 In recent months this is not how I have collected performance data, as I attempt to capture video of the review playthrough, and the load of video capture and encoding can, has, and will impact performance.
 
 Once the data collection is finished, OCAT will close a CSV with all of the data, and append a line onto a summary file with various statistics.
-I take the CSVs I created and will place them into the appropriate folders, and this folder structure is important as some of the scripts depend on it.
+I take the CSVs and place them into the appropriate folders, and this folder structure is important as some of the scripts depend on it.
 The top folder is the name of the article, which in this case is "Serious Statistics and Scripts."
 The next folder that matters here is "OCAT Data," and within it are folders for each GPU.
 Under the GPU folder will be the API folder, and under that the graphics configuration such as High or Max, and finally we have the CSVs.
@@ -39,11 +39,11 @@ The \textit{moments} library is just for the Skewness and Kurtosis functions, an
 
 The other files I will have in the OCAT Data folder are there because I wanted to make my life easier.
 Previously I would need to manually edit the R scripts to have the graphs/plots properly labelled with graphics configuration, recording location, etc.
-What I have since done is configured the Python script to check for and then read in files that I place the information in.
-I commonly have a Locations.txt file but can also have Qualities and API files, and even Short Locations and Short API files if necessary.
+What I have since done is configured the Python script to check for and then read in files that I place this information in.
+I commonly have a Locations.txt file but can also have Qualities and APIs files, and even Locations Short and Short APIs Short files if necessary.
 (The Short files have shortened versions of the names, such as changing Thebes – Karnak to just Karnak, so it fits better on the plots.These text files are all optional but very desirable.
 
-In total I have four scripts (now) for managing and processing the data and one more for managing the graphs, and while the first I use for this is the Python script, I am instead going to start with an R script.
+In total I have four scripts (now) for managing and processing the data and one more for managing the graphs, and while the first I use in my process is the Python script, I am instead going to start with an R script.
 The reason is that the Python script works heavily with this particular R script, and I feel this script will serve better as an introduction, though it does have a quirk or two.
 The purpose of this script is to read in the multiple CSVs, combine them to a single table, and then save a new file with all of the relevant data.
 While this can significantly increase the storage footprint of the data, it makes things a bit easier to have all of the data in a single file, instead of needing to load in multiple files to work with.

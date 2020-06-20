@@ -52,7 +52,9 @@ TYPEs	=	[\
 'Course',\
 'Freq',\
 'QQ',\
-'Diff']
+'Diff',\
+'Diff EXT',\
+'Means Labeled']
 
 def numFind	(filename, list):
 	if list == [""]:
@@ -83,11 +85,11 @@ def numGen (filename, GPU = droppedGPU):
 
 	return(code)
 
-if not os.path.exists("Graphs"):
-	os.mkdir("Graphs")
+if not os.path.exists("@Graphs"):
+	os.mkdir("@Graphs")
 
 for file in os.listdir(droppedPath):
 	if file.endswith(".png"):
-		shutil.copyfile(file, "Graphs\\" + numGen(file) + ".png")
+		shutil.copyfile(file, "@Graphs\\" + numGen(file) + ".png")
 
 # os.system("pause")

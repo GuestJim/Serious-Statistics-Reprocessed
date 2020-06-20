@@ -1,58 +1,69 @@
 \section{Scripting: OCAT -- Combined -- PA.r}
 
 The purpose of this script is to take the multiple CSV data files and combine them all into one file, with information added to identify the configuration.
-This information would by GPU, API, Quality configuration, and Location
+This information would by GPU, API, Quality configuration, and Location.
 
 I think one thing I should address right away is that the name of the script is OCAT - Combined - PA.r and the reason for the - PA is to identify this as for the performance analyses.
 I did have a version for the game reviews (OCAT - Combined - Review.r), but as this version works for both (provided I use the correct folder structure) I am no longer using the other script, but do not feel like dropping the - PA.
-The Python script I will cover in the next section also has the - PA to it, but again it is a legacy note.
+The Python script I will cover in the next section also has the - PA suffix, but again it is a legacy note.
 
 I should also mention that any time I have a term surrounded by exclamation marks, the whole term is meant for the Python script to replace, if appropriate.
 
+\subsubsection{R Library Loading}
 \begin{styleR}
 library(readr)
 
 game = "!GAME!"
+COMPRESS	=	TRUE
 
 setwd("!PATH!")
 \end{styleR}
 
-These lines are the beginning of the script and serve to set certain things up for the script.
+These lines are the beginning of the script and serve to set certain things up for it.
 The \textbf{library} function tells R to load the library named, \textit{readr} in this case, which provides R with functions for reading in different files, including CSVs.
 
 The next line creates and sets the variable \textbf{game} to be the name of the game (or article).
 The Python script will replace the !GAME!
 term with the appropriate name, but it can also be typed in manually.
 
+The following line is a control for the very end of the script when it comes time to export the result.
+Besides being able to read and read CSV files, \textit{readr} is also able to do the same with compressed files.
+As this script will effectively double the data footprint as the contents of multiple files are placed in a new file, such compression is appropriate.
+
 The \textbf{setwd} function is to set the working directory, so all file names and paths R is told to use will be relative to this directory.
 Like the !GAME!
 term, !PATH!
 will be replaced by Python, but you can also manually change it, though you will need to remember R uses / instead of \SBS for paths.
 
+\subsubsection{OCATcomb Data Frame Creation}
 \begin{styleR}
 OCATcomb	=	data.frame(matrix(ncol = 24, nrow = 0))
-OCATtemp	=	data.frame(matrix(ncol = 24, nrow = 0))
 \end{styleR}
 
 I already explained this script is for loading in and combining multiple CSVs.
-In order to do this the data needs to be stored in variables and these two lines create these variables.
-First is \textbf{OCATcomb}, which stands for OCAT combined, and \textbf{OCATtemp} is for OCAT temporary, a temporary variable I use for managing the CSV data before it goes to OCATcomb
+In order to do this the data needs to be stored in such a way that the data of each CSV can be combined, which is a little tricky.
+You see, while there are functions that will combine the contents of multiple datasets, these separate datasets must first exist, which is why I am creating the \textbf{OCATcomb} variable here, and why it is empty.
+The name \textbf{OCATcomb} is for OCAT.
 
-Both of these variables are made to be data frames, a fundamental and powerful data structure in R, with 24 columns, which is how many I will need, and 0 rows, because I want these objects to be empty.
-They are currently just placeholders, which is why I want them empty as now I can have the CSV data appended to them without issue, though the number of columns does need to be correct.
-To make sure I get the right size, empty matrices are made first and then these are converted into data frames.
+There are two things going on here to create this variable, and the inner thing is creating a matrix.
+This matrix has 24 columns and 0 rows to it.
+This is important because the function I will use for combining the data is \textbf{rbind}, which stands for row bind and it requires the objects it works with to have the same number of columns.
+The reason it has zero rows is so it is empty, and therefore combining it with the first of the CSVs will result in just the contents of the CSV.
 
-By the way, I have started using tabs for aligning certain things, in this case the equal signs, as I find it easier to read.
-Obviously it is not a blanket rule for equal signs, as I just used spaces within the matrix command, but is one of my formatting quirks to be aware of.
-I also tend to have spaces surrounding operations, such as +, -, *, and so on.
+The outer thing going on is to turn the empty matrix into an object called a data frame.
+Data frames are a fundamental data structure to R, like the matrix, vector, list, and other data classes, but I would consider it one of the most powerful.
+It is basically the closest to a data table and allows each column to be a different data type (strings or numbers, for example) and for rows and columns to have names.
+Data frames must also be rectangular, which means there must be the same number of columns to every row, even if some elements in a row are empty.
+This structure matches that of the CSV data and, indeed, when read, the CSV data will be a data frame normally.
 
+\subsubsection{Locations List Creation}
 \begin{styleR}
 listLOC	=	c(
 !LOC!
 )
 \end{styleR}
 
-The \textbf{listLOC} variable is effectively a list of the locations the data is collected from, and the !LOC!
+The \textbf{listLOC} variable is a list of the locations the data is collected from, and the !LOC!
 term will be replaced by the Python script.
 It may be worth noting though that R has multiple object types that can be thought of as lists.
 This is specifically an atomic vector, one of the simplest, but there are also objects actually called lists that have some greater functionality.
@@ -64,87 +75,98 @@ You do need to make sure everything is properly closed though.
 
 This next bit is a custom function I made for this script, and I feel it is best to introduce it as a whole and then examine its pieces.
 
+\subsubsection{READ Function for Importing CSV}
 \begin{styleR}
-READ	=	function(fold="", Quality = "", API="") {
-	if (API != "") {
-		API	=	paste0(API, "/")
-	}
-	if (length(listLOC[1]) == 0)	{
-		listLOC	=	paste0(rep("Recording ", length(CSV)), 1:length(CSV))
-	}
+READ	=	function(fold="",	CSV,	GPU,	Quality = "",	API="")	{
+	if (API != "")	API	=	paste0(API, "/")
+	if (length(listLOC[1]) == 0)	listLOC	=	paste0("Recording ", 1:length(CSV))
+
 	len	=	min(length(listLOC), length(CSV))
-	for (place in 1:len) {
-		if (CSV[place] != ".csv") {
-			if (grepl(GPU, getwd()))	{
-				OCATtemp	=	read_csv(paste0(CSV[place]))[,1:20]
-			}	else	{
-				OCATtemp	=	read_csv(paste0(fold, GPU, "/" , API, Quality, "/", CSV[place]))[,1:20]
-			}
-		} else {next}
-		OCATtemp[,21]	=	GPU
-		OCATtemp[,22]	=	Quality
-		OCATtemp[,23]	=	listLOC[place]
-		OCATtemp[,24]	=	gsub("/", "", API)
-		OCATcomb	=	rbind(OCATcomb, OCATtemp)
+	out	=	data.frame(matrix(ncol = 24, nrow = 0))
+
+	for (place in 1:len)	{
+		if (CSV[place] != ".csv")	{
+			fileLOC	=	paste0(fold, GPU, "/" , Quality, "/", CSV[place])
+			if	(API != "")	fileLOC	=	paste0(fold, GPU, "/" , API, Quality, "/", CSV[place])
+
+			if	(grepl(GPU, getwd()) & grepl(Quality, getwd()))		fileLOC	=	paste0(CSV[place])
+			if	(grepl(GPU, getwd()) & !grepl(Quality, getwd()))	fileLOC	=	paste0(fold, API, Quality, "/",CSV[place])
+		}	else {next}
+		OCATtemp	=	read_csv(fileLOC)[, 1:20]
+
+		OCATtemp$GPU		=	GPU
+		OCATtemp$Quality	=	Quality
+		OCATtemp$Location	=	listLOC[place]
+		OCATtemp$API		=	gsub("/", "", API)
+		out	=	rbind(out, OCATtemp)
 	}
-	return(OCATcomb)
+	return(out)
 }
 \end{styleR}
 
 The first piece I want to address is the creation and closing of the function.
 
+\subsubsection{Custom Function Example}
 \begin{styleR}
-READ	=	function(fold="", Quality = "", API="")	{
+READ	=	function(fold="",	CSV,	GPU,	Quality = "",	API="")	{
 	...
-	return(OCATcomb)
+	return(out)
 }
 \end{styleR}
 
 When creating a function you can tell it what its arguments are.
-In this case there are three arguments with the names \textit{fold}, \textit{Quality}, and \textit{API}.
+In this case there are five arguments with the names \textit{fold}, \textit{CSV}, \textit{GPU}, \textit{Quality}, and \textit{API}.
 When using the function, the values passed to it will be referred to by those names.
-By setting the names equal to something, in this case empty strings, the variables will as default values whatever you provided.
-This allows one to not provide a value for each argument, but for this function I always do have a value passed to them.
+By setting the names equal to something, in this case empty strings, the variables will have default values of whatever you provided.
+This allows one to not provide a value for each argument, but for the function to still opoerate correctly.
 Functions in other scripts will be more important to have default values for.
 
 After using the \textbf{function} command to create the function, the body of the function is held between curly brackets.
-Generally whenever you are identifying the body of something, it is these brackets you use, which we see within the function for the \textbf{if} statements and \textbf{for} loop.
+Generally whenever you are identifying the body of something, it is these brackets you use, and that includes when working with \textbf{if} statements and \textbf{for} loops.
+If the body of the function can occupy a single line, however, then these brackets are not necessary.
 
-This function is supposed to provide an output, so to identify what the output should be the \textbf{return} command is used, and in this case it is \textbf{OCATcomb} that is returned.
-Technically a function does not need an output, which is the case in a different script, and it might not even be needed here as I am changing \textbf{OCATcomb}.
-The variable was made outside the function and therefore changes made within the function should be carried over to the outside of the function too.
-Any variable created within the function though will not be available outside of the function.
-(This is not true of \textbf{for} loops though, as the variables created by the loop for the iteration process and those variables made within the body of the loop will be accessible outside the loop too.)
+This function is supposed to provide an output, so to identify what the output should be the \textbf{return} command is used, and in this case it is \textbf{out} that is returned.
+Technically a function does not need an output, which will be seen in another script, and even here I could assign the output value to \textbf{OCATcomb} in such a way it will be applied to the global environment, but I choose not to.
 
+\subsubsection{API Folder Check}
 \begin{styleR}
-if (API != "") {
-	API	=	paste0(API, "/")
-}
+if (API != "")	API	=	paste0(API, "/")
 \end{styleR}
 
-This \textbf{if} is to address that sometimes the API folder is present, and sometimes it is not.
+This \textbf{if} is to address that sometimes the API folder is present, and sometimes it is not by checking if the value of \textbf{API} is not equal to an empty string.
 If there is an API value, then the CSVs will be under a folder by the name of the API, so the / must be added so R will know to look into this folder at a later command.
+As string manipulation can be achieved in a single line, I have done so and the curly brackets are unnecessary.
 
+I should also explain the \textbf{paste0} function, which is a variant of the \textbf{paste} function.
+Both will take a list of strings, or some other data objects, and concatenate them together into a single string.
+The difference between the functions is \textbf{paste0} will not apply a separation string between the elements, while \textbf{paste} can and does have a default value of a space.
+
+\subsubsection{Locations List Check}
 \begin{styleR}
-if (length(listLOC[1]) == 0)	{
-	listLOC	=	paste0("Recording ", 1:length(CSV))
-}
+if (length(listLOC[1]) == 0)	listLOC	=	paste0("Recording ", 1:length(CSV))
 \end{styleR}
 
 This is to address if there is not a list of location names to use, and checks by seeing how long the first entry in the \textbf{listLOC} is with the \textbf{length} function.
 To identify it is just the first element we are interested in, \textbf{[1]} is used and the actual test for if the length is equal to zero requires \textbf{==}.
-The two equal signs for testing equality is common for many if not all languages.
+The two equal signs for testing equality is common for many if not all languages, and similarly the exclamation point is commonly used to check the Boolean inverse, or "not", hence why \textbf{!=} earlier was for not equal to.
 Brackets can be used for more than just identifying specific elements in a list, as we will see as it can also grab multiple columns, or rows, or be used for subsetting the data.
 
-If the test returns TRUE, then there was not a provided list of locations, so one needs to be created and for that I am using a couple functions.
-The first is \textbf{paste0}, which is a special version of the \textbf{paste} command.
-Both serve to concatenate values into a string, but \textbf{paste0} does not apply a separation character between the values.
-By default \textbf{paste} does, but this can be changed by passing a \textit{sep} argument, but \textbf{paste0} is just simpler.
+If the test returns TRUE, then there was not a provided list of locations, so one needs to be created and for that I am using the \textbf{paste0} and \textbf{length} functions again as well as a shorthand for the \textbf{seq} function.
 
-The second command is actually a special shorthand for the \textbf{seq} command for generating sequences of numbers.
-The shorthand is using a colon between the start of the sequence and the end of the sequence, which are 1 and the length of the list of CSVs; the number of recordings.
-This shorthand uses a step of 1, but the \textbf{seq} function does have a \textit{by} argument for a different step.
+As its name suggests, \textbf{seq} is a function for generating a sequence of numbers.
+The shorthand is the use of the colon with a numeric value on both sides.
+The number of the left is the beginning of the sequence, and on the right the end of the sequence.
+It assumes a step of 1, which is correct for my use here but \textbf{seq} does have a \textit{by} argument to control this.
 
+The sequence I want is a list of numbers from 1 to the number of CSVs being worked on, as this will correspond to the number of locations.
+This list of CSVs will be those for a specific configuration of GPU, API, and Quality, and as I do not repeat locations for the same configuration, the numbers will match.
+
+The \textbf{paste0} function takes this list and appends to it the "Recording " string I provided, but there is something very important to note here.
+The output of \textbf{paste0} will be a vector, and not a single string.
+By default \textbf{paste0} will not collapse a vector to a single string, so it is now instead applying the string I provided to each element in the vector.
+The function does have an argument named \textbf{collapse} and if it is given a value other than NULL (its default) it will collapse the list down to a single string, and that is something I want in a different script.
+
+\subsubsection{Recording Count}
 \begin{styleR}
 len	=	min(length(listLOC), length(CSV))
 \end{styleR}
@@ -152,6 +174,7 @@ len	=	min(length(listLOC), length(CSV))
 This line sets a variable to be the minimum of the number of CSVs and the number of locations tested.
 Honestly, I do not think this will ever come up for me, but it will catch the case where these numbers might be different, like if I forgot to name every location I recorded in, or do not have a recording for a location.
 
+\subsubsection{for Loop Example}
 \begin{styleR}
 for (place in 1:len)	{
 	...
@@ -164,6 +187,7 @@ The list is a sequence from 1 to the value of \textbf{len}, with a step of one.
 The \textbf{place} variable is created by this loop and will hold the current value in that list.
 Any name would work, but I am using \textbf{place} because it is for the place in the list of CSV files.
 
+\subsubsection{next Command Example}
 \begin{styleR}
 if (CSV[place] != ".csv")	{
 	...
@@ -175,140 +199,162 @@ This one is to check for if there was not a CSV file provided at the current pla
 Again this is not likely to happen, but was useful when I was originally creating the script.
 The way it works is to see if the current line in the CSV list is not equal to ".csv."
 The CSV list will be shown later, but for now it is just worth noting that the list is originally just the file name, without the extension so I use a \textbf{paste0} function to add that on.
-If an element in the list was empty then, it will then become just that extension.
-The symbol to check if things are not equal is \textbf{!=}, which is again the common for many languages.
-Actually \textbf{!} is commonly used to invert TRUE and FALSE, and I will use it like that in other scripts too.
+If an element in the list were empty, it will then become just that extension.
 
 In this case I want something specific done if the result of the test is FALSE, so I am using the \textbf{else} statement as well.
-The code to be executed for this situation is also contained within curly brackets.
-In this case the command to be run is \textbf{next}, which tells the \textbf{for} loop to stop its current operation and go to the next iteration.
-This way the loop will skip any missing CSV file names and go to the next place in the list to try.
+The code to be executed for this situation is also contained within curly brackets, and that is the \textbf{next} command.
+This command tells the loop to stop its current operation and go to the next iteration.
+This way the loop will skip any missing CSV file names and go to the next place in the list.
 
+\subsubsection{File Location Construction}
 \begin{styleR}
-if (grepl(GPU, getwd()))	{
-	OCATtemp	=	read_csv(paste0(CSV[place]))[,1:20]
-}	else	{
-	OCATtemp	=	read_csv(paste0(fold, GPU, "/" , API, Quality, "/", CSV[place]))[,1:20]
-}
+if (CSV[place] != ".csv")	{
+	fileLOC	=	paste0(fold, GPU, "/" , Quality, "/", CSV[place])
+	if	(API != "")	fileLOC	=	paste0(fold, GPU, "/" , API, Quality, "/", CSV[place])
+
+	if	(grepl(GPU, getwd()) & grepl(Quality, getwd()))		fileLOC	=	paste0(CSV[place])
+	if	(grepl(GPU, getwd()) & !grepl(Quality, getwd()))	fileLOC	=	paste0(fold, API, Quality, "/",CSV[place])
+}	else {next}
 \end{styleR}
 
-There is a lot going on here, including something potentially confusing because of the READ function being described before covering what it will be run on.
-The GPU value, as well as the CSV list, is set outside of the function, but when the function is called it will grab the value to use.
+I have a lot going on within the \textbf{if} statement, but it is not that bad, I promise.
+The entire purpose here is to build the \textbf{fileLOC} variable, which holds the file location information.
+I described previously the files are hold in a folder structure that, within the OCAT Data folder, starts with the GPU, then the API, the Quality, and finally we have the files themselves.
 
-The next thing to address is what the \textbf{grepl} function does, and that is to test if a certain string is in another string.
-In this case it is testing if the current GPU is within the current working directory, which is called by the \textbf{getwd} function.
-The reason for this \textbf{if} statement is to determine if the CSV files to be combined are for a specific configuration or covering multiple GPUs.
-I explained earlier that the CSVs are sorted into a tree of folders identifying the configuration, including the GPU, so when it is the files for a specific configuration, the GPU will be in the directory path.
-When getting the data for multiple GPUs though, then the path is for the OCAT Data folder and not the GPU folders beneath it.
+The first declaration of \textbf{fileLOC} creates a version of the file path with both the GPU and Quality folders in the path.
+It is assuming there is no API folder to be concerned with and it also has the \textbf{fold} variable, which I will explain now.
+Its purpose is purely as a precaution for a scenario where I might have an additional folder level at the top of this.
+One possible example could be a CPU, if I were to test multiple CPUs as well as GPUs and so on, or if I were to compare multiple games.
+I doubt I ever will use this capability, but I still want it there to be safe.
 
-Getting into the commands to be run, \textbf{read\_csv} will read the CSV file at the location it is given.
-This will be a combination of the current working directory and whatever is given to the function.
-If the files are in the working directory, the situation for when the files are for a specific configuration, then just the file name needs to be given to this function, and to ensure it will be a string I am using the \textbf{paste0} function.
-This technically should not be necessary, as the CSV list is a list of strings, but just in case.
+The second declaration of the variable is behind an \textbf{if} condition that simply checks if there is an API to consider or not.
+Actually, because the \textbf{API} variable will be an empty string if not used, I could just use this declaration of \textbf{fileLOC} and remove the previous, but I somewhat prefer to keep it this way, as a visual reminder.
 
-The last bit to this line is \textbf{[,1:20]}, which is similar to the brackets used earlier.
-Here it is grabbing a list of columns because I am passing to it the indices for multiple columns.
-First things first though, to indicate it is just the columns I want, I have a comma to the left of the sequence.
-Values to the left of the comma would be to identify the desired rows, and to the right of the comma is for columns.
-When no value is given for either the row or column, then R will grab all of them.
-By using 1:20, the first twenty columns are selected, so only those from the CSV are stored to the \textbf{OCATtemp} variable.
+The next two declarations are for two specific possibilities.
+The first is if the script is running inside the same folder as the CSVs, which is a common situation.
+The check the \textbf{if} condition does uses the \textbf{grepl} function that will search a string to see if a given pattern is present in it, and then return TRUE or FALSE.
+The pattern it searches for is given first, and for that I use the GPU name, and the string it searches is the current working directory, which is returned by the \textbf{getwd()} function.
 
-Something very technical about this is that the \textbf{read\_csv} function actually does not create a standard data frame but an object called a tibble.
-These are a subclass of data frames, but for everything I am doing, the distinctions are unimportant.
-Depending on your interest in R though, it may be worth investigating them.
+This is not the only check being done though, as you can see by the second \textbf{grepl}, which is checking for the presence of the \textbf{Quality} variable in the current working directory.
+If both the GPU name and the Quality name are in the working directory, that means we are in the folder with the CSVs, as those are the beginning and end of the relative path from the OCAT Data folder.
+This means the file location is just the file name itself.
+To make sure both checks are TRUE, the ampersand, \&, symbol is used as it stands for AND, which will only return TRUE when all conditions it connects are TRUE.
+There is also the pipe symbol, |, that is used for OR and will return TRUE when any of the conditions are TRUE.
 
-By the way, \textbf{read\_csv} does have some useful arguments that can be useful for other situations, but I do not need them here.
-One that has proven helpful in a few rare circumstances is to have it start reading at a specific line, as sometimes the top of the CSV file is not a table but other information.
+The final \textbf{fileLOC} declaration is for a situation I doubt I will use much, but is there because it is a reasonable possibility.
+This situation would be for if I want to work with all of the data for a specific GPU, which means I am within the GPU's folder.
+This is why the GPU name must be found in the working directory, but the Quality name must not be.
+One reason why I doubt I will ever use this specific capability is that there are other ways available to me to achieve this same goal by finding subsets within larger datasets, but that is something for a different script.
 
+\subsubsection{Temporary Data Frame Creation}
 \begin{styleR}
-OCATtemp	=	read_csv(paste0(fold, GPU, "/" , API, Quality, "/", CSV[place]))[,1:20]
+OCATtemp	=	read_csv(fileLOC)[, 1:20]
 \end{styleR}
 
-I wanted to repeat this line, as it has been a while since we saw it.
-This is the command that is run when the \textbf{if} statements finds the GPU name is not in the path.
-That means R needs to go down through folders to find the current CSV file.
-Luckily this is as easy as just adding the folder names to the string for the file.
-This is why the earlier test would add a / to the API value if it is present, because otherwise the API string is empty and does not impact the file path at all.
-The \textbf{GPU} and \textbf{Quality} strings will never be empty through, so I can safely add the / in both locations.
-The \textbf{fold} variable is present just in case I have placed the GPU folders into another for some reason.
-I do not recall if I ever have, but it can be a helpful feature just in case.
+With the file location determined by the previous code, we can now actually use it with the \textbf{read\_csv} function from the \textit{readr} library.
+It has several arguments, some which can be necessary in certain circumstances, but not here.
+For this use, all the function needs is to be told where the CSV to read is.
+There is more to this line of code than that though, with the square brackets following the call to the function.
 
-The string to one of the files for this articles looks like this: RX Vega 64/DirectX 11/Max/OCAT-Sam2017.exe-2019-07-20T105950.csv.
-Remember, the working directory has been set already, so the path all the way from the drive letter is not necessary.
+As I mentioned earlier, square brackets can be used to identify more than just a single element from a list, but to grab columns or rows, or to subset data.
+The format for doing this is to identify the desired rows and then the desired columns with a comma separating them.
+I want every row from the data being read in, so I have nothing on the left of the comma.
+On the right, however, I have a shorthand sequence of the numbers 1 through 20, which means I want the first twenty columns.
+If you look at a CSV from OCAT, you will see all of the data is contained in these first twenty columns, with subsequent columns holding other information such as the CPU and GPU.
+Important information, yes, but I do not need it stored here.
+Actually, I could even remove a couple columns as I do not need the screen width and height recorded here either, but I am fine keeping it.
 
-Something that occurs to me is that because I am setting \textbf{OCATtemp} to a value here, it is actually not necessary to create it earlier like I did.
-I am leaving it though, if only to keep the reference and make it clear the two data frames are meant to be the same width.
+The way this bracket notation can be used to find a subset of results will be shown in a different script.
 
+Returning to the \textbf{read\_csv} function, it returns a special kind of data frame called a tibble.
+This is a data type used by \textit{readr} and other libraries made by Tidyverse, but for almost all of my purposes, are identical to data frames.
+That is definitely the case in this script.
+Because the function returns a data frame, the bracket notation can be applied to it as though it were a variable storing a data frame, because effectively that is what is happening.
+This subset of that data is then assigned to the \textbf{OCATtemp} variable, a temporary holder of the OCAT data.
+
+\subsubsection{Configuration Columns}
 \begin{styleR}
-OCATtemp[,21]	=	GPU
-OCATtemp[,22]	=	Quality
-OCATtemp[,23]	=	listLOC[place]
-OCATtemp[,24]	=	gsub("/", "", API)
+OCATtemp$GPU		=	GPU
+OCATtemp$Quality	=	Quality
+OCATtemp$Location	=	listLOC[place]
+OCATtemp$API		=	gsub("/", "", API)
 \end{styleR}
 
-Coming out of the \textbf{if} statement, but still in the \textbf{for} loop, we have these commands.
-What they are doing is assigning values to the columns with the given identifying number.
-Because \textbf{OCATtemp} only has twenty columns to it, based on the \textbf{read\_csv} function, these new columns are added on.
-The values for every row in the column will be what is stated there: the current GPU; current Quality; current Location; and current API.
-The \textbf{gsub} command will remove the / character from the API string.
-With these columns, the configuration for every row is identified.
+At this stage we are taking advantage of a useful assumption R will make with regards to data frames and other objects that support names.
+I have covered previously how the bracket notation works to identify columns of a data frame, but another means is to use the \$ symbol to grab a column of a specific name.
+If no column by that name exists when you ask for it, R will return NULL, but if you assign a value to this non-existent column, it will create the column.
+It will also assign the name you used to identify the column and the value given too.
+This top line creates the GPU column for the \textbf{OCATtemp} data frame and then assigns to that column the value of the \textbf{GPU} variable.
+Quite appropriately, R repeats this value for every row in the data frame.
 
+Similarly, columns are created for the Quality, Location, and API, though the creation of the API column is a little special.
+Remember, I added the / character to the value of \textbf{API}, so I use \textbf{gsub} to remove it now.
+This function is related to the \textbf{grepl} function, but instead of reporting if a pattern is present in a string, it searches for a pattern ("/"), replaces it with a provided pattern ("", an empty string), within the provided string (the \textbf{API} variable).
+
+\subsubsection{Combining Data Frames}
 \begin{styleR}
-OCATcomb	=	rbind(OCATcomb, OCATtemp)
+out	=	rbind(out, OCATtemp)
 \end{styleR}
 
-Now we can end the loop, and nearly the \textbf{READ} function itself with this.
-The \textbf{rbind} function will take the provided objects and combine them by rows.
-There is also a \textbf{cbind} function that is similar by combining objects by columns.
+With the columns applied to identify the configuration of the data from the current CSV, the contents of \textbf{OCATtemp} are concatenated onto the \textbf{out} data frame using \textbf{rbind}.
+For the first run of the \textbf{for} loop, the result will just be the contents of \textbf{OCATtemp}, but for every subsequent iteration, \textbf{out} will store the contents of multiple \textbf{OCATtemp} data frames, which is multiple CSVs.
 
-By using \textbf{rbind} on \textbf{OCATcomb} and \textbf{OCATtemp} the result is adding the recently loaded CSV to the combined data frame of data.
-This is also why it was necessary to create \textbf{OCATcomb} earlier, because R would throw an error if it tried to use an object that did not yet exist.
+\subsubsection{Setting Function Output}
+\begin{styleR}
+return(out)
+\end{styleR}
 
-The last bit of the \textbf{READ} function is the \textbf{return} command, which I explained earlier, so we can move on.
+Now we can end the loop and the \textbf{READ} function itself, but to do that we must state what the output of the function is.
+This is done with the \textbf{return} command, which also ends the execution of the function.
 
+\subsubsection{Text to Be Replaced}
 \begin{styleR}
 !LONG!
 \end{styleR}
 
 As you can hopefully guess, this is something the Python script will replace, but because that is not going to help us much now, here is an example of what it will place there.
 
+\subsubsection{CSV List Example}
 \begin{styleR}
-GPU = "RX Vega 64"
-CSV = c(
+GPU	=	"RX Vega 64"
+CSV	=	c(
 "OCAT-Sam2017.exe-2019-07-20T105950",
 "OCAT-Sam2017.exe-2019-07-20T110524",
 "OCAT-Sam2017.exe-2019-07-20T111116"
 )
-CSV = paste0(CSV, ".csv")
-OCATcomb = READ("", "Max", "DirectX 11")
+CSV	=	paste0(CSV, ".csv")
+OCATcomb	=	rbind(OCATcomb, READ("", CSV, GPU, "Max", "DirectX 11"))
 \end{styleR}
 
 As you can see the GPU variable is set, the CSV list is created with names for the CSV files, and then the ".csv" extension is pasted on the end of the file names.
-The last bit is to run the \textbf{READ} function and set the output equal to \textbf{OCATcomb}.
-Actually, just running \textbf{READ} would be enough, as the new value for \textbf{OCATcomb} is already set by the function, but I do not mind being a little redundant.
-(I already explained the \textbf{return} function is not necessary too, but I still think it is useful to cover in the first R script addressed.)
+The last bit is to run the \textbf{READ} function and concatenate it to the \textbf{OCATcomb} variable.
+This combination is then assigned to \textbf{OCATcomb}.
 
-The Quality and API  values are both passed to the \textbf{READ} function as arguments.
-Technically I could make the GPU an argument too, but I do have a reason for keeping it separate, though it might not be good enough for everyone.
-By having it where it is, I can more easily see it when looking through the file.
-For a performance analysis, it is highest group to sort things by and seeing the separations between the groups can be helpful if any manual editing is required.
+We can see how the \textbf{READ} function is having values supplied for its arguments, and because I am using every argument and in the same order, just the values are provided.
+In two cases, the values are actually variables, so R will get the values of those variables and pass that into the function.
+It is possible to use a different order by using the argument name, such as API = "DirectX 11" but is not necessary here.
 
+\subsubsection{CSV Writing with Compression}
 \begin{styleR}
-colnames(OCATcomb)[21:24]	=	c("GPU", "Quality", "Location", "API")
-write_csv(OCATcomb, "@Combined - !QUA!.csv")
+if	(COMPRESS)	{
+	write_csv(OCATcomb, "@Combined - !QUA!.csv.bz2")
+}	else	{
+	write_csv(OCATcomb, "@Combined - !QUA!.csv")
+}
 \end{styleR}
 
-Finally we are at the end of the file with these last two lines.
-The first uses the \textbf{colnames} function to get the column names for the \textbf{OCATcomb} data frame.
-This will just be a list and the [21:24] identifies just those for the columns I added.
-The \textbf{read\_csv} function grabbed the column names from the original CSVs, so those are not touched.
-The identified column names are then set to be GPU, Quality, Location, and API.
-Thus far I have only grabbed columns by their number, but it is also possible to get them by their names, which we will see in other scripts, so naming the columns is advantageous.
+Finally we are at the end of the file and the \textbf{COMPRESS} switch set at the beginning is used.
+This switch controls whether the \textbf{OCATcomb} data should be exported to a normal CSV or if it should be compressed.
+I have it set to use bzip2 compression but gzip and lzma are also offered by using the .gz and .xz extensions, respectively.
+Having tested the different methods, I have decided on bzip2 as it produces the best compression, though gzip is faster but also produces the largest file of the three.
+With lzma, the output was still larger than bzip2 and took the longest by far, so I would not bother with it.
+The bzip2 compressed file did take longer to read than the others, but the difference was small enough that I consider it still the best method of the three to use.
 
-The \textbf{write\_csv} does exactly what its name suggests and writes a new CSV.
-The first argument is what the object is that should be written, \textbf{OCATcomb}, and the second here is the file name.
-The !QUA!
-will be replaced by the Python script to be the appropriate quality, the lowest group level I am concerned with.
-This file will be placed in the current working directory.
+Going within the \textbf{if...else} statement, we see the \textbf{write\_csv} function from \textit{readr}.
+The two arguments I am passing it are for the data to be written to a file, and the path the output file should be written to.
+It will inherit the current working directory so only the file name is needed.
+In one version, the file name includes the .bz2 extension, indicating this compression should be used, while the other version will write an uncompressed CSV.
+In both cases the !QUA!
+term will be replaced by the Python script to identify the Quality configuration for the data it will contain.
 
 That finishes this script, so now we can get to the next one, which is the Python script that does the replacements necessary in this script and another, as well as placing the R scripts where they need to be.

@@ -1,33 +1,264 @@
 \section{Scripting: OCAT -- Combined -- Output.r (Graphs)}
 \subCustomFunction
-The OCAT – Combined – Output.r script is some 25 KB currently, and while I could give a line count, I may make enough tweaks for it to change.
-The point is, this is a fairly large file, more than all of the other scripts this article will cover combined in fact, and more than half of it is for the creation of the graphs; the code this section is to cover.
-Fortunately, there is a lot of repetition in this portion of the script, thanks to the way \textit{ggplot2} works, so this section should not also be larger than the previous combined.
 
-R does have built-in functions for creating graphs, but when I was first learning how to work with R, I learned of this library for creating graphs and it is what I learned to use.
-It works by opening a plot object, with the \textbf{ggplot} function, and then layers are added onto this, somewhat literally as it is the addition symbol connecting layers together.
-These layers are what actually create the plots from the data, configure the graph's scales, colors, labels, and more.
-Some of these layers are present in every graph, though their specific values may be a little different.
-Still, a lot is shared between the graphs so it is not as much code as you may expect.
+At last we have come to the final section of the Output.r script, which contains all of the functions concerned with the graphs as well as the calls to actually save the output files at the very end.
+Since I originally wrote this article, there have been a number of changes to these functions, including some new functions I will get to soon, but first I have the two functions concerned with actually saving the graphs to files.
 
-A couple things I want to mention are that it is possible to assign layers (and even whole plots) to variables, which is actually something I do at the start of this section of the script.
-The other is that before I started messing with the text and HTML output described in the previous section, making so much of it functions, I spent the time to do the same thing with the plots.
-If you skipped the previous section, this means I have made each graph into its own function, and the reason for this is so I do not need to have multiple copies of the same graph for each data type.
-The differences, mainly different scales, are set inside of \textbf{if} statements and then the code for the graphs reference variables, allowing the code to be abstract enough to work with whatever I give it.
-
+\subsubsection{customSave Custom Function (Custom Graph Saving)}
 \begin{styleR}
-if	(multiGPU)	{
-	labsGPU	=	labs()
-}	else	{
-	labsGPU	=	labs(caption = cGPU)
+customSave	=	function(type="", device=ggdevice, plot = last_plot(), width=gWIDTH, height=gHEIGH, dpi=DPI)	{
+	if	(device	==	"png"	|	device == "both")	{
+		ggsave(filename=paste0(gameGAQF, " - ", type, ".png"), plot = plot, device="png", width=width, height=height, dpi=dpi)
+	}
+	if	(device	==	"pdf"	|	device == "both")	{
+		ggsave(filename=paste0(gameGAQF, " - ", type, ".pdf"), plot = plot, device="pdf", width=width, height=height)
+	}
 }
 \end{styleR}
 
-First up we have this simple switch that checks if it is a multi-GPU situation.
-If it is, then the \textbf{labs} layer for all of the graph will be empty and have no impact.
-If it is not, then this layer will add a caption to the graph, identifying the current GPU.
-Captions appear on the lower right of the graph.
-With \textbf{labsGPU} set to this, I can add it to a graph like any layer.
+This function exists to simplify the saving of the graphs.
+The \textit{ggplot2} library has the \textbf{ggsave} function for saving graphs, and it can even save them as different file types, but it also has a lot of arguments.
+Since I want these arguments to be the same across all of the graphs and the names to be similar, I made this wrapper function to effectively set my own defaults, though I can still change them by providing the right arguments.
+The naming system is all but automatic, only needing the type of the graph to be provided, as the game name and descriptors are applied by the function for me.
+
+The arguments for my \textbf{customSave} function are \textbf{type}, \textbf{device}, \textbf{plot}, \textbf{width}, \textbf{height}, and \textbf{dpi}.
+These arguments all have default values and most of them are variables set in the Input.r script.
+This allows me to control those arguments, \textbf{device}, \textbf{width}, \textbf{height}, and \textbf{dpi}, all from the other script without needing to touch this one.
+The \textbf{type} argument is used in setting the name and as this is always given, it does not need a default value but I still made it an empty string to be safe.
+The \textbf{plot} argument is actually a very important one as a means of saving some time, and its default is \textbf{last\_plot()}, which is also its default for the original \textbf{ggsave} function.
+
+When set to be \textbf{last\_plot()}, \textbf{ggsave} will save whatever the last plot drawn by \textit{ggplot2} was to the appropriate file, but it is also possible to directly provide the plot.
+This is helpful as it allows the original drawing of the plot to be skipped, saving a decent amount of time.
+This only really matters when running the code in the GUI, as the console will not render the graph anyway.
+By default I do want the most recent plot to be used, so I can use \textbf{customSave} for more than just this script, but I do have it configured to have the desired plot always identified.
+
+The \textbf{device} argument is also worth discussing as it can be one of three values.
+The first two it can be are "png" and "pdf," which are normal values for it to be in \textbf{ggsave}, but I have added "both."
+Though I likely would not use it for these graphs, "both" will tell \textbf{customSave} to create both a PNG and PDF version of the graph.
+
+In case you are wondering, the reason I do not want to make PDFs of these graphs is that they tend to be near the size of the original data.
+For some articles that is over 100 MB (311 MB for this article) while the PNGs will not even be 1 MB.
+
+Within the \textbf{ggsave} function, we can see I am using the \textbf{paste0} function to create the desired string for the file name.
+This uses the \textbf{gameGAQF} variable made in the Input.r script to be a file name safe string identifying the game and descriptors.
+
+Though this function is configured so it can be called and used whenever, this next function is what will actually call it.
+
+\subsubsection{graphOUT Custom Function (Graph Output Control)}
+\begin{styleR}
+graphOUT	=	function(datatype, graphtype, OUT = TRUE, SHOW = FALSE, diffLim = NULL, ...)	{
+	if	(datatype == "MsBetweenPresents")			dataNAME	=	"Frame Time"
+	if	(datatype == "MsBetweenDisplayChange")		dataNAME	=	"Display Time"
+	if	(datatype == "MsUntilRenderComplete")		dataNAME	=	"Render Time"
+	if	(datatype == "MsEstimatedDriverLag")		dataNAME	=	"Driver Lag"
+
+	if	(substitute(graphtype) == "graphMEANS")		graphNAME	=	"Means"
+	if	(substitute(graphtype) == "graphCOURSE")	graphNAME	=	"Course"
+	if	(substitute(graphtype) == "graphFREQ")		graphNAME	=	"Freq"
+	if	(substitute(graphtype) == "graphQQ")		graphNAME	=	"QQ"
+	if	(substitute(graphtype) == "graphDIFF")		graphNAME	=	"Diff"
+
+	if	(substitute(graphtype) == "graphMEANSbox")	graphNAME	=	"Means Labeled"
+
+	PLOT	=	graphtype(datatype)
+	if	(graphNAME == "Diff" & !is.null(diffLim))	{
+		PLOT	=	graphtype(datatype, diffLim)
+		graphNAME	=	paste0(graphNAME, " EXT")
+	}
+
+	message(paste0(graphNAME, " - ", dataNAME))
+
+	if	(OUT)	customSave(paste0("@", graphNAME, " - ", dataNAME), plot = PLOT, ...)
+	if	(SHOW)	PLOT
+}
+\end{styleR}
+
+This \textbf{graphOUT} function is analogous to the \textbf{sinkOUT} function before, in how it is responsible for actually calling the functions to create the graph to be saved and then call \textbf{customSave} so save it.
+Its two most important arguments are \textbf{datatype} and \textbf{graphtype}, which cannot have defaults.
+The \textbf{datatype} argument is just like it is for other functions by identifying the column of \textbf{results} to use while \textbf{graphtype} is the name of the graph function to use.
+It is worth noting that while \textbf{datatype} is expected to be a string, \textbf{graphtype} should just be the name of the function and not a string.
+
+The next two arguments determine what the outputs of this function are.
+The \textbf{OUT} argument determines if the supplied graph should be saved, so its default is TRUE.
+The \textbf{SHOW} argument, set to FALSE, determines if the graph should be shown in the GUI and by having it FALSE it will keep R from rendering it twice.
+
+The last two arguments are for some special configurations.
+With \textbf{diffLim} it will know if the difference scale for the Consecutive Difference graph should be changed, which is a value set in Input.r but it will not just be called here.
+It must still be provided as an argument, so the version without expanded limits is always produced.
+Last we have the dot-dot-dot argument so that arbitrary arguments can be supplied to the \textbf{customSave} plot, which will likely not need them, but it is a good and appropriate use of the argument.
+
+Entering the body of the function, we start with two blocks of \textbf{if} conditions checking the values of \textbf{datatype} and \textbf{graphtype}.
+For the \textbf{datatype} checks the \textbf{dataNAME} variable is set to a more readable value, such as Frame Time.
+The checks of \textbf{graphtype} similarly also provide more readable names, but because the argument is not a string, the \textbf{substitute} function is necessary for the check to work.
+
+After the block of checks for \textbf{graphtype} we can see another for when the argument is "graphMEANSbox" which is a new graph I have made, though I doubt I will use it.
+It is the version of the Means graph with labels for each value on it, and so it has a different \textbf{graphtype} value to check for and a different \textbf{graphNAME} value so it will be saved to a different file.
+
+At this point we start to get into the actual work of the function, though it is not much just yet.
+First \textbf{PLOT} is created with the assigned value of \textbf{graphtype(datatype)}.
+Remember that the \textbf{graphtype} argument is supposed to be just the name of the desired graph function, so by adding the parantheses and then \textbf{datatype} as an argument, that function can be properly called.
+You can also store a function like this to a new object, in this case \textbf{PLOT}, which will then be passed to \textbf{customSave} so it knows what to save.
+
+After assigning this value to \textbf{PLOT} it becomes necessary to possibly change it if we want to change the limits for the Consecutive Difference graph.
+First there must be a check that it is that graph to be worked on, which is as easy as checking the \textbf{graphNAME} and then if there is a value for \textbf{diffLim}.
+If both conditions are TRUE, then \textbf{PLOT} must be changed to include \textbf{diffLim} and \textbf{graphName} too must change to reflect the extended limits.
+This is achieved by just adding " EXT" to \textbf{graphNAME}.
+
+With the proper value is assigned to \textbf{PLOT} the message command is used to indicate the current graph and data type being worked on.
+It can be nice to know how the script is progressing at saving graphs.
+
+Now at the end we see where \textbf{OUT} and \textbf{SHOW} come into play with a couple \textbf{if} statements.
+If \textbf{OUT} is TRUE, then \textbf{customSave} will be called with \textbf{PLOT} explicitly going to the \textbf{plot} argument while the \textbf{type} argument implicitly receives a string made by concatenating \textbf{graphNAME} and \textbf{dataNAME} with the @ symbol at the front and a hyphen between.
+The @ symbol is just to influence the sorting of the files.
+It might be worth looking back at the \textbf{customSave} function as you will see there that this string is placed after the \textbf{gameGAQF} value, so there is more to the file name than just the graph and data type.
+
+After the graph is saved, or not, the check on \textbf{SHOW} is done, and if it passes then \textbf{PLOT} is executed, and because that was assigned to be the graph with the data type supplied, it will proceed to draw the graph.
+Of course that only applies for the GUI.
+
+\subsubsection{Factor Level Manipulation Functions}
+\begin{styleR}
+levels.rev		=	function(DATA, COL)	{
+	DATA	=	as.data.frame(DATA)
+	ordered(DATA[, COL],	levels = rev(levels(DATA[, COL])))
+}
+
+levels.short	=	function(DATA, COL, LIST, LEVS)	{
+	DATA	=	as.data.frame(DATA)
+	DATA[, COL]	=	ordered(DATA[, COL],	levels	=	LIST)
+	levels(DATA[, COL])	=	LEVS
+	return(DATA[, COL])
+}
+\end{styleR}
+
+These two are newer functions to Output.r and are quite helpful because of how I use them.
+They serve to alter the factor levels of the specified columns, reversing the order and applying new levels, such as those with shortened names, hence why they are named \textbf{levels.rev} and \textbf{levels.short}.
+
+Starting with \textbf{levels.rev}, the function needs the \textbf{DATA} and \textbf{COL} arguments to identify the larger object it is working on, and the specific column.
+The first line in the function's body is actually in both because \textbf{results}, the object most likely supplied as \textbf{DATA}, is actually a tibble instead of a data frame, and tibbles apparently do not like the kind of ordering I am trying to do here, or the way I am doing it.
+Either way, making \textbf{DATA} a data frame with \textbf{as.data.frame} tackles the problem and allows the rest to work.
+
+The second and last line of the body could be passed to the \textbf{return} command but I did not do this.
+It does not matter in this case though, because R correctly assumes it should return the last evaluated expression.
+That last expression is to make the selected column, \textbf{DATA[, COL]} an ordered factor with the levels being reversed from whatever they were, by using the \textbf{ordered}, \textbf{levels}, and \textbf{rev} functions.
+
+The second function is \textbf{levels.short} and it is a bit more complex because the levels need to be altered, which requires more information to upfront and certain checks too.
+The argument list includes the same \textbf{DATA} and \textbf{COL} as the previous function but also \textbf{LIST} and \textbf{LEVS} with the former meant to be the original levels and the latter the new levels.
+
+Just like before, the first thing done is to make sure \textbf{DATA} is a data frame.
+The second thing is to make the \textbf{COL} column of \textbf{DATA} ordered factors with the levels being \textbf{LIST}.
+In theory \textbf{DATA} should already have this column be ordered factors with those levels, but this makes certain of that.
+After that is done, the \textbf{levels} function is used to identify just that list for the column, and then that list has the values of \textbf{LEVS} assigned to it.
+Something very important here is that the ordering of \textbf{LIST} and \textbf{LEVS} match, because when \textbf{LEVS} is assigned to the levels, the order matter.
+
+After this, \textbf{return} is used to pass the selected column, with the new levels assigned, out of the function.
+
+While these functions can be used on their own and directly on the data, they are not.
+Instead I have these next two functions that are responsible for calling them and providing the desired arguments.
+
+\subsubsection{Applying Factor Level Manipulations}
+\begin{styleR}
+data.short	=	function(DATA)	{
+	if	(!is.null(shortLOC))				DATA[, "Location"]	=	levels.short(DATA,	"Location",	listLOC,	levsLOC)
+	if	(!is.null(shortAPI)	&	testAPI)	DATA[, "API"]		=	levels.short(DATA,	"API",		listAPI,	levsAPI)
+	return(DATA)
+}
+
+graph.rev	=	function(DATA, rev.LOC = FALSE, rev.API = FALSE)	{
+	if (rev.LOC)				DATA$Location	=	levels.rev(DATA, "Location")
+	if (rev.API	&	testAPI)	DATA$API		=	levels.rev(DATA, "API")
+	return(DATA)
+}
+\end{styleR}
+
+Technically the first function, \textbf{data.short}, is only applied for the graphs so it could be named \textbf{graph.short} instead, but the name is still clear.
+All it takes is \textbf{DATA} because everything else it pulls from the higher environments.
+
+The first line in the body starts by checking if \textbf{shortLOC}, the list of shortened location names exists.
+If it does exist, then the Location column in \textbf{DATA} is set to be the result of \textbf{levels.short} which gets the arguments of \textbf{DATA}, "Location" for \textbf{COL}, and \textbf{listLOC} and \textbf{levsLOC} for \textbf{LIST} and \textbf{LEVS} respectively.
+
+The second line is similar, but in addition to checking if \textbf{shortAPI} exists, it also checks if \textbf{testAPI} is true, as it makes little sense to try changing the API levels if we are not interested in them.
+
+It might be worth noting that both \textbf{levsLOC} and \textbf{levsAPI} are set in Input.r and will be the same as \textbf{listLOC} and \textbf{listAPI}, respectively.
+It is only if the shortened versions of these lists exist that those variables will be other than those defaults, which means the checks technically are not necessary, except for \textbf{testAPI}.
+Without the checks, \textbf{levels.short} will just apply the same levels to \textbf{DATA}, which would be an unnecessary step, but not a harmful one.
+
+While \textbf{data.short} exists to apply shortened names, for when the graphs are not large enough, the \textbf{graph.rev} is more about a personal preference.
+By reversing the ordered factor levels, a graph's facets will be reversed, and I do prefer it this way.
+My reason is so the first facet variable, such as the first location, is closer to the X-scale by being the bottom plot instead of the top in a graph.
+It really does not matter too much though, but that is why there are switches here.
+
+The arguments for \textbf{graph.rev} are \textbf{DATA}, \textbf{rev.LOC}, and \textbf{rev.API}, with the last two have defaults of FALSE.
+These are switches that will disable reversing the Location and API levels respectively, so the reversing can be easily controlled, even from one graph type to the next as we will see later.
+
+Within the function body, the first line is very simply as it simply assigns the output of \textbf{levels.rev} for the Location column to that column, if \textbf{rev.LOC} is TRUE.
+I notice I am selecting the relevant column differently between \textbf{data.short} and \textbf{graph.rev} differently, using square brackets in one and the dollar sign in the other.
+I do know these two methods actually can produce different results, but I do not know if that would matter here or not.
+It likely does not matter, but there is no need to change it.
+
+After the Location levels of reversed, if called for, the API levels will be reversed, if the \textbf{rev.API} switch is TRUE and \textbf{testAPI} is TRUE.
+With the results of \textbf{levels.rev} applied to \textbf{DATA}, it is returned by the function.
+Together the \textbf{data.short} and \textbf{graph.rev} functions will handle the possible factor level manipulation I want in the graphs, and are called within the graph functions.
+This is important because by doing the work within the graph functions, the changes made to \textbf{results} will be kept there instead of being applied to that object, potentially producing knock-on issues later on.
+When just running the script, that is not really a problem, but when doing the work manually or trying to troubleshoot something, this can be a source of frustration.
+
+\subsubsection{FACET Custom Function (Graph Faceting Control)}
+\begin{styleR}
+FACET = function(graphtype)	{
+	if	(any(substitute(graphtype)	==	c("graphMEANS")))	{
+		if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(API),				cols = vars(Location), switch = "y"))
+		if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Quality),			cols = vars(Location), switch = "y"))
+		if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(API, Quality),	cols = vars(Location), switch = "y"))
+
+		return(facet_grid(cols = vars(Location), switch = "y"))
+	}
+
+	if	(any(substitute(graphtype)	==	c("graphCOURSE", "graphFREQ", "graphQQ", "graphDIFF")))	{
+		if	(multiGPU)	{
+			if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(Location, API),			cols = vars(GPU), switch = "y"))
+			if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Location, Quality),		cols = vars(GPU), switch = "y"))
+			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(Location, API, Quality),	cols = vars(GPU), switch = "y"))
+		}	else	{
+			if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(API),				cols = vars(Location, GPU), switch = "y"))
+			if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Quality),			cols = vars(Location, GPU), switch = "y"))
+			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(API, Quality),	cols = vars(Location, GPU), switch = "y"))
+		}
+
+		return(facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y"))
+	}
+}
+\end{styleR}
+
+One of the more significant changes I made when I overhauled these scripts when originally writing this article was to make each graph into its own function.
+This allowed me to ensure the same design and formatting for graphs across data types.
+Though to a lesser degree, this \textbf{FACET} function allows for something similar, as it ensures the faceting will be similar across graphs of similar design.
+For the most part that means everything but the Means graph, as it is the only one that allows what is otherwise a facet, the GPU, to be on a scale.
+
+The only argument for \textbf{FACET} is \textbf{graphtype} and in order to check it I must use the \textbf{substitute} function to make it a string.
+Technically, since the graph function will not be called, I could just use a string when calling \textbf{FACET}, but I decided to let it just be the graph name instead.
+The \textbf{substitute} function is not the only one being used in the \textbf{if} condition though, as \textbf{any} is also present.
+Its purpose is to check if \textbf{graphtype} is present as any of the values in the vector it is being compared against.
+For the first \textbf{if} statement, it hardly matters as it only needs to check against \textbf{graphMEANS} but for the other \textbf{if} statement it needs to check a vector of four values.
+I am using \textbf{any} in both places just for consistency and to make it easy if I ever create another graph similar to \textbf{graphMEANS}.
+
+If it is the Means graph, then there is a sequence of three more checks to make, to determine if \textbf{testAPI} and or \textbf{testQUA} are TRUE.
+Depending on those values, those factors might need to be facet variables.
+Unfortunately I was never able to figure out how to build a list of facet variables, so depending on the results of the conditions, the entire \textbf{facet\_grid} layer is returned for the appropriate graph to use.
+After these \textbf{if} statements there is one last \textbf{return} command to supply what is actually going to be the most common faceting pattern for the Means graph, and that is to only facet by Location, so it is a good fallback.
+
+We come to the next check of what the graph type is, and though I could have used just an \textbf{else}, as there are no other graph types, by using another \textbf{if} statement with another condition, this code is ready for new graphs that require a different facet design.
+In any case, if it is the Course, Frequency, QQ, or Consecutive Difference graph being worked with, the first check is if it is a multi-GPU situation, and only then are the checks for \textbf{testAPI} and \textbf{testQUA} done.
+The difference between a multi-GPU and single-GPU situation is whether the Location is faceted along the rows or columns, which is actually a change I have made.
+Previously the Location would always be on the columns, but it occurred to me having the Location on rows would be better, as then temporal patterns should be somewhat aligned.
+
+It may seem odd that there will always be column facets for the GPU, even for single-GPU data, but this provides an additional way for the GPU to be identified.
+The current GPU should also be stated in the lower right corner as a caption, but just in case or just to be redundant, this faceting design ensures the GPU is stated on the graph.
+
+Just like with the Means graph conditions, there is a single \textbf{return} command after the \textbf{testAPI} and \textbf{testQUA} conditions, and for the same reason.
+Not testing by API and Quality is the most likely scenario, so it makes the best fallback.
+
+At this point we can finally get to the graph functions, which unfortunately cannot be more compacted than they are.
+I did make an effort to pull out some of the scale creation, like I had the faceting, but it just got too messy to be viable.
+It is unfortunate, but it is what it is.
 
 \subsubsection{Means Graph}
 \begin{styleR}
@@ -35,40 +266,44 @@ graphMEANS	=	function(datatype)	{
 	if	(datatype == "MsBetweenPresents")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Frame Time (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
-			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			breaks		=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Frame Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 	if	(datatype == "MsBetweenDisplayChange")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Refresh Cycles Later (1/60 s)",
-			breaks		=	c(0, round(ytimes, 2)),
-			labels		=	labelDisp,
-			limits		=	c(0, FtimeLimit),
-			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			breaks		=	ybreaks,	labels	=	labelDisp,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Display Time (ms)",
+				labels	=	ybreaks
+			)
 		)
 	}
 	if	(datatype == "MsUntilRenderComplete")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Render Time (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
-			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			breaks		=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Render Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 	if	(datatype == "MsEstimatedDriverLag")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Estimated Driver Lag (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
-			expand		=	c(0.02, 0),
+			breaks		=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis()
 		)
 	}
+
+	# if (useSHORT)	results	=	data.short(results)
+	results	=	graph.rev(results,	rev.LOC,	rev.API)
+	# if (useSHORT)	STATS	=	data.short(STATS)	; STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 
 	ggplot(data = results, aes(x = GPU, y = get(datatype))) +
 	ggtitle(gameQ, subtitle = paste0(datatype, " - Means, Medians, and Percentiles")) + labsGPU +
@@ -78,90 +313,92 @@ graphMEANS	=	function(datatype)	{
 	geom_bar(aes(fill = GPU), stat = "summary", fun.y = "mean") + scale_fill_hue() +
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
 	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
-	facet_grid(rows = vars(API), cols = vars(Location), switch = "y") +
+	FACET(graphMEANS) +
 	scale_x_discrete(labels = labelBreak) +
-	scale_Y +
+	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
 	guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
 }
 \end{styleR}
 
-That is a lot, I know, but I do not want to break apart a function when first introducing it.
-With it introduced now though, I will do just that.
+There is a lot to each graph function, so I am going to break it down into pieces, starting with the creation of the scales, but first the \textbf{datatype} argument.
+Like many of the functions previously discovered, this identifies the column of \textbf{results} to be used and every graph needs this to be identified.
+The QQ and Consecutive Difference graphs both have one additional argument, but those will be covered when we get there.
 
 \begin{styleR}
-graphMEANS	=	function(datatype)	{
-	if	(datatype == "MsBetweenPresents")	{
-		scale_Y	=	scale_y_continuous(
-			name		=	"Frame Time (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
-			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+if	(datatype == "MsBetweenPresents")	{
+	scale_Y	=	scale_y_continuous(
+		name		=	"Frame Time (ms)",
+		breaks		=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
+		sec.axis	=	dup_axis(
+			name	=	"Frame Rate (FPS)",
+			labels	=	ms2FPS
 		)
-	}
-...
+	)
 }
+...
 \end{styleR}
 
-This \textbf{graphMEANS} function is responsible for making the means graph that shows a bar plot for the arithmetic mean and then custom box plots showing the 0.1\%, 1\%, 99\%, and 99.9\% values and median for each configuration of GPU, location, and API, when applicable.
-All it takes for an argument is the \textbf{datatype}, such as MsBetweenPresents.
-It would not be hard to change have it support friendlier names, but I prefer to keep in practice using the original column names.
+Because the Y-scale for the Means graph needs to reflect the selected data type, it is necessary to describe the scale for each with appropriate values.
+Much is similar between each data type though, so I am just going to go through this one and then identify some differences.
 
-The top half of the function is occupied by \textbf{if} statements checking what \textbf{datatype} is and setting a \textbf{scale\_Y} variable based on that.
-There are some differences between these variables, but focusing on just the first, for MsBetweenPresents, should be enough.
+First there is the check for what the data type is and then the creation of the \textbf{scale\_Y} variable.
+This will hold the description of the scale that will be applied later when the graph is actually being made.
+As it is the Y scale and the values are continuous, as opposed to discrete such as the GPU names, the \textbf{scale\_y\_continuous} layer is called and its arguments are provided.
+By naming the arguments order does not matter, but I prefer to have the name for the scale at the top.
+In this case it is "Frame Time (ms)" so we know both the data type and the unit.
 
-The \textbf{scale\_Y} variable is assigned the \textbf{scale\_y\_continuous} layer with a number of arguments.
-As the name suggests, this is for controlling the properties of the Y scale or axis.
-This is a continuous scale because the data can be anything along a continuous range.
-An example of a discrete scale would be the GPUs, because each GPU is a discrete value on that scale.
-The X scale for this graph are the GPUs, so it does have a discrete scale, but it does not change based on the data type, so it is with the graph's code.
+The next line actually holds three arguments, separated by commas.
+The arguments for the graph layers can be separated by line breaks if you prefer that visual formatting, as I do here, but the only separation necessary is a comma.
+These arguments are \textbf{breaks}, \textbf{labels}, and \textbf{expand}.
+Typically you do not want a graph plot to stretch all the way to the edge of your scales, and the way to add padding is with this last argument, \textbf{expand}.
+It expects a vector with two elements, the first being a multiplicative term and the second an additive.
+I prefer to use the multiplicative term as that means the padding will always be a ratio of the scale's length, while the additive term will apply a fixed amount and so longer scales may not show as much.
 
-The arguments I am using for \textbf{scale\_y\_continuous} are \textbf{name}, \textbf{breaks}, \textbf{limits}, \textbf{expand}, and \textbf{sec.axis}.
-To make them easier to read and work with, each has its own line and I use tabbing to align the equal signs and the values.
+The \textbf{breaks} argument sets where the tick marks on the scale will be, as well as the lines the cross the plot from those tick marks.
+If you leave \textbf{labels} undefined, the labels will just be the values of the \textbf{breaks}, but you can also supply a list of the same length as \textbf{breaks} to explicitly give them, or supply a function as I have.
+The values of the \textbf{breaks} will be passed to the function and whatever it returns will be shown then.
+In this case, the labels will just be rounded from the original values.
+For display time though, I actually transform the values to be counts of 60 Hz refresh cycles.
+The label functions and \textbf{ybreaks} were defined at the start of this script.
 
-The value for \textbf{name} I think is self-explanatory, so I will move on.
+After that line comes the \textbf{sec.axis} argument that allows a secondary axis to be drawn.
+One possible use for a secondary axis is when display different kinds of data, such as frame time and GPU frequency, for example, and as these have clearly different units, a second axis would help to indicate the values of both data.
+For that example, you would likely want to use \textbf{sec\_axis} that will not inherit information from the primary axis, but for what I am doing here \textbf{dup\_axis} is best.
+My purpose is to provide other units for the primary axis, specifically frame rate in this case, so I use the \textbf{ms2FPS} function and set a new name for this other axis.
 
-Breaks for a scale are where the tick marks appear on the scale itself, and if you look closely at the background of the graphs, there are white lines following these marks on the plot's background.
-There are also minor breaks, controlled with \textbf{minor\_breaks} but I typically do not need to change those.
-By default the major breaks are determined by \textit{ggplot2} based on the data, but I want to control them myself.
-The very start of the script holds the creation of the \textbf{ytimes} list, and after adding 0 to the vector and rounding to two places, those are the breaks I want.
-
-Directly related to the breaks are the labels for the breaks.
-By default they are just the values for the breaks, which is acceptable for MsBetweenPresents, but not for MsBetweenDisplayChange, so I do want to address them.
-You can, like with \textbf{breaks} supply a vector or list for the values you want shown as the labels, but you can also use a function instead.
-This function will be run on the break values to produce the labels, which is why I made custom \textbf{labelRound}, \textbf{labelBreak}, and \textbf{labelDisp} functions.
-The \textbf{labelRound} does exactly that, so I could skip rounding within the breaks and use this function, but I decided not to.
-The \textbf{labelBreak} function adds line breaks to every other label, to help avoid overlap and is used for the X scale, but is not necessary on a Y scale.
-Lastly I have \textbf{labelDisp}, which converts the breaks value to be in refresh cycles for a 60 Hz monitor.
-
-The \textbf{limits} argument is probably also self-explanatory, though I do want to point out my use of \textbf{FtimeLimit} here.
-The value of that variable is set in the Input script, making it possible to control the upper limit for this scale, and others, from a single line.
-Usually I do not need to touch it, but I did for this article, so that ability to change one thing to affect all of the graphs was definitely nice.
-
-The \textbf{expand} argument is to control how much padding around the scale is applied.
-Instead of having the edges of the plot be at the limits of the scales, \textit{ggplot2} will expand the plot a little further, providing some separation that can look good to the eye.
-It is controlled with a vector containing two values, with the first being a multiplier and the second additive.
-I have it set to use the multiplying coefficient, because that means that however great the limits are, the padding should appear consistent, while an additive value would appear different for different scale sizes.
-An analogy for text would be using 1.5 spacing, which uses line spacing derived from the size of the font, and setting a fixed spacing of say 15 pt.
-When the font size changes, the 1.5 spacing changes with it while 15 pt remains 15 pt.
-I consistently use this vector with the \textbf{expand} argument.
-
-Lastly we have \textbf{sec.axis}, which adds a secondary axis.
-In this case I just have it duplicating the axis with \textbf{dup\_axis}, but it is also possible to create a completely different scale for this other axis.
-I just want the axis duplicated so you do not need to look as far to find the values on the scale.
+For display time though, I have the labels match the breaks, so the unit is milliseconds, and set an appropriate name.
+The MsEstimatedDriveLag data type also gets a secondary axis, but no transformation is applied to it as its unit should remain milliseconds, so \textbf{dup\_axis} is called to just duplicate the primary axis.
 
 \begin{styleR}
+...
+# if (useSHORT)	results	=	data.short(results)
+results	=	graph.rev(results,	rev.LOC,	rev.API)
+# if (useSHORT)	STATS	=	data.short(STATS)	; STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
+...
+\end{styleR}
+
+These three lines are responsible for applying shortened factor level names to \textbf{results} and \textbf{STATS} and reversing the levels as well, but these operations are not always necessary.
+That is why two of the lines are commented out, but I still want them present for each graph.
+Generally speaking, the Means graph is large enough that shortened names are not necessary, so that line is commented out, but I may want to reverse the order of the Locations and/or APIs, so the line remains.
+The third line is concerned with the \textbf{STATS} variable, which is not needed for this graph, hence why it is commented out.
+This variable will hold information such as the percentiles for the QQ graph and the mean and median for the Frequency graph.
+
+To place both the name shortening and level reversing on a single line I use the semi-colon character to tell R these are separate commands, just like if there were a line break there instead.
+This also means the \textbf{if} statement does not impact the second half of the line, concerned with reversing the levels.
+
+\begin{styleR}
+...
 ggplot(data = results, aes(x = GPU, y = get(datatype))) +
 ggtitle(gameQ, subtitle = paste0(datatype, " - Means, Medians, and Percentiles")) + labsGPU +
 geom_hline(yintercept = 1000/60, color = "red") +
 # geom_boxplot(outlier.alpha = 0) +
 stat_summary(fun.data = BoxPerc, geom = "boxplot", width = 0.6) +
-geom_bar(aes(fill = GPU), stat = "summary", fun.y = "mean") + scale_fill_hue() +
+geom_bar(aes(fill = GPU), stat = "summary", fun.y = mean) + scale_fill_hue() +
 stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
 # geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
-facet_grid(rows = vars(API), cols = vars(Location), switch = "y") +
+FACET(graphMEANS) +
 scale_x_discrete(labels = labelBreak) +
-scale_Y +
+scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
 guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
 \end{styleR}
 
@@ -176,7 +413,7 @@ I also set \textbf{y}, the Y value, the output of the \textbf{get} function.
 There is no column named datatype, but the \textbf{datatype} variable does hold the name of a column.
 The \textbf{get} function will pass that name as an object to the graph, which enables me to use a variable as a reference and still have everything work.
 
-Connecting the layers of the graph together are addition symbols, and the next line of code holds the \textbf{ggtitle} layer and the \textbf{labsGPU} variable I set earlier.
+Connecting the layers of the graph together are addition symbols, and the next line of code holds the \textbf{ggtitle} layer and the \textbf{labsGPU} variable set in Input.r.
 The \textbf{ggtitle} layer is one of the ways to assign labels to a graph, including the title and subtitle.
 It is also possible to apply a caption with it, but there is nothing wrong with how I have that separate with \textbf{labsGPU}.
 
@@ -235,32 +472,106 @@ Like before I have a commented out line that would add a default box plot.
 It has an \textbf{alpha} argument too, but also the \textbf{outlier.alpha} argument is not set to zero, which means the outlier points will be visible.
 They are mostly transparent though, which would indicate their lack of importance, if this layer were active.
 
-Now we come to a feature of \textit{ggplot2} that I have definitely been enjoying for a while now; faceting.
-With faceting it is possible to have multiple plots present in a single graph, and while these plots will be different, they can also be set to share things like scales.
-The \textbf{facet\_grid} layer will have the facets placed on a grid, and is what I use, but there is also \textbf{facet\_wrap}.
-It instead places the plots on a ribbon and then wraps them into the two-dimensional space of the graph.
-
-The key arguments for \textbf{facet\_grid} are \textbf{rows} and \textbf{cols} as you assign to these the variables you want to have the plots grouped by, and the dimension you want them on.
-I have the rows of the plots set to be the different APIs and the columns to be the different locations.
-As we will see later, it is possible to supply more than one variable for these.
-It is important that the variables used here are factors, as that is what the faceting layers expect, but it should also be noted that you may want to order the factors yourself.
-This ordering will carry over to the facets, which would otherwise use alphabetical ordering.
-It is also worth noting it tends to use a top-down and left-right ordering for facets, but I prefer different directions, so I address that later.
-
-The third argument I set is \textbf{switch}, which serves a fairly simply function.
-By default the facet labels for the rows is on the right side of the graph, but I prefer it on the left, so by passing "y" to \textbf{switch}, it switches the placement of the labels along the Y scale to the other side.
-You can use "x" to put the labels at the top to the bottom, and "both" to move both axes to their, respective, opposite sides.
+Now we come to where the facets are set for the graph, which is handled by the \textbf{FACETS} function now.
+It just needs the name of the graph to be supplied and it handles the rest.
 
 The \textbf{scale\_x\_discrete} layer is actually not strictly necessary, as \textit{ggplot2} correctly interprets the X scale to be discrete as well as its breaks and such.
-This is also why none of its arguments are called up and edited within this layer, because the defaults are all correct.
-All I want is to apply the \textbf{labelBreak} function to prevent the labels from overlapping.
+However, in order to apply the line breaks to the labels, it is necessary to set its \textbf{labels} argument to \textbf{labelBreak} as then that function will be applied to the breaks to create the labels.
 
 After that scale is set, the \textbf{scale\_Y} variable adds the layer for the Y scale that I already configured.
+Following this layer is one that I did not use previously, but is useful for a couple reasons.
+One reason is it pulls the need to set the limits of the Y scale out of \textbf{scale\_Y}, avoiding some repetition, but also \textbf{coord\_cartesian} handles limits differently.
+It will basically crop the graph down, much like cropping an image, while setting the limits in the scale will throw warnings whenever data falls outside the limits.
+Warnings are not necessarily bad, as the graph will still be drawn, but, for example, if the end of a bar graph were to fall outside the limits, then the whole bar will be omitted.
+With \textbf{coord\_cartesian} the bar will instead be seen going to the edge of the plot.
+Of its arguments, I am using \textbf{ylim} here to set the lower and upper limits for the Y-scale respectively.
+It also has \textbf{xlim} and \textbf{expand} arguments as well as a couple others that might be worth researching yourself.
 
 Lastly we have a couple layers for controlling the legend.
 The \textbf{guides} layer states that the legend concerning the \textbf{fill} aesthetic should be a single row.
 The \textbf{theme} layer then has the \textbf{legend.position} argument set to place the legend on the bottom.
 Working with the guides and themes can get a little complicated, with the host of things they can control and influence; especially the theme, which is why I try to not touch it too much.
+
+\subsubsection{Means Graph Labels}
+\begin{styleR}
+boxLABS		=	function(datatype)	{
+	STATS	=	AGG(datatype, statGRAPH)
+
+	ALPHA	=	0.65
+
+	nudOUT	=	0.50
+	nudIN	=	0.40
+	nudMED	=	0.55
+
+	list(
+		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "99.9"],	label = round(STATS[, "99.9"], 2)),		alpha = ALPHA,
+											vjust = 0,	nudge_y = nudOUT),
+		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "0.1"],	label = round(STATS[, "0.1"], 2)),		alpha = ALPHA,
+											vjust = 1,	nudge_y = -nudOUT),
+		#	0.1% and 99.9%
+
+		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "99"],		label = round(STATS[, "99"], 2)),		alpha = ALPHA,
+			hjust = 1,	nudge_x = nudIN,	vjust = 0),
+		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "1"],		label = round(STATS[, "1"], 2)),		alpha = ALPHA,
+			hjust = 1,	nudge_x = nudIN,	vjust = 1),
+		#	1% and 99%
+
+		geom_label(data = STATS,	aes(x = GPU, y = Median,			label = round(Median, 2)),				alpha = ALPHA,
+			hjust = 1,	nudge_x = nudMED),
+		geom_text(data = STATS,		aes(x = GPU, y = Mean, 				label = round(Mean, 2)),
+			hjust = 0,	nudge_x = -0.55,	vjust = 0)
+		#	median and mean
+		)
+}
+
+graphMEANSbox	=	function(datatype)	graphMEANS(datatype) + boxLABS(datatype)
+\end{styleR}
+
+Though I will likely never have need of it myself, I decided, at least as an experiment, to put together the necessary layers to add labels for the mean and custom box plots in the Means graph.
+Applying them to the Means graph is fairly easy, as can be seen in the last line of this code block, as I created a new function that just passes \textbf{datatype} to both \textbf{graphMEANS} and this new \textbf{boxLABS} function, which are added together.
+Just like any other graph, I can call this function, \textbf{graphMEANSbox} and get the desired graph with my preferred formatting, but first I need to explain how this \textbf{boxLABS} functions works.
+
+All the function takes as an argument is \textbf{datatype}, just like \textbf{graphMEANS}, but it does need more information than that for the labels, which is what the first line takes care of.
+By using \textbf{AGG} and the \textbf{statGRAPH} function earlier, the \textbf{STAT} variable is made and assigned all of the necessary statistics.
+
+The next lines of assignments are all to control the formatting, but because it would be repeated and took some experimentation, I placed the variables here.
+The first is \textbf{ALPHA} and it sets the transparency for the label backgrounds.
+I want them to be partially transparent so the layers behind them can be easily seen.
+
+The three "nud" variables control the nudging of the labels, because they may write on top of each other.
+Also I think the nudging helps identify what each statistic is, based on the proximity to the feature of the box plot the label represents.
+The three nudge values are \textbf{nudOUT} for the outer values, 0.1\% and 99.9\%, \textbf{nudIN} for the inner values, 1\% and 99\%, and then \textbf{nudMED} for the median value.
+
+At this point all that remains is the assembly of the layers, which I am doing in a list, which \textit{ggplot2} will accept.
+By doing it this way, the layers are collected as a single object that will be returned by the function as it is the last expression evaluated.
+I could surround the list with \textbf{return} but it is not necessary.
+Instead of using the additive symbol to combine the layers, a comma to separate the elements, like any list, is used.
+
+The first two layers in the list of \textbf{geom\_label} layers are for the outer values, and though perhaps not perfectly done, I have tried to align every argument with tab indents, across all layers.
+It is important that these two layers are first, because the later layers will write over them then, if there is overlap and I do consider the information of the later layers more important.
+Anyway, each layer needs the \textbf{data} argument to be set to \textbf{STAT} because there is no other way for these layers to know where to pull the values from, or at least no other way I know of.
+One cannot simply call \textbf{ggplot} again as this will conflict with the one already in \textbf{graphMEANS}.
+
+With \textbf{STAT} selected for \textbf{data}, the aesthetics can then be selected with the X value being the GPU, just like \textbf{graphMEANS} and then the Y value just needs to be pointed to the correct column.
+The \textbf{geom\_label} also needs the \textbf{label} aesthetic to be identified, which is the same as Y value for my use, but rounded to two digits.
+
+I already explained the \textbf{alpha} argument so the next one to talk about is \textbf{vjust} for vertical justification.
+A value of 0 is bottom alignment while a value of 1 is top alignment, and as you can see this places the appropriate labels outside of the lines they are marking.
+The \textbf{nudge\_y} values push the labels out a bit further too, to make sure the lines are visible, and it might be worth taking note of the 0.1\% layer having a negative nudge applied, so the label is pushed down.
+
+After a comment to identify the previous pair of layers, we have two more for 1\% and 99\% and for the most part, these are very similar.
+The only noticeable differences are the addition of the \textbf{hjust} and \textbf{nudge\_x} arguments, as well as the removal of the \textbf{nudge\_y} arguments, but the concepts are the same as earlier.
+With \textbf{hjust} you can control the horizontal justification of the labels, with 1 meaning right aligned, and then these are nudged over a bit more, by \textbf{nudIN}.
+
+The last pair of layers is a bit different from the others because these are the Median and Mean and I want them treated a little differently.
+For one thing, the Median label uses centered vertical justification, the default, but the main thing is \textbf{geom\_text} is used for the Mean.
+The difference between these two layers is the presence of a background to the text.
+To help distinguish the Mean from the other values, it lacks a background, and it is also on the other side of the plot.
+While all of the other layers are right aligned, the Mean is left aligned, and it also has an additional nudge out from the center of the bar and box plot.
+The Mean is also bottom aligned vertically, which is necessary to place the text above the bar, as otherwise its lack of a background could make it hard to read with the bar bifurcating it.
+
+With those layers assembled in the list, and the list closed, the \textbf{graphMEANSbox} will work to add them onto the original Means graph.
+There is a good chance I will not put this to use, but perhaps it will come in handy for reference at some point, or anyone reviewing the scripts can put it to use.
 
 \subsubsection{Course Graph}
 \begin{styleR}
@@ -268,367 +579,229 @@ graphCOURSE	=	function(datatype)	{
 	if	(datatype == "MsBetweenPresents")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Frame Time (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
-			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			breaks		=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Frame Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 	if	(datatype == "MsBetweenDisplayChange")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Refresh Cycles Later (1/60 s)",
-			breaks		=	c(0, round(ytimes, 2)),
-			labels		=	labelDisp,
-			limits		=	c(0, FtimeLimit),
-			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			breaks		=	ybreaks,	labels	=	labelDisp,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Display Time (ms)",
+				labels	=	ybreaks
+			)
 		)
 	}
 	if	(datatype == "MsUntilRenderComplete")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Render Time (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
-			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			breaks		=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Render Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 	if	(datatype == "MsEstimatedDriverLag")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Estimated Driver Lag (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
-			expand		=	c(0.02, 0),
+			breaks		=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis()
 		)
 	}
 
-	if	(length(unique(results$Location)) == 1)	{
-		ALPHA	=	1
-	}	else	{
-		ALPHA	=	0.05
-	}
+	if (useSHORT)	results	=	data.short(results)
+	results	=	graph.rev(results,	rev.LOC,	rev.API)
+	# if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
+
+	ALPHA	=	0.05
+	if	(length(unique(results$Location)) == 1)	ALPHA	=	1
 
 	ggplot(data = results, aes(x = TimeInSeconds, y = get(datatype))) +
 	ggtitle(gameQ, subtitle = paste0(datatype, " - Course")) + labsGPU +
 	geom_hline(yintercept = 1000/60, color = "red") +
 	geom_point(alpha = ALPHA) +
 	geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) +
-	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
+	FACET(graphCOURSE) +
 	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreak, expand=c(0.02, 0)) +
-	scale_Y
+	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit))
 }
 \end{styleR}
 
-Now the graph we are making the function for is my Course graph that shows the measurements over the length of the recordings.
-The configurations for the \textbf{scale\_Y} variable is the same as for the Means graph, so I will skip over that, and as much of the code for the graph too, but there are still things to cover.
+We have the Course plot now, but because of how much is similar between this and the Means graph described earlier, such as the \textbf{scale\_Y} creation, I am going to skip covering that part of the function again.
 
 \begin{styleR}
-if	(length(unique(results$Location)) == 1)	{
-	ALPHA	=	1
-}	else	{
-	ALPHA	=	0.05
-}
+...
+if (useSHORT)	results	=	data.short(results)
+results	=	graph.rev(results,	rev.LOC,	rev.API)
+# if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
+
+ALPHA	=	0.05
+if	(length(unique(results$Location)) == 1)	ALPHA	=	1
+...
 \end{styleR}
 
-This checks if the data is for a single location, because my single-location graphs have always had completely opaque points to them.
-For the faceted graphs with multiple locations, however, I have the points almost completely transparent, so the darkness is an indication of density.
-I definitely think the transparent points look better for the faceted graphs and I could probably use them for the single-location graphs too, but with the larger size of the single-location graphs, I do not think this effect is as necessary.
+In this block there are two things happening.
+The first is a repeat of code seen in \textbf{graphMEANS} for manipulating factor levels.
+The only difference is that the line for applying short names to \textbf{results} is not commented out, so if \textbf{useSHORT} is TRUE, the names will be changed.
+
+After this there are a couple lines for setting \textbf{ALPHA}, the transparency value for the points.
+The default value of 0.05 is assigned to \textbf{ALPHA} first, but if a check reveals there are multiple locations in \textbf{results}, then the value will become 1 for completely opaque.
+It would probably be fair to remove the check and always have the points be mostly transparent, but I feel that when the graph is of a single location, the opaque points look better.
+I do not feel this way about faceted graphs, but as it is now so much easier to have subsets for separate locations, while still faceting for other variables, perhaps I should drop this line.
+I will think about it, but as I have not decided and the change would be very easy to make, by simply commenting out the line, I see little reason to do it now.
 
 \begin{styleR}
+...
 ggplot(data = results, aes(x = TimeInSeconds, y = get(datatype))) +
 ggtitle(gameQ, subtitle = paste0(datatype, " - Course")) + labsGPU +
 geom_hline(yintercept = 1000/60, color = "red") +
 geom_point(alpha = ALPHA) +
 geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) +
-facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
+FACET(graphCOURSE) +
 scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreak, expand=c(0.02, 0)) +
-scale_Y
+scale_Y + coord_cartesian(ylim = c(0, FtimeLimit))
 \end{styleR}
 
-The construction of \textbf{ggplot} is very similar to what we just had, but now the X value is set to the TimeInSeconds data.
+The construction of \textbf{ggplot} is very similar to what we just had for \textbf{graphMEANS}, but now the X value is set to the TimeInSeconds data.
 The \textbf{ggtitle} layer too is similar to what we had before, so no need to go over it, and the \textbf{geom\_hline} layer is exactly identical.
 
 The first truly new layer we have is \textbf{geom\_point}.
 This will plot the data using the aesthetics set in \textbf{ggplot}, inheriting the X value to be the time in the recording and the Y value is whatever data type I am asking for.
-Its transparency value is then set to either be completely opaque or mostly transparent using the \textbf{ALPHA} variable set earlier.
+Its transparency value is then set according to \textbf{ALPHA} earlier.
 
 The \textbf{geom\_smooth} layer is the one responsible for the blue line on the course plots.
 It will produce a smooth line from the data.
 I actually could place it without any arguments, as its default behavior is acceptable to me, but because that behavior involves automatically selecting the smoothing function, I decided to explicitly state the function.
-The layer works by using a function to smooth the data, and it has multiple built in.
-It will select what it thinks is the best to use based on the amount of data it has to work with, and with the thousands of points in my data, it normally selects "gam" for generalized additive model.
+The layer works by using a function to smooth the data, and it has multiple built in that it can select between based on the amount of data it has to work with.
+With the thousands of points in my data, it normally selects "gam" for generalized additive model.
 As you can see in the code, I have the method manually set to that, and then a formula is set, which I found is the default formula the layer uses with "gam."
 
-The \textbf{facet\_grid} layer is a bit different from what it was for Means.
-Now the variable for \textbf{cols} is the GPU and there are two variables for \textbf{rows}, Location and API, in that order.
-The order does matter and you can see in the graphs the plots for the locations are grouped together, and then the API plots for each location are shown.
-If the order were reversed, then the API would be the top-level group, with each location covered within it, and that I think is not as useful.
-I want to see how the different APIs behave at the same location, so Location is the first variable and API the second.
+The \textbf{FACET} function is called now to get the appropriate faceting which will include GPU as a variable.
 
-Now we have \textbf{scale\_x\_continuous} with I think only two of the arguments being interesting.
-One is the use of \textbf{labelBreak} for the labels, and the other is the sequence I use for the breaks.
-To keep the X scale from being over-populated with labels, I want it to have breaks just every 60 seconds, so I have this sequence set to generate values from 0 to the maximum time in the data, and use a step of 60.
+Now we have \textbf{scale\_x\_continuous} with the \textbf{name}, \textbf{labels}, and \textbf{expand} arguments all looking similar to what I previously used.
+The one interesting argument I think is \textbf{breaks} as it is a sequence generated from the data by finding the maximum value in the TimeInSeconds column and then using a step of 60.
+This may the breaks will only be at the minutes.
 Technically I could just set it to go to 300, but this way I can vary the length of the recordings without needing to change a value anywhere.
 
-Lastly the \textbf{scale\_Y} variable is applied with the \textbf{scale\_y\_continuous} layer inside.
-
-\subsubsection{Consecutive Difference Graph}
-This graph is a bit different and a bit more complicated than those we have already looked at.
-This is because both axes need to be changed for the data types, and the need to use a temporary variable to hold some data.
-
-\begin{styleR}
-graphDIFF	=	function(datatype, diffLim = 1000/50)	{
-	if	(datatype == "MsBetweenPresents")	{
-		scale_X	=	scale_x_continuous(
-			name	=	"Frame Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(0, FtimeLimit),
-			expand	=	c(0.02, 0)
-		)
-		scale_Y	=	scale_y_continuous(
-			name	=	"Consecutive Frame Time Difference (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(-diffLim, diffLim),
-			expand	=	c(0, 0)
-		)
-	}
-	if	(datatype == "MsBetweenDisplayChange")	{
-		scale_X	=	scale_x_continuous(
-			name	=	"Refresh Cycles Later (1/60 s)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelDisp,
-			limits	=	c(0, FtimeLimit),
-			expand	=	c(0.02, 0)
-		)
-		scale_Y	=	scale_y_continuous(
-			name	=	"Consecutive Display Time Difference (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(-diffLim, diffLim),
-			expand	=	c(0, 0)
-		)
-	}
-	if	(datatype == "MsUntilRenderComplete")	{
-		scale_X	=	scale_x_continuous(
-			name	=	"Render Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(0, FtimeLimit),
-			expand	=	c(0.02, 0)
-		)
-		scale_Y	=	scale_y_continuous(
-			name	=	"Consecutive Render Time Difference (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(-diffLim, diffLim),
-			expand	=	c(0, 0)
-		)
-	}
-	if	(datatype == "MsEstimatedDriverLag")	{
-		scale_X	=	scale_x_continuous(
-			name	=	"Estimated Driver Lag (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(0, FtimeLimit),
-			expand	=	c(0.02, 0)
-		)
-		scale_Y	=	scale_y_continuous(
-			name	=	"Consecutive Lag Difference (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(-diffLim, diffLim),
-			expand	=	c(0, 0)
-		)
-	}
-
-	temp	=	eval(parse(text = paste0("results$", datatype)))
-	#	this is to grab the desired column from the data frame
-	#	the [1,] is needed because it otherwise just gets the list of row names
-	#		cannot use the subsetting method because it has the wrong data type
-
-	ggplot(data = results, aes(x = get(datatype), y = rbind(c(diff(temp), 0))[1,]) ) +
-	ggtitle(gameQ, subtitle=paste0(datatype, " Consecutive Differences")) + labsGPU +
-	geom_point(alpha = 0.1) +
-	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
-	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) +  scale_fill_viridis_c() +
-	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
-	scale_X +
-	scale_Y
-}
-\end{styleR}
-
-When I was first developing this graph, I did try different limits for the consecutive difference scale, ultimately settling on 1000/50, in both directions.
-I find this looks good and usually holds the data pretty well too, but I have seen times when some points appear to have vanished, but this is very uncommon.
-In case I ever want to change the limits again, this limit is an argument for easy access and experimentation.
-
-\begin{styleR}
-if	(datatype == "MsBetweenPresents")	{
-	scale_X	=	scale_x_continuous(
-		name	=	"Frame Time (ms)",
-		breaks	=	c(0, round(ytimes, 2)),
-		limits	=	c(0, FtimeLimit),
-		expand	=	c(0.02, 0)
-	)
-	scale_Y	=	scale_y_continuous(
-		name	=	"Consecutive Frame Time Difference (ms)",
-		breaks	=	c(0, round(ytimes, 2)),
-		limits	=	c(-diffLim, diffLim),
-		expand	=	c(0, 0)
-	)
-}
-\end{styleR}
-
-Instead of setting just one scale, I need to set both for this graph because at least the names should be different between the data types.
-Everything else is similar to what we have seen before though, so it is not necessary to go through the code.
-
-\begin{styleR}
-temp	=	eval(parse(text = paste0("results$", datatype)))
-\end{styleR}
-
-This line will assign to the temporary variable, \textbf{temp}, the column from the data for the desired data type.
-Because I want to run a function, the \textbf{diff} function specifically, on the data, I cannot use \textbf{get} like I have been, but the combination of \textbf{eval} and \textbf{parse} get the job done.
-
-\begin{styleR}
-ggplot(data = results, aes(x = get(datatype), y = rbind(c(diff(temp), 0))[1,]) ) +
-ggtitle(gameQ, subtitle=paste0(datatype, " Consecutive Differences")) + labsGPU +
-geom_point(alpha = 0.1) +
-stat_density_2d(geom = "polygon", aes(fill = stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
-# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) +  scale_fill_viridis_c() +
-facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
-scale_X +
-scale_Y
-\end{styleR}
-
-Like before \textbf{ggplot} has its \textbf{data} argument set, and then within the \textbf{aes} argument the X value is set using the \textbf{get} function.
-The Y value is a little different and weird though, because it was necessary to combine a few things to get what I want.
-The \textbf{diff} function being applied to the \textbf{temp} data makes sense, but this is then combined with a 0.
-This is because the length of the output from \textbf{diff} will be one less than the original data, and I need the dimensions to be the same.
-I could also place the 0 at the beginning, but by having it at the end, the Y value of any point will direct us to the next point.
-The 0 at the beginning would Y value would tell us what the previous measurement was, and I feel looking forward is better than looking back.
-The \textbf{rbind} function is needed because it will actually stick the 0 at the end, as just having them both in the vector will not do, because the output from \textbf{diff}, in this case, is not a vector.
-
-Keeping things weird, I need to identify a specific row be grabbed, using the square brackets.
-I am not entirely sure why, but the output from \textbf{rbind} and the rest will actually have the row numbers looked at instead of the values.
-This corrects that, but I could not tell you why it happens in the first place.
-
-Just like the Course graph above, \textbf{geom\_point} inherits what it needs to from \textbf{ggplot}, so it is not necessary to provide any additional arguments to it, except for \textbf{alpha}.
-Some additional arguments are needed for the \textbf{stat\_density\_2d} layer though, which is what adds the heat maps, as I call them, to the plots.
-
-The first argument it has is \textbf{geom}, where I tell it I want polygons to be drawn for the density levels.
-Other options would provide contour lines for each density level or a density map covering the entire plot.
-To set it so the density levels are colored based on the density the \textbf{aes} argument is necessary and then the \textbf{fill} color is set to use the calculated variable of \textbf{nlevel}.
-Some of the \textit{ggplot2} layers will produce variables of their own, and these variables can then be accessed and used.
-In this case, \textbf{nlevel} identifies the normalized height of the contour line.
-Other variables would be just \textbf{level}, which is not normalized, \textbf{density}, and \textbf{ndensity}, which are the density estimate and normalized version of that estimate.
-By using the normalized variable, the apparent density value cannot be compared between plots, but within the same plot the density can be compared.
-
-With the \textbf{show.legend} argument set to FALSE, the legend for indicating the meaning of the colors is not shown, which I think is fine because the values are normalized anyway.
-It also means there is more room for the plots.
-
-The \textbf{scale\_fill\_viridis\_c} layer sets the coloring for the levels in the density map to a set of colors I feel have a nice contrast between them, making the levels easy to distinguish.
-At least this is the case when you have them all, thanks to the normalized densities.
-If the densities were not normalized then some of the plots would not show all of the colors, if the density in one plot is sufficiently lower than another, which is rather likely with the different GPU performance levels.
-
-The next line of code is nearly identical to this last one.
-The difference is the \textbf{alpha} argument that is also set to \textbf{nlevel}.
-Originally I thought it was a good idea to have the density map's transparency change with the density, but I have since changed my mind.
-Still, I keep the original code so I can go back if I ever wish to.
-
-The rest of the code is similar to what we had before, so we can move on to the next graph.
+Lastly the \textbf{scale\_Y} variable is applied with the \textbf{scale\_y\_continuous} layer inside and \textbf{coord\_cartesian} is applied to set the desired limits.
 
 \subsubsection{Frequency Graph}
 \begin{styleR}
 graphFREQ	=	function(datatype)	{
+	STATS	=	AGG(datatype, statGRAPH)
 	if	(datatype == "MsBetweenPresents")	{
-		STATS	=	graphSTATS
 		scale_X	=	scale_x_continuous(
 			name	=	"Frame Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelRound,
-			limits	=	c(0,  FtimeLimit),
-			expand	=	c(0.02, 0)
+			breaks	=	ybreaks,	labels	=	labelRoundB,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Frame Rate (FPS)",
+				labels	=	ms2FPS.lab
+			)
 		)
 	}
 	if	(datatype == "MsBetweenDisplayChange")	{
-		STATS	=	dispgSTATS
 		scale_X	=	scale_x_continuous(
 			name	=	"Refresh Cycles Later (1/60 s)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelDisp,
-			limits	=	c(0, FtimeLimit),
-			expand	=	c(0.02, 0)
+			breaks	=	ybreaks,	labels	=	labelDispB,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Display Time (ms)",
+				labels	=	ybreaks
+			)
 		)
 	}
 	if	(datatype == "MsUntilRenderComplete")	{
-		STATS	=	rendgSTATS
 		scale_X	=	scale_x_continuous(
 			name	=	"Render Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelRound,
-			limits	=	c(0,  FtimeLimit),
-			expand	=	c(0.02, 0)
+			breaks	=	ybreaks,	labels	=	labelRoundB,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Render Rate (FPS)",
+				labels	=	ms2FPS.lab
+			)
 		)
 	}
 	if	(datatype == "MsEstimatedDriverLag")	{
-		STATS	=	drivgSTATS
 		scale_X	=	scale_x_continuous(
 			name	=	"Estimated Driver Lag (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelRound,
-			limits	=	c(0,  FtimeLimit),
-			expand	=	c(0.02, 0)
+			breaks	=	ybreaks,	labels	=	labelRoundB,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis()
 		)
 	}
-	STATS$GPU	=	factor(STATS$GPU, levels = listGPU, ordered = TRUE)
 
-	ggplot(results, aes(get(datatype))) +
+	if (useSHORT)	results	=	data.short(results)
+	results	=	graph.rev(results,	rev.LOC,	rev.API)
+	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
+
+	ggplot(results, aes(get(x = datatype))) +
 	ggtitle(gameQ, subtitle=paste0(datatype, " - Frequency Plot")) + labsGPU +
 	geom_vline(xintercept = 1000/60, color = "red") +
 	geom_freqpoly(binwidth=0.03, size=0) +
 		geom_vline(data = STATS, aes(xintercept = Mean), color = "darkgreen") +
 		geom_vline(data = STATS, aes(xintercept = Median), color = "darkcyan", linetype="dotdash") +
-	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
-	scale_X +
+	FACET(graphFREQ) +
+	scale_X + coord_cartesian(xlim = c(0, FtimeLimit)) +
 	scale_y_continuous(name="Count", expand=c(0.02, 0))
 }
 \end{styleR}
 
-The Frequency graph is definitely simpler than the Consecutive Difference graph, but because of my addition of lines for the arithmetic mean and the median, it is slightly more complicated than the other two graphs.
-We can see this change immediately in the \textbf{if} statements for the data types.
+Here we have the Frequency graph that had been one of the simpler graphs, consisting of just one plot layer, but with the addition of the lines for the arithmetic mean and median, it has become slightly more complicated.
+The first change is right at the beginning, before even the \textbf{if} statements for the data types.
 
 \begin{styleR}
+...
+STATS	=	AGG(datatype, statGRAPH)
 if	(datatype == "MsBetweenPresents")	{
-	STATS	=	graphSTATS
 	scale_X	=	scale_x_continuous(
 		name	=	"Frame Time (ms)",
-		breaks	=	c(0, round(ytimes, 2)),
-		labels	=	labelRound,
-		limits	=	c(0,  FtimeLimit),
-		expand	=	c(0.02, 0)
+		breaks	=	ybreaks,	labels	=	labelRoundB,	expand	=	c(0.02, 0),
+		sec.axis	=	dup_axis(
+			name	=	"Frame Rate (FPS)",
+			labels	=	ms2FPS.lab
+		)
 	)
 }
+...
 \end{styleR}
 
-In order to place the lines for those two statistics into the plots, it is necessary to have access to the \textbf{graphSTATS} variable I made earlier, and the similar variables for the other data types.
-To make the access regular, I have it set in these statements to assign the value to the new \textbf{STATS} variable.
-There is nothing much else to note, except perhaps the use of \textbf{labelRound} on the labels, but we have already seen how functions can be used this way.
-Also I have a line for setting the order of the GPUs in \textbf{STATS}, which does not seem necessary, but does not hurt to have.
+In order to place the lines for those two statistics into the plots, it is necessary to have access to those values, so I create the \textbf{STATS} variable and have it hold the output of \textbf{statGRAPH} from the \textbf{AGG} function.
+There are several statistics returned by \textbf{statGRAPH} besides the mean and median, but these two are all I need here.
+
+I have also included here one of the data type checks because it is a little different from those we have seen earlier.
+The performance axis, whether it is frame time or something else, was vertical for the previous two graphs, but the Frequency graph calls for it to be horizontal, which is why \textbf{scale\_X} is made and it uses \textbf{scale\_x\_continuous} This is not the only change necessary as the label functions must now have \textbf{lineBreak} support, like any other horizontal scale.
 
 \begin{styleR}
-ggplot(results, aes(get(datatype))) +
+...
+if (useSHORT)	results	=	data.short(results)
+results	=	graph.rev(results,	rev.LOC,	rev.API)
+if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
+
+ggplot(results, aes(get(x = datatype))) +
 ggtitle(gameQ, subtitle=paste0(datatype, " - Frequency Plot")) + labsGPU +
 geom_vline(xintercept = 1000/60, color = "red") +
 geom_freqpoly(binwidth=0.03, size=0) +
 	geom_vline(data = STATS, aes(xintercept = Mean), color = "darkgreen") +
 	geom_vline(data = STATS, aes(xintercept = Median), color = "darkcyan", linetype="dotdash") +
-facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
-scale_X +
+FACET(graphFREQ) +
+scale_X + coord_cartesian(xlim = c(0, FtimeLimit)) +
 scale_y_continuous(name="Count", expand=c(0.02, 0))
+}
 \end{styleR}
 
-The first layer to this plot that is interesting is \textbf{geom\_freqpoly}, which is what creates the frequency plot.
-Actually it is creating a frequency polygon, which is how it gets its name.
-In any case, I have two arguments set for it, with the more generic one being \textbf{size}.
-This just sets the size of the line used to be quite thin, because I do not like the default thickness.
-The \textbf{binwidth} argument controls how wide the bins are that are used to count the number of measurements at certain values.
-A larger value will produce higher counts, but the plot looks less detailed, while a smaller value shows more noise in the plot.
-I did experiment some when creating the graph and found 0.03 to be the visually most appealing to me.
+Ahead of the creation of this graph are the three lines responsible for manipulating factor levels, and now all three are active.
+This is simply because the \textbf{STATS} object is not being used and so it too may need to be manipulated, so its line cannot be commented.
+
+Getting into the graph layers now, the first line of much interest is the \textbf{geom\_vline} that will create a red vertical line for referencing where 16.667 ms or 60 FPS is.
+It is just like the \textbf{geom\_hline} called in prior graphs, but must have some things flipped because the line is vertical instead of horizontal.
+
+The next line is the actually interesting one as this is where the frequency plot is created using \textbf{geom\_freqpoly}.
+It creates a polygon based on the count of data within certain bins.
+By default there are 30 bins and their width calculated to properly span the data, but it is best to manually set \textbf{binwidth} after some experimentation.
+I found 0.03 to be the visually most appealing to me, being neither too noisy nor too smooth when I first created the graph and have stuck with it since.
+The \textbf{size} argument controls the width of the line used for the plot, and I have it set to 0 so the line is quite thin.
 
 The next two layers are for adding the vertical lines for the mean and median.
 Both use the \textbf{STATS} data frame to get the value from, which is important because while it can be possible to have the plot calculate these values directly from the data, this does not always work well with the facets.
@@ -637,55 +810,60 @@ This approach, however, does ensure the correct values are used for each plot.
 To distinguish between the lines, I have different colors set, but also the median has a different line type combining dots and dashes.
 The mean line will be solid, the default.
 
-\subsubsection{QQ Graph}
-You may be a little surprised when you look at the code for this graph, because while there is a geometry layer to create QQ plots in \textit{ggplot2}, this is actually the most complicated graph, even compared to the Consecutive Difference graph.
+The other layers have previously been covered, so we can move on.
 
+\subsubsection{QQ Graph}
 \begin{styleR}
-graphQQ	=	function(datatype)	{
+graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
+	PERCS	=	sort(unique(c(PERCS, QUAN)))
+	STATS	=	AGG(datatype, statGRAPH)
 	if	(datatype == "MsBetweenPresents")	{
-		STATS	=	graphSTATS
 		scale_Y	=	scale_y_continuous(
 			name	=	"Frame Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelRound,
-			expand	=	c(0.02, 0)
+			breaks	=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Frame Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 	if	(datatype == "MsBetweenDisplayChange")	{
-		STATS	=	dispgSTATS
 		scale_Y	=	scale_y_continuous(
 			name	=	"Refresh Cycles Later (1/60 s)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelDisp,
-			expand	=	c(0.02, 0)
+			breaks	=	ybreaks,	labels	=	labelDisp,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Display Time (ms)",
+				labels	=	ybreaks
+			)
 		)
 	}
 	if	(datatype == "MsUntilRenderComplete")	{
-		STATS	=	rendgSTATS
 		scale_Y	=	scale_y_continuous(
 			name	=	"Render Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelRound,
-			expand	=	c(0.02, 0)
+			breaks	=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Render Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 	if	(datatype == "MsEstimatedDriverLag")	{
-		STATS	=	drivgSTATS
 		scale_Y	=	scale_y_continuous(
 			name	=	"Estimated Driver Lag (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelRound,
-			expand	=	c(0.02, 0)
+			breaks	=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0)
 		)
 	}
-	STATS$GPU	=	factor(STATS$GPU, levels = listGPU, ordered = TRUE)
+
+	if (useSHORT)	results	=	data.short(results)
+	results	=	graph.rev(results,	rev.LOC,	rev.API)
+	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 
 #	sec.axis	=	sec_axis(~.,
 #		breaks	=	STATS[c("0.1", "1", "Median", "99", "99.9")],
 #		labels	=	paste0(round(STATS[c("0.1", "1", "Median", "99", "99.9")], 2), c(" (0.1%)", " (1%)", " (50%)", " (99%)", " (99.9%)"))
 #	)
 #		this can be used to add a secondary axis that shows the values for the percentiles
-#			it needs to be put in place after STATS is assigned, else it throws an error
+#			code remains for reference as now Rates are shown for the second axis
 
 	ggplot(data = STATS, aes(ymin = -Inf, xmin = -Inf)) +
 	ggtitle(gameQ, subtitle = paste0(datatype, " - QQ Distribution")) + labsGPU +
@@ -699,42 +877,42 @@ graphQQ	=	function(datatype)	{
 	stat_qq(data = results, aes(sample=get(datatype))) +
 	stat_qq_line(data = results, aes(sample=get(datatype)), line.p = QUAN, color = "green", alpha = 0.5, size = 1.1, linetype = "dotted") +
 	geom_label(data = STATS, aes(x = Inf, y = -Inf, label = paste0("Slope: ", Slope)), parse = TRUE, hjust="right", vjust="bottom", fill = "darkgrey", color = "green") +
-	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
+	FACET(graphQQ) +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
-	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=labelBreak(c("0.1", "1", "50", "99", "99.9")), minor_breaks=NULL, expand=c(0.02, 0))
+	scale_x_continuous(name = "Percentile", breaks = qnorm(PERCS), labels = labelBreakQQ, minor_breaks = NULL, expand = c(0.02, 0))
 }
 \end{styleR}
 
-Like I said, it is the most complicated of the graphs, because I have returned things to it I had previously dropped, and added some new things too.
-Fortunately, a lot of it repeats what we have already seen in other the graphs.
+Perhaps surprisingly, the QQ graph is actually the most complex graph of all of them, as even the Consecutive Difference graph coming up involves less code to build.
+Just like the Frequency graph, it requires the \textbf{STATS} variable with the output from \textbf{statGRAPH} but it also needs another variable made to better support some experimentation.
 
 \begin{styleR}
-if	(datatype == "MsBetweenPresents")	{
-	STATS	=	graphSTATS
-	scale_Y	=	scale_y_continuous(
-		name	=	"Frame Time (ms)",
-		breaks	=	c(0, round(ytimes, 2)),
-		labels	=	labelRound,
-		expand	=	c(0.02, 0)
-	)
-	...
-}
-STATS$GPU	=	factor(STATS$GPU, levels = listGPU, ordered = TRUE)
+graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
+	PERCS	=	sort(unique(c(PERCS, QUAN)))
+...
+\end{styleR}
+
+Sometimes when working on a performance analysis, I see the turn to longer frame times on a QQ plot happen inside of 99\%.
+This can pose a problem as it can significantly inflate the slope of the theoretical line, and while I have long been able to manipulate the two points used to make that line, such a change would not be affected on the graph.
+To fix that I added the \textbf{PERCS} argument for the percentiles I wants as breaks on the graph and then add the points for the line to the vector.
+By using \textbf{unique} any repetition is removed and then \textbf{sort} keeps them in order, so the result is any change to the theoretical line will be reflected in the graph.
+It might not come up much, and indeed I do not think I will both saving versions of the graph with these alterations, but now that work is easier to do.
+
+\begin{styleR}
+...
 #	sec.axis	=	sec_axis(~.,
 #		breaks	=	STATS[c("0.1", "1", "Median", "99", "99.9")],
 #		labels	=	paste0(round(STATS[c("0.1", "1", "Median", "99", "99.9")], 2), c(" (0.1%)", " (1%)", " (50%)", " (99%)", " (99.9%)"))
 #	)
 #		this can be used to add a secondary axis that shows the values for the percentiles
-#			it needs to be put in place after STATS is assigned, else it throws an error
+#			code remains for reference as now Rates are shown for the second axis
+...
 \end{styleR}
 
-The creation of the \textbf{scale\_Y} and \textbf{STATS} variable are nothing new, but there is the commented code I want to address.
+Though this code is commented out, I still want to address it.
 This is for adding a special secondary axis that will mark the values of the percentiles 0.1\%, 1\%, 99\%, 99.9\%, and the median on the right side of the plot.
-As these values are all specifically given within the tables I share, I do not feel it is necessary to include them here, but at the same time I do not want to throw away the code.
+As these values are all specifically given within the tables I share, I do not feel it is necessary to include them on the graph, but at the same time I do not want to throw away the code.
 It is also a good idea to not use them because of the potential for overlap as some of these values can be right next to each other and I have no way to automatically correct that.
-
-For the Frequency graph I mentioned that I added the code to apply an order to the GPUs in the \textbf{STATS} data frame, but that it was not necessary.
-Here it is because when I did not have the order set, a different order was used, so that line of code is necessary here.
 
 \begin{styleR}
 ggplot(data = STATS, aes(ymin = -Inf, xmin = -Inf)) +
@@ -749,9 +927,9 @@ stat_qq_line(data = results, aes(sample=get(datatype)), line.p = QUAN, color = "
 stat_qq(data = results, aes(sample=get(datatype))) +
 stat_qq_line(data = results, aes(sample=get(datatype)), line.p = QUAN, color = "green", alpha = 0.5, size = 1.1, linetype = "dotted") +
 geom_label(data = STATS, aes(x = Inf, y = -Inf, label = paste0("Slope: ", Slope)), parse = TRUE, hjust="right", vjust="bottom", fill = "darkgrey", color = "green") +
-facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
+FACET(graphQQ) +
 scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
-scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=labelBreak(c("0.1", "1", "50", "99", "99.9")), minor_breaks=NULL, expand=c(0.02, 0))
+scale_x_continuous(name = "Percentile", breaks = qnorm(PERCS), labels = labelBreakQQ, minor_breaks = NULL, expand = c(0.02, 0))
 \end{styleR}
 
 This looks like a lot of code, and it is, but a lot of it is repeated, so it is not as bad as it appears.
@@ -778,20 +956,20 @@ With the \textbf{stat\_qq\_line} we get to the first layer that needs to look to
 This layer appears twice for the same reason the \textbf{stat\_summary} layers are there twice in the Means graph; to avoid obscuring the data.
 Besides needing the \textbf{data} to be set, the actual data to sample must also be identified within the aesthetics mapping.
 Be default the line goes between the 25\% and 75\% values (the first and third quartiles), but I want to use different values, which is where the \textbf{line.p} argument comes in.
-It requires a vector of two elements be provided to it, and that is already set in the Input script to be for 1\% and 99\%.
+It requires a vector of two elements be provided to it, and that is already set in the Input.r script as \textbf{QUAN} with the values 1\% and 99\%.
 After that \textbf{color} is set to green, which is nicely visible, \textbf{size} is set to 1.1 so it is a little thicker than usual, and \textbf{linetype} to dotted.
 I want the line to be dotted to make it easier to see the data behind it, which is also why the second \textbf{stat\_qq\_line} has \textbf{alpha} set to 0.5.
 
 The layer sandwiched between the lines is \textbf{stat\_qq} which just needs to be given an object for \textbf{data} and told what the \textbf{sample} should be.
-The defaults for the rest of it are find with me, and the layer will then order and place the points to create a QQ plot.
+The defaults for the rest of it are fine with me, and the layer will then order and place the points to create a QQ plot.
 Well, kind of since only one scale is quantiles, but the layer name is QQ, so I keep calling it a QQ plot anyway.
 
 There is yet another geometry layer to be concerned with and it is \textbf{geom\_label}.
-This and its sister layer \textbf{geom\_text} are for adding text to a plot, with \textbf{geom\_label} placing a box around the text to make it easier to read.
+As already covered for the \textbf{boxLABS} function, this and its sister layer \textbf{geom\_text} are for adding text to a plot, with \textbf{geom\_label} placing a box around the text to make it easier to read.
 The value I want shown is the slope of the QQ line, which is in \textbf{STATS}, so I set that to \textbf{data}.
 That might not be necessary, if the layer would still inherit from \textbf{ggplot}, but it does not hurt to have it (aside from being a longer line of code).
 Again with the aesthetics I am using the \textbf{Inf} special word to place the label on the lower right of the plots, regardless of the actual edges of the plots.
-The label is then set to be a string identifying the value as the slope, and then grabbing the value from \textbf{data}.
+The label is then set to be a string identifying the value as the slope, and then grabbing the value from \textbf{STATS}.
 
 Coming outside of the data-driven aesthetics, the \textbf{parse} argument is TRUE, but it honestly does not matter.
 When TRUE the labels will be parsed into expressions, but it still works when this is FALSE.
@@ -799,157 +977,193 @@ There is a little difference in the placement of the text within the label recta
 To keep the label box from going outside of the plot, the horizontal justification (\textbf{hjust}) and vertical justification (\textbf{vjust}) are set to be right and bottom, respectively.
 The \textbf{color} for the text and border of the box are set to be green, matching the line concerned, so \textbf{fill} is set to dark grey, as the green shows up nicely on it.
 
-The \textbf{facet\_grid} and \textbf{scale\_Y} layers have been covered before, but \textbf{coord\_cartesian} is something new and very useful.
-There is an unfortunate quirk to \textit{ggplot2} and that is whenever a part of an object to be drawn is outside of the plot’s scales, the whole object will not be drawn.
-For \textbf{stat\_qq} this is not an issue as it just means the points outside the plot are missing, but for the \textbf{geom\_rect} and \textbf{stat\_qq\_line}, it could be an issue if one of the points defining them is above the \textbf{FtimeLimit} value.
-It would cause that entire layer to be skipped, but thankfully \textbf{coord\_cartesian} provides a solution.
+The \textbf{FACET}, \textbf{scale\_Y}, and \textbf{coord\_cartesian} layers have all been covered before, so we can move on to the last layer, \textbf{scale\_x\_continuous}.
+This is what places the major breaks at the interested percentiles and then makes sure the labels are percentiles by using \textbf{labelBreakQQ}, which will also alternate the labels to help with readability.
+This layer also disables the minor breaks which would not actually be too helpful anyway, since the X scale is not linear.
+Perhaps by applying a transformation I can fix that, but I do not think it is necessary.
 
-The \textbf{coord\_cartesian} layer acts different with how it applies limits, as it does not prevent objects outside of its limits from being drawn, but it does remove them as a result of the cropping of the graph.
-Though the reason I added this I believe I have resolved by other means, it is still good to have at least one example of in all of this, because it can be very annoying when something is not appearing and you do not know why.
-
-The last layer is \textbf{scale\_x\_continuous}, which is important because it places the major breaks at the interested percentiles and then makes sure the labels are as percentiles, and not quantiles or the Z-scores that would normally be shown on a QQ plot.
-It also disables the minor breaks which would not actually be too helpful anyway, since the X scale is not linear.
-
-\subsubsection{Graph Output Function}
-
-With the functions for the different graphs made, we can finally get to actually creating the graphs and saving them.
-For that I have one more custom function.
-
+\subsubsection{Consecutive Difference Graph}
 \begin{styleR}
-graphOUT	=	function(datatype, graphtype, OUT = TRUE, diffLim = NULL, ...)	{
-	if	(datatype == "MsBetweenPresents")			dataNAME	=	"Frame Time"
-	if	(datatype == "MsBetweenDisplayChange")		dataNAME	=	"Display Time"
-	if	(datatype == "MsUntilRenderComplete")		dataNAME	=	"Render Time"
-	if	(datatype == "MsEstimatedDriverLag")		dataNAME	=	"Driver Lag"
-
-	if	(substitute(graphtype) == "graphMEANS")		graphNAME	=	"Means"
-	if	(substitute(graphtype) == "graphCOURSE")	graphNAME	=	"Course"
-	if	(substitute(graphtype) == "graphFREQ")		graphNAME	=	"Freq"
-	if	(substitute(graphtype) == "graphQQ")		graphNAME	=	"QQ"
-	if	(substitute(graphtype) == "graphDIFF")		graphNAME	=	"Diff"
-
-	#ARGS	=	list(...)
-	#	how to get the miscellaneous arguments into a variable
-
-	message(paste0(graphNAME, " - ", dataNAME))
-
-	if	(graphNAME == "Diff" & !is.null(diffLim))	{
-		PLOT	=	graphtype(datatype, diffLim)
-	}	else	{
-		PLOT	=	graphtype(datatype)
+graphDIFF	=	function(datatype, diffLim = 1000/50)	{
+	if	(datatype == "MsBetweenPresents")	{
+		scale_X	=	scale_x_continuous(
+			name	=	"Frame Time (ms)",
+			breaks	=	ybreaks,	labels	=	labelRoundB,	limits	=	c(0, FtimeLimit),
+			expand	=	c(0.02, 0)
+		)
+		scale_Y	=	scale_y_continuous(
+			name	=	"Consecutive Frame Time Difference (ms)",
+			breaks	=	ybreaks,	labels	=	labelRound,		limits	=	c(-diffLim, diffLim),
+			expand	=	c(0, 0)
+		)
+	}
+	if	(datatype == "MsBetweenDisplayChange")	{
+		scale_X	=	scale_x_continuous(
+			name	=	"Refresh Cycles Later (1/60 s)",
+			breaks	=	ybreaks,	labels	=	labelDisp,		limits	=	c(0, FtimeLimit),
+			expand	=	c(0.02, 0)
+		)
+		scale_Y	=	scale_y_continuous(
+			name	=	"Consecutive Display Time Difference (ms)",
+			breaks	=	ybreaks,
+			limits	=	c(-diffLim, diffLim),
+			expand	=	c(0, 0)
+		)
+	}
+	if	(datatype == "MsUntilRenderComplete")	{
+		scale_X	=	scale_x_continuous(
+			name	=	"Render Time (ms)",
+			breaks	=	ybreaks,	labels	=	labelRoundB,	limits	=	c(0, FtimeLimit),
+			expand	=	c(0.02, 0)
+		)
+		scale_Y	=	scale_y_continuous(
+			name	=	"Consecutive Render Time Difference (ms)",
+			breaks	=	ybreaks,	labels	=	labelRound,		limits	=	c(-diffLim, diffLim),
+			expand	=	c(0, 0)
+		)
+	}
+	if	(datatype == "MsEstimatedDriverLag")	{
+		scale_X	=	scale_x_continuous(
+			name	=	"Estimated Driver Lag (ms)",
+			breaks	=	ybreaks,	labels	=	labelRoundB,	limits	=	c(0, FtimeLimit),
+			expand	=	c(0.02, 0)
+		)
+		scale_Y	=	scale_y_continuous(
+			name	=	"Consecutive Lag Difference (ms)",
+			breaks	=	ybreaks,	labels	=	labelRound,		limits	=	c(-diffLim, diffLim),
+			expand	=	c(0, 0)
+		)
 	}
 
-	if	(OUT)	customSave(paste0("@", graphNAME, " - ", dataNAME), plot = PLOT, ...)
-	PLOT	#shows the current graph, but must be after customSave
+	if (useSHORT)	results	=	data.short(results)
+	results	=	graph.rev(results,	rev.LOC,	rev.API)
+	# if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
+
+	ggplot(data = results, aes(x = get(datatype), y = diff.CONS(get(datatype))) ) +
+	ggtitle(gameQ, subtitle=paste0(datatype, " Consecutive Differences")) + labsGPU +
+	geom_point(alpha = 0.1) +
+	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
+	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
+	FACET(graphDIFF) +
+	scale_X +
+	scale_Y
 }
 \end{styleR}
 
-As it serves a similar purpose to the \textbf{sinkTXT}, \textbf{sinkHTML}, and \textbf{sinkOUT} functions I made earlier, I am naming it \textbf{graphOUT}.
-It requires four arguments, and the first true cannot have defaults.
-These are \textbf{datatype}, serving the exact same purpose as it did for the graph functions, and \textbf{graphtype}.
-The \textbf{diffLIM} argument is there just to be passed to the Consecutive Difference graph, in case I want to change it, and then \textbf{OUT} is to control if I want to save the graph.
-Usually I do, but there may be times I want to just look at the graph in the R GUI, so I would set it to FALSE.
-There is also the ellipsis among the arguments and this is to pass any arguments to the \textbf{customSave} functions, such as the width or height different from the default.
+This graph is quite a bit different than the others because it requires controlling both axes and involves performing special operations on the data.
+Fortunately, I have found a way to simplify some of this, and curiously when I first implemented it, the results were slightly different.
+I cannot explain this but I am also not worried about it and can even believe this new design is more accurate, but I will get to that when the time comes.
+First the beginning of the function needs to be covered.
 
 \begin{styleR}
-if	(datatype == "MsBetweenPresents")			dataNAME	=	"Frame Time"
-...
-if	(substitute(graphtype) == "graphMEANS")		graphNAME	=	"Means"
+graphDIFF	=	function(datatype, diffLim = 1000/50)	{
+	if	(datatype == "MsBetweenPresents")	{
+		scale_X	=	scale_x_continuous(
+			name	=	"Frame Time (ms)",
+			breaks	=	ybreaks,	labels	=	labelRoundB,	limits	=	c(0, FtimeLimit),
+			expand	=	c(0.02, 0)
+		)
+		scale_Y	=	scale_y_continuous(
+			name	=	"Consecutive Frame Time Difference (ms)",
+			breaks	=	ybreaks,	labels	=	labelRound,		limits	=	c(-diffLim, diffLim),
+			expand	=	c(0, 0)
+		)
+	}
 ...
 \end{styleR}
 
-As the two groups of \textbf{if} statements were identical but for some particulars, I am just using these two lines as examples.
-These lines are necessary for naming the graphs appropriately.
-The first one checks what the \textbf{datatype} argument is and then sets the \textbf{dataNAME} variable to be a friendly name for the file name.
-The second is a little more complicated because of the \textbf{substitute} function.
-What it will do is return the parsed value of the variable, without evaluating it.
-This is necessary because while the value assigned to \textbf{datatype} needs to be a string, \textbf{graphtype} is actually the graph function.
-With \textbf{substitute} we get the name of the function as a string, so we can compare it against the names as strings.
-Depending on the result, \textbf{graphNAME} is set to a friendlier name of the graph.
-The next bit of code is something I commented out but want there as a note to myself.
-In order to get the arguments provided by the ellipsis, one can just assign the ellipsis as a list to a variable, and then work from that variable.
-I do not need to do that here, but it is useful to remember.
+When I was first developing this graph, I did try different limits for the consecutive difference scale, ultimately settling on 1000/50, in both directions.
+I find this looks good and usually holds the data pretty well too, but I have seen times when some points appear to have vanished, but this is very uncommon.
+In case I ever want to change the limits again, this limit is an argument for easy access and experimentation.
+
+Instead of setting just one scale, I need to set both for this graph because at least the names should be different between the data types.
+Everything else is similar to what we have seen before though, so it is not necessary to go through the code.
 
 \begin{styleR}
-message(paste0(graphNAME, " - ", dataNAME))
+if (useSHORT)	results	=	data.short(results)
+results	=	graph.rev(results,	rev.LOC,	rev.API)
+# if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 
-if	(graphNAME == "Diff" & !is.null(diffLim))	{
-	PLOT	=	graphtype(datatype, diffLim)
-}	else	{
-	PLOT	=	graphtype(datatype)
+ggplot(data = results, aes(x = get(datatype), y = diff.CONS(get(datatype))) ) +
+ggtitle(gameQ, subtitle=paste0(datatype, " Consecutive Differences")) + labsGPU +
+geom_point(alpha = 0.1) +
+stat_density_2d(geom = "polygon", aes(fill = stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
+# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
+FACET(graphDIFF) +
+scale_X +
+scale_Y
+\end{styleR}
+
+As none of the information in \textbf{STATS} is needed for this graph, its line for factor level manipulation is commented out, leading us to building the graph and the significant change I made.
+
+After it occurred to me I can use functions in \textbf{aes}, which took longer than it perhaps should have, I realized I should try to apply that knowledge to this graph.
+Previously I needed to create an intermediate variable to hold the consecutive difference data, but having created the \textbf{diff.CONS} function, instead I can just have its results directly assigned to the \textbf{y} aesthetic here.
+For some reason this resulted in the heat maps looking a little different when I first tried this, even though the output will be the same as the previous process.
+It is also not as though the data is not being correctly grouped, because if that were the case then every heat map would appear the same, and we can see that is not happening.
+While I cannot explain the minor discrepancy, as this should be the superior method, at least in terms of efficient code, I will use it.
+
+Just like the Course graph before, \textbf{geom\_point} inherits what it needs to from \textbf{ggplot}, so it is not necessary to provide any additional arguments to it, except for \textbf{alpha}.
+Some additional arguments are needed for the \textbf{stat\_density\_2d} layer though, which is what adds the heat maps, to the plots.
+
+The first argument it has is \textbf{geom}, where I tell it I want polygons to be drawn for the density levels.
+Other options would provide contour lines for each density level or a density map covering the entire plot.
+To set it so the density levels are colored based on the density the \textbf{aes} argument is necessary and then the \textbf{fill} color is set to use the calculated variable of \textbf{nlevel}.
+Some of the \textit{ggplot2} layers will produce variables of their own, and these variables can then be accessed and used.
+In this case, \textbf{nlevel} identifies the normalized height of the contour line.
+Other variables would be just \textbf{level}, which is not normalized, \textbf{density}, and \textbf{ndensity}, which are the density estimate and normalized version of that estimate.
+By using the normalized variable, the apparent density value cannot be compared between plots, but within the same plot the density can be compared.
+
+With the \textbf{show.legend} argument set to FALSE, the legend for indicating the meaning of the colors is not shown, which I think is fine because the values are normalized anyway.
+It also means there is more room for the plots.
+
+The \textbf{scale\_fill\_viridis\_c} layer sets the coloring for the levels in the density map to a set of colors I feel have a nice contrast between them, making the levels easy to distinguish.
+At least this is the case when you have them all, thanks to the normalized densities.
+If the densities were not normalized then some of the plots would not show all of the colors, if the density in one plot is sufficiently lower than another, which is rather likely with the different GPU performance levels.
+
+The next line of code is nearly identical to this last one.
+The difference is the \textbf{alpha} argument that is also set to \textbf{nlevel}.
+Originally I thought it was a good idea to have the density map's transparency change with the density, but I have since changed my mind.
+Still, I keep the original code so I can go back if I ever wish to.
+
+The rest of the code is similar to what has been covered before, but with one important difference that I decided to wait to point out.
+Instead of using \textbf{coord\_cartesian} as I have been, the limits are defined in the scales because, that is the only way for the graph to work correctly.
+For some reason, \textbf{stat\_density\_2d} and \textbf{coord\_cartesian} do not get along, but applying the limits in the scales does not cause any problem.
+
+That finishes off the graphs so all that remains are the calls to the appropriate functions to save the various outputs.
+
+\subsubsection{Saving Text Outputs}
+\begin{styleR}
+#	text outputs
+if	(textOUT)	{
+	if	(textFRAM)	sinkOUT("MsBetweenPresents")
+	if	(textDISP)	sinkOUT("MsBetweenDisplayChange")
+	if	(textREND)	sinkOUT("MsUntilRenderComplete")
+	if	(textDRIV)	sinkOUT("MsEstimatedDriverLag")
+	message("")
 }
-
-if	(OUT)	customSave(paste0("@", graphNAME, " - ", dataNAME), plot = PLOT, ...)
-PLOT	#shows the current graph, but must be after customSave
 \end{styleR}
 
-The \textbf{message} function will identify the current graph being worked on, which is valuable when this is running in the console window.
-This next bit of code is to cover when it is a Consecutive Difference graph being worked on, and the limits for the difference axis need to be changed.
-In that scenario, the \textbf{graphDIFF} function assigned to \textbf{graphtype} will be given the values of \textbf{datatype} and \textbf{diffLim} as arguments.
-Otherwise, \textbf{graphtype} is just given \textbf{datatype}.
-In both scenarios, the graph is not actually created but assigned to the \textbf{PLOT} variable.
-The reason for this is because of how the \textbf{ggsave} function within my \textbf{customSave} function works.
-Normally it will use whatever the last-drawn graph is, but it can also be given a graph for it to save directly.
-By assigning the graph to \textbf{PLOT} I can pass it to \textbf{customSave} so it is saved directly.
-If I am doing tweaking or experiments, this can be very helpful as a way to avoid accidentally saving the wrong graph.
-Before the graph is saved though, the \textbf{if} statement quickly checks if the graph should be saved.
-If it should be, then the \textbf{customSave} function is run with all of the information it needs.
-If it should not be, then the last line of the function is \textbf{PLOT}, which will tell the R GUI to render the graph.
-Perhaps it would be appropriate to have it only render \textbf{PLOT} if it is set to not be saved, but it is also very likely that I will want to see the graph if I am in the R GUI.
+First are the text outputs, as the comment indicates.
+These are fairly simple as the only thing required is to call \textbf{sinkOUT} with the appropriate data type.
+Of course there are the controls for disabling the different types and even all of the text outputs.
+These are easily handled with simple \textbf{if} statements and we will see this continue with the graphs too.
 
-With that function gone through, it is time to start actually making the graphs.
-First though, the order of the APIs needs to be changed.
-
+\subsubsection{Saving Graph Outputs}
 \begin{styleR}
-results$API	=	factor(results$API, levels = rev(listAPI))
-\end{styleR}
+if	(graphs)	{
+rev.LOC	=	FALSE	;	rev.API	=	TRUE
 
-I do not like the bottom-up order \textit{ggplot2} will use normally, so I reverse the APIs to address this.
-
-\begin{styleR}
 #Means
 if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphMEANS)
 if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphMEANS)
 if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphMEANS)
 if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphMEANS)
-\end{styleR}
 
-The first graphs to be created are the Means graphs for a specific reason that I will get to soon.
-First this code checks if the graph for the data type is even desired, and if it is the \textbf{graphOUT} function is called with the appropriate arguments.
-After this we get to the reason the Means graphs are made first.
+#Means with Boxplot Lables
+#				graphOUT("MsBetweenPresents",		graphMEANSbox)
 
-\begin{styleR}
-if	(useSHORT)	{
-results							=	reLoc(results, shortLOC);		results		=	reAPI(results, shortAPI)
+rev.LOC	=	TRUE	;	rev.API	=	TRUE
 
-if	(graphFRAM)	{	graphSTATS	=	reLoc(graphSTATS, shortLOC);	graphSTATS	=	reAPI(graphSTATS, shortAPI)	}
-if	(graphDISP)	{	dispgSTATS	=	reLoc(dispgSTATS, shortLOC);	dispgSTATS	=	reAPI(dispgSTATS, shortAPI)	}
-if	(graphREND)	{	rendgSTATS	=	reLoc(rendgSTATS, shortLOC);	rendgSTATS	=	reAPI(rendgSTATS, shortAPI)	}
-if	(graphDRIV)	{	drivgSTATS	=	reLoc(drivgSTATS, shortLOC);	drivgSTATS	=	reAPI(drivgSTATS, shortAPI)	}
-}
-
-results$Location						=	factor(results$Location, levels = rev(levels(results$Location)))
-if	(graphFRAM)		graphSTATS$Location	=	factor(graphSTATS$Location, levels = rev(levels(graphSTATS$Location)))
-if	(graphDISP)		dispgSTATS$Location	=	factor(dispgSTATS$Location, levels = rev(levels(dispgSTATS$Location)))
-if	(graphREND)		rendgSTATS$Location	=	factor(rendgSTATS$Location, levels = rev(levels(rendgSTATS$Location)))
-if	(graphDRIV)		drivgSTATS$Location	=	factor(drivgSTATS$Location, levels = rev(levels(drivgSTATS$Location)))
-\end{styleR}
-
-Normally the Means graphs do not need the shortened versions of the location and API names, and this code is what applies those names, where appropriate.
-First it checks if the names are supposed to be used to begin with.
-After that, it applies them using the \textbf{reLoc} and \textbf{reAPI} functions found in the Input script to the whole of \textbf{results}.
-Because I think it looks nice to be on a single line, I am using the semi-colon to tell R to separate the two commands without a line break.
-
-After \textbf{results} is changed, the different data frames of the graph-specific stats need to have the same work done to them.
-Though we see the code as being on a single line, it is necessary to use the curly brackets with the \textbf{if} statements here, because the semi-colon will tell R the code for the statement has ended.
-
-After the shortened names are applied, I want to reverse the order of the locations in the data.
-It is just that I have a different preference for ordering it than R, making this necessary.
-Because there is only one thing to do when the \textbf{if} statements are true, the semi-colon and thus the curly brackets too are not needed.
-
-There is really nothing left to this script, except for the creation of the other graphs, but the pattern is identical to that for creating the Means graphs above.
-
-\begin{styleR}
 #Course
 if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphCOURSE)
 if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphCOURSE)
@@ -968,9 +1182,32 @@ if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphQQ)
 if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphQQ)
 if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphQQ)
 
-#Differnce
+#Difference
 if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphDIFF)
 if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphDIFF)
 if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphDIFF)
 if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphDIFF)
+
+#Difference - Extended
+if (!is.null(diffLim))	{
+	if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphDIFF,	diffLim = diffLim)
+	if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphDIFF,	diffLim = diffLim)
+	if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphDIFF,	diffLim = diffLim)
+	if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphDIFF,	diffLim = diffLim)
+}
+}
 \end{styleR}
+
+Surrounding all of the calls to \textbf{graphOUT} is the \textbf{if} statement checking if any graphs are desired.
+Once inside of that, then there are the checks for the different data types with each graph type.
+It would be appropriate to group the graphs together by each data type, so the checks do not need to be repeated, but that would then require repeating the \textbf{rev.LOC} and \textbf{rev.API} assignments so I think this is best.
+
+As you can see, I have the controls for reversing the Location and API factor levels set ahead of the different groups of graphs.
+By editing these lines or copying them elsewhere, one can easily change their application, but it is important to note they must be provided.
+If you go back and look at the \textbf{graph.rev} function you will see default values were set for these arguments, but when called in each graph function, these variables are explicitly given.
+That means they must have a value before calling the function, else R will throw an error.
+
+I do not think there is anything too remarkable about this code except for the inclusion of the \textbf{graphMEANSbox} example, there purely for reference, and then the Difference – Extended graphs at the end.
+Normally \textbf{diffLim} is NULL in Input.r so that is all I need to check for to know if the extended graphs should be made.
+
+With that, we have arrived at the end of this script and this section.

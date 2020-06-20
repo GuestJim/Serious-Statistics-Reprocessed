@@ -4,12 +4,18 @@ droppedPath	=	sys.argv[1].rsplit("\\", 1)[0] + "\\"
 
 scriptPath	=	sys.argv[0].rsplit("\\", 1)[0] + "\\"
 
-if "OCAT Data" in droppedPath.rsplit("\\", 3)[2:3]:
-	TYPE	=	"HIGH"
+if "Review" in droppedPath.rsplit("OCAT Data")[0].rsplit("\\", 2)[1]:
+	TYPE	=	"SINGLE"
+elif "OCAT Data" in droppedPath.rsplit("\\", 4)[2:4]:
+	TYPE	=	"MULTI"
 else:
-	TYPE	=	"GPU"
+	TYPE	=	"SINGLE"
+
+mQUA	=	"High"
 
 def	listclean	(list):
+	if list == ['']:
+		return "NULL"
 	return str(list).replace("[", "").replace("]", "").replace("\'", "\"").replace(", ", ",\n").replace(".csv", "");
 
 def	CSVlistR	(GPU, API, QUA, CSVlist):
@@ -21,7 +27,7 @@ CSV	=	c(\n"\
 	+ listclean(CSVlist) + \
 "\n)\n\
 CSV	=	paste0(CSV, \".csv\")\n\
-OCATcomb	=	READ(\"\", \"" + QUA + "\", \"" + API + "\")\n"
+OCATcomb	=	rbind(OCATcomb, READ(\"\", CSV, GPU, \"" + QUA + "\", \"" + API + "\"))\n"
 );
 
 RelPath	=	droppedPath.split("OCAT Data")[0] + "OCAT Data\\"
@@ -30,7 +36,7 @@ listfile	=	[]
 
 for paths, folders, files in os.walk(droppedPath):
 	for file in files:
-		if file.startswith("OCAT-"):
+		if file.startswith("OCAT-") and file.endswith(".csv"):
 			listfile.append((str(paths).replace(RelPath, "") + "\\" + str(file)).replace("\\\\", "\\"))
 #	produces a list of all OCAT CSVs with the directory information
 
@@ -53,26 +59,13 @@ for item in listmap:
 	APIs.append(item[1])
 	QUAs.append(item[2])
 
-if		TYPE	==	"HIGH":
-	GPUs	=	[\
-	'RX 580',\
-	'RX Vega 64',\
-	'GTX 770',\
-	'GTX 980',\
-	'GTX 1070',\
-	'GTX 1080',\
-	'RTX 2060',\
-	'RTX 2080']
-	QUAs	=	["High"]
-elif	TYPE	==	"GPU":
-	GPUs	=	list(set(GPUs))
+GPUs		=	list(set(GPUs))
+APIs		=	list(set(APIs))
+if		TYPE	==	"MULTI":
+	QUAs	=	[mQUA]
+elif	TYPE	==	"SINGLE":
 	QUAs	=	list(set(QUAs))
 
-if "APIs.txt" in os.listdir(RelPath):
-	APIs	=	open(RelPath + "APIs.txt", 'r').readlines()
-	APIs	=	[line.rstrip('\n') for line in APIs]
-else:
-	APIs	=	list(set(APIs))
 
 grouped	=	[]
 out		=	""
@@ -103,24 +96,10 @@ else:
 		loc[i]	=	loc[i] + str(i+1)
 locStr	=	listclean(loc)
 
-if	"Locations Short.txt" in os.listdir(RelPath):
-	locsho		=	open(RelPath + "Locations Short.txt", 'r').readlines()
-	locsho		=	[line.strip('\n') for line in locsho]
-	locshoStr	=	listclean(locsho)
-else:
-	locshoStr	=	"NULL"
-
-if	"APIs Short.txt" in os.listdir(RelPath):
-	APIsho		=	open(RelPath + "APIs Short.txt", 'r').readlines()
-	APIsho		=	[line.strip('\n') for line in APIsho]
-	APIshoStr	=	listclean(APIsho)
-else:
-	APIshoStr	=	"NULL"
-
-if		TYPE	==	"HIGH":
+if		TYPE	==	"MULTI" and len(GPUs) != 1:
 	cGPU	=	"NULL"
-elif	TYPE	==	"GPU":
-	cGPU	=	"\"" + GPUs[0] + "\""
+elif	TYPE	==	"SINGLE" or len(GPUs) == 1:
+	cGPU	=	"\"" + str(GPUs[0]) + "\""
 
 
 scriptFull	=	scriptPath + "OCAT - Combined - PA.r"
@@ -154,16 +133,12 @@ if not os.path.exists(outputFull):
 			fout.write(line
 				.replace("!PATH!",		RPath)				\
 				.replace("!GAME!",		droppedGame)		\
-				.replace("!API!",		listclean(APIs))	\
-				.replace("!APISHO!",	APIshoStr)			\
 				.replace("!QUA!",		QUAs[0])			\
-				.replace("!LOC!",		locStr)				\
-				.replace("!LOCSHO!",	locshoStr)			\
 				.replace("!GPU!",		cGPU)
 			)
 		fout.close()
 
-if not os.path.exists(droppedPath + "OCAT - Combined - Output.r"):
+if not os.path.exists(droppedPath + "@Combined - Output.r"):
 	shutil.copyfile(scriptPath + "OCAT - Combined - Output.r", droppedPath + "@Combined - Output.r")
 
 # os.system("pause")

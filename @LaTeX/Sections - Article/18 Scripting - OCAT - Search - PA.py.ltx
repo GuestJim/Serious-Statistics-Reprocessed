@@ -1,0 +1,246 @@
+\section{Scripting: OCAT - Search - PA.py}
+
+Thanks to the new code in OCAT – Search – PA.r for finding and determining the configuration of the CSV files, this Python script can be much simpler.
+It no longer needs to build a special list of every CSV to insert into a different script, but it does still need to find some information, necessitating the use of the \textbf{os.walk} generator function, but there is ultimately less processing involved.
+
+\subsubsection{Python Module Loading and Script Arguments for File Paths}
+\begin{stylePy}
+import sys, os, shutil
+
+droppedPath	=	sys.argv[1].rsplit("\\", 1)[0] + "\\"
+
+scriptPath	=	sys.argv[0].rsplit("\\", 1)[0] + "\\"
+\end{stylePy}
+
+First things first, the \textit{sys}, \textit{os}, and \textit{shutil} modules are imported and the \textbf{droppedPath} and \textbf{scriptPath} variables are made from the script's arguments.
+As a quick refresher, these arguments are those passed to the script by the command line with the first, at index 0, always being the path to the script itself.
+The second argument, at index 1, is the path to the first file dropped onto the script.
+The \textbf{rsplit} function, reverse split function is used to split these arguments, which exists as strings, at the provided pattern, "\DBS" that separates directory names and the final file name.
+Being \textbf{rsplit} instead of \textbf{split}, it starts splitting from the right to the left, and the second argument, 1, limits the number of times the string is split.
+By only splitting once, this split will separate the path to the file and the file name.
+To select just the path, square brackets are used to identify the desired index, and then "\DBS" is concatenated to the end of the string so that just a file name need be added to have a complete path.
+
+\subsubsection{Situation Check and Quality Selection}
+\begin{stylePy}
+if "Review" in droppedPath.rsplit("OCAT Data")[0].rsplit("\\", 2)[1]:
+	TYPE	=	"SINGLE"
+elif "OCAT Data" in droppedPath.rsplit("\\", 4)[2:4]:
+	TYPE	=	"MULTI"
+else:
+	TYPE	=	"SINGLE"
+
+mQUA	=	"High"
+\end{stylePy}
+
+I remarked in the earlier section that this statement is a bit complicated, but is actually easier to read than the design I had been using previously.
+Basically there are four situations I want this script to support currently, concerning if this is a single or multi-GPU situation.
+The first situation is the data is for a review, in which case "Review" will be in the folder name above the OCAT Data folder.
+I only use a single GPU in reviews, so \textbf{TYPE} should be SINGLE.
+As all articles are held beneath a folder named "@Reviews" it is necessary to check only the folder name above OCAT Data, which is why the second \textbf{rsplit} is necessary in the first \textbf{if} condition.
+
+The second situation is a performance analysis and I am trying to get the High Quality data for all of the GPUs.
+By using \textbf{elif}, for else...if, the previous condition that it is a review has already failed, but also it is necessary to check if \textbf{droppedPath} is to the OCAT Data folder.
+Each GPU has its own folder beneath OCAT Data, so using a file from this folder is a clear indicator I want to work with every GPU.
+
+The third situation is why the check for the position of "OCAT Data" in \textbf{droppedPath} is not just for it being the lowest directory.
+This is the single-GPU, multi-API situation, which I still want \textbf{TYPE} to be MULTI for.
+This will cause the script to use the \textbf{mQUA} value, for multi Quality, when identifying the quality configuration to use, as opposed to using whatever it reads from the file path.
+In a single-GPU, multi-API situation I still want a single quality configuration to be used, but as there might be recordings for multiple qualities, it is necessary to specify the desired one.
+
+The fourth situation would be applying this script on a specific configuration, which would be all the way down the folder hierarchy to the original CSVs.
+This is the last situation I am interested in, and it is a single-GPU situation, so \textbf{else} is used to indicate that when both previous conditions fail, \textbf{TYPE} should be SINGLE.
+This is also a reasonable fallback in case for unforeseen situations.
+
+The last bit here is to set the \textbf{mQUA} value which will almost always be "High," though this article is a counter example as the Quality is "Max."
+As this Python script is not necessary for finding the CSVs but just setting certain names, it is not that significant an issue.
+It will need to be correct in OCAT – Search – PA.r though.
+
+\subsubsection{Relative Path Creation and Building List of CSV Files}
+\begin{stylePy}
+RelPath	=	droppedPath.split("OCAT Data")[0] + "OCAT Data\\"
+listfile	=	[]
+
+for paths, folders, files in os.walk(droppedPath):
+	for file in files:
+		if file.startswith("OCAT-") and file.endswith(".csv"):
+			listfile.append((str(paths).replace(RelPath, "") + "\\" + str(file)).replace("\\\\", "\\"))
+\end{stylePy}
+
+Now we arrive at the first significant difference between the two versions of the Python script.
+The custom functions \textbf{listclean} and \textbf{CSVlistR} are removed because they are not necessary in this script any more.
+ That means we are now making the \textbf{RelPath} variable that holds the path to the OCAT Data folder, followed by the creation and filling of the \textbf{listfile} variable.
+As all of the data is held in folders beneath OCAT Data, its path can serve as a relative path for finding everything, hence the name \textbf{RelPath}.
+The \textbf{listfile} variable will hold a list of all of the CSVs, which is still necessary because some configuration information is needed.
+
+The reason \textbf{listfile} needs to be created as an empty list first is that I am using the \textbf{append} function to add elements to the list, but the list must exist first for that to work.
+This is something R actually has an advantage with because it will directly produce a list of files, while Python uses a generator function that requires \textbf{for} loops to build a comparable list.
+The first \textbf{for} loop goes through the outputs of \textbf{os.walk}, \textbf{paths}, \textbf{folders}, and \textbf{files}.
+The \textbf{files} iterator provides a list of every file \textbf{os.walk} finds, but not as separate strings, as a list of files within each path, and that path is an element \textbf{paths} will hold.
+The \textbf{folders} iterator is a list of the folders it finds at the current \textbf{paths} location.
+
+As my use is to go through every file, I then need a second \textbf{for} loop to go through the elements of \textbf{files} one by one, which is every single file that has been found.
+The \textbf{if} statement is then used to make sure \textbf{file} is an OCAT CSV file by checking it starts with "OCAT-" and ends with ".csv" with the appropriately named \textbf{startswith} and \textbf{endswith} functions.
+If both conditions pass, then \textbf{listfile} will have appended to it the current value of \textbf{paths}, though with the \textbf{RelPath} portion of it removed, and the current file name from \textbf{file}.
+The \textbf{replace} function is used twice in this process, with the first use being to remove \textbf{RelPath} from the current file path, and the second to avoid any issues from accidentally doubling the "\DBS" symbol used to separate names in a path.
+
+\subsubsection{Separating Directory/File Names and Mapping Configuration Information}
+\begin{stylePy}
+listsplit	=	[file.split("\\") for file in listfile]
+
+listmap	=	[]
+for line in listsplit:
+	listmapL	=	[line[0], "", "", ""]
+	for i in range(1, len(line)):
+		listmapL[len(listmapL) - i]	=	line[len(line) - i]
+	listmap.append(listmapL)
+\end{stylePy}
+
+This code is the same as the original version and is for properly mapping configuration information, GPU, API, and Quality, to columns in a list.
+The first line is weird in its construction and I think it is fair to say plenty of people trying to read it with some programming knowledge would not know how to interpret it.
+I found it while looking up how to do this and though I could not explain it, I found it worked and is compact, so I kept it.
+What it does is apply the \textbf{split} function to \textbf{file}, even though \textbf{file} is created and defined after the function as you read it.
+It is the variable for a \textbf{for} loop that goes through the \textbf{listfile} list created previously.
+The whole thing is in square brackets, which normally indicates it should be a list but as \textbf{split} outputs a list, the actual final object is a matrix.
+This matrix, with each column being a directory name or the file name, is then assigned to \textbf{listsplit}.
+
+With \textbf{listsplit} created, it now needs to have its contents properly mapped, which calls for the creation of \textbf{listmap} to hold that output.
+Next we have a \textbf{for} loop that will go through each row, \textbf{line}, in \textbf{listsplit}.
+The first step within this loop is the creation of \textbf{listmapL}, for listmap line, and it has assigned to it a list of four values.
+The first is the first element of the current line, which will be the GPU.
+As covered in earlier sections, to address the occasional absence of an API folder, the other elements of Quality and file name are assigned to \textbf{listmapL} backwards, starting from the end and working back to the start.
+This way the second column meant to hold the API will be empty when there is no API to consider, but when there is, that value will be assigned to it.
+The last step then is to append \textbf{listmapL} to \textbf{listmap}.
+
+\subsubsection{Finding Unique Configuration Descriptors}
+\begin{stylePy}
+GPUs, QUAs	=	[], []
+
+for item in listmap:
+	GPUs.append(item[0])
+	QUAs.append(item[2])
+
+GPUs	=	list(set(GPUs))
+if		TYPE	==	"MULTI":
+	QUAs	=	[mQUA]
+elif	TYPE	==	"SINGLE":
+	QUAs	=	list(set(QUAs))
+\end{stylePy}
+
+There are a few things going on in this code block, starting with the creation of the \textbf{GPUs} and \textbf{QUAs} variables as empty lists for the same reason empty variables were made before, to append items to these lists.
+A \textbf{for} loop goes through each row in \textbf{listmap} and then appends the elements in the certain positions to the appropriate list.
+In the original version of this list there was also an \textbf{APIs} variable, but it is not needed in this version, so I removed it.
+
+After these lists are built, then a couple things are done.
+First the \textbf{GPUs} list is converted to a set and then back to a list in order to arrive at just the unique elements in the list.
+After this, depending on the value of \textbf{TYPE}, the list of qualities is set to either be the \textbf{mQUA} value set at the beginning of the file, or is also reduced to just the unique elements.
+Neither the \textbf{GPUs} nor the \textbf{QUAs} values are needed for any filtering of \textbf{listmap} but for placing proper labels in the R scripts.
+Actually, I could probably clean up the code some more here because of that fact, but I think I will leave it to keep greater parity with the original script.
+It does the job and is not without purpose, this code is just not the most optimal design for what it does here.
+
+\subsubsection{Finding Game/Article Title}
+\begin{stylePy}
+droppedGame	=	RelPath.rsplit("\\", 3)[1]	\
+	.replace(" Performance Analysis", "")	\
+	.replace(" Review", "")
+\end{stylePy}
+
+This could probably have been done earlier, but at this position in the script it is closer to where \textbf{droppedGame} will be used for naming scripts.
+What this code does is take the \textbf{RelPath} string and applies \textbf{rsplit} at "\DBS" three times.
+The first element from this split will be the path leading to the article's folder; the second element is the name of the article's folder; and then the last part is "OCAT Data."
+I want the article folder name as it will identify the game or article, but I am not done as I want the "Review" or "Performance Analysis" label removed so I will have just the game name.
+For a miscellaneous article like this though, because it lacks either label, \textbf{droppedGame} will just be the name of the folder.
+
+\subsubsection{Setting Current GPU}
+\begin{stylePy}
+if		TYPE	==	"MULTI" and len(GPUs) != 1:
+	cGPU	=	"NULL"
+elif	TYPE	==	"SINGLE" or len(GPUs) == 1:
+	cGPU	=	"\"" + str(GPUs[0]) + "\""
+\end{stylePy}
+
+This code is fairly simple as its purpose is just to determine what the \textbf{cGPU}, current GPU is for the data.
+It is not completely simple though because of one situation this script might be used for; single-GPU, multi-API.
+In that case \textbf{TYPE} is "MULTI" but there will only be one GPU in \textbf{GPUs} and I will want it identified in the R script.
+This is why for \textbf{cGPU} to be NULL, \textbf{TYPE} must be "MULTI" and there must be more than one GPU in the list.
+If either \textbf{TYPE} is "SINGLE" or there is only one GPU in the list though, then \textbf{cGPU} will be made the name of the GPU with double quotes on either side.
+This is so it will be written into the R script with the quotes, identifying it as a string.
+
+\subsubsection{Identifying Reference and Output Script}
+\begin{stylePy}
+scriptFull	=	scriptPath + "OCAT - Search - PA.r"
+
+outputName	=	"Search - PA - " + droppedGame + ".r"
+outputFull	=	droppedPath + "@" + outputName
+\end{stylePy}
+
+The first of these three lines is to identify the reference script Python should read in and replace certain substrings in.
+With \textbf{outputName}, the name of the script Python should write is constructed and then after that \textbf{outputFull} is made, attaching the path to the file dropped onto the script to the front, as well as the @ symbol, to place it near the top when sorting alphabetically.
+Technically I could integrate \textbf{outputName} directly into \textbf{outputFull}, but I find it easier to quickly recognize the script type when it is placed closer to the left.
+
+\subsubsection{R Path Format Conversion}
+\begin{stylePy}
+RPath		=	droppedPath.replace("\\", "/")
+\end{stylePy}
+
+This line is fairly simple as all it does is convert the \textbf{droppedPath} string from the format Python needs to work with paths to the format R needs to do the same, thus the name \textbf{RPath}.
+Python wants two backslashes while R wants a single forward slash, which a quick application of \textbf{replace} takes care of.
+
+\subsubsection{Converting Reference Script (OCAT - Search - PA.r)}
+\begin{stylePy}
+if not os.path.exists(outputFull):
+	with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
+		for line in fref:
+			fout.write(line	\
+				.replace("!PATH!",		RPath)			\
+				.replace("!GAME!",		droppedGame)	\
+				.replace("!QUA!",		QUAs[0])
+			)
+		fout.close()
+\end{stylePy}
+
+Here we have another block of code that has changed because of moving the search for the CSVs into the R script as less needs to be replaced in the script.
+Just the path, game name, and quality need to be place in it.
+
+First a check is made if the output script exists or not, so it will not be overwritten, using \textbf{os.path.exists}.
+After this the \textbf{open} function is used to open the reference script at \textbf{scriptFull} and it is read in to \textbf{fref} for file reference.
+The reference file is opened in a read-only mode because of the \textbf{'r'} argument passed to \textbf{open}.
+At the same time, the \textbf{outputFull} file will be open for writing, using the \textbf{'w'} argument, with this file assigned to \textbf{fout} for file output.
+The \textbf{with} command is helpful for managing opening files like this, which is why it is used here.
+
+With the files opened, a \textbf{for} loop is used to go through each line of \textbf{fref} and write it to \textbf{fout}.
+Before a line is written though, the \textbf{replace} function is applied to substitute the identified substrings with values found in this script.
+After the loop finishes, \textbf{fout} is closed, finishing the creation of the file.
+
+\subsubsection{Converting Reference Script (OCAT - Combined - Input.r)}
+\begin{stylePy}
+scriptFull	=	scriptPath + "OCAT - Combined - Input.r"
+
+outputName	=	"Combined - Input - " + droppedGame + ".r"
+outputFull	=	droppedPath + "@" + outputName
+
+if not os.path.exists(outputFull):
+	with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
+		for line in fref:
+			fout.write(line
+				.replace("!PATH!",		RPath)				\
+				.replace("!GAME!",		droppedGame)		\
+				.replace("!QUA!",		QUAs[0])			\
+				.replace("!GPU!",		cGPU)
+			)
+		fout.close()
+\end{stylePy}
+
+Nothing much to say here as it is functionally very similar to the previous code block.
+It might be worth noting that it is still the OCAT – Combined – Input.r script being used here, and not the OCAT – Search – Input.r script I will cover next that removes the need for a combined CSV to read.
+As I stated in a the section though, this is slower so I prefer to continue using the process with the combined CSV.
+
+\subsubsection{Copying OCAT - Combined - Output.r}
+\begin{stylePy}
+if not os.path.exists(droppedPath + "@Combined - Output.r"):
+	shutil.copyfile(scriptPath + "OCAT - Combined - Output.r", droppedPath + "@Combined - Output.r")
+\end{stylePy}
+
+It takes until the very end of the script, but finally the \textit{shutil} module is used.
+After a check for if the Output.r script is in the \textbf{droppedPath} folder, the reference version will be copied there if needed, and renamed to "@Combined – Output.r" which will keep it near the top when sorting alphabetically and both it and the reference file from accidental overwriting when copy and pasting.
+
+With that, this script is covered except for a commented out command to pause the script, there just for troubleshooting purposes.

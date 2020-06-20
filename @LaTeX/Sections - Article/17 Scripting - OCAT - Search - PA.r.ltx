@@ -1,0 +1,314 @@
+\section{Scripting: OCAT - Search - PA.r}
+
+This section is new to the article and comes as the result of my investigation of R's ability to work with files.
+Already I have shown this being used so R finds and reads the Locations.txt files and similar, instead of needing the information written into the Input.r script by the Python script.
+What I actually did first was determine if I could have R search for and find all of the CSV files in the OCAT Data folder, like the Python script does.
+Not only is it possible but a bit easier as R does not rely on a generator function or some other odd concept and R is much more adept at handling and manipulating tables than Python.
+
+While I do have now have R scripts that replace this important process the Python script was responsible for, that is not to suggest a Python script is not still useful.
+It can write information such as game or article title into the R scripts as well as the path to the OCAT Data folder.
+For anyone with the curiosity and/or foresight, yes it is possible to build this CSV search capability into a version of the OCAT – Combined – Input.r script, and while I have done so, I do not believe this is the best approach.
+I did not test to confirm, but it felt slower for it to load in the multiple files to then work on, as compared to loading in an already build file.
+To that end, I am going to focus on OCAT – Search – PA.r, a variant of OCAT – Combined – PA.r that is responsible for finding the CSVs and then building the combined CSV.
+
+A potential use for this Search variant would be to have the R scripts built before done collecting performance data and then using OCAT – Search – PA.r to update the combined CSV the Input.r script then loads in to process.
+Otherwise it would be necessary to replace the OCAT – Combined – PA.r script with the additional paths to the new CSVs.
+
+Another perhaps more powerful use is to easily change the contents of the combined CSV.
+I normally collect together all of the High Quality results for all the GPUs, but I could also subset by a specific GPU or API, or just the results for a different Quality configuration.
+That might be better done with the OCAT – Search – Input.r variant, so multiple combined CSV files do not need to be created, even if they are compressed.
+
+\subsubsection{Library Loading, Working Directory, and Sub-Setting Controls}
+\begin{styleR}
+library(readr)
+
+game	=	"!GAME!"
+COMPRESS	=	TRUE
+
+COLUMN	=	NULL	;	SUBSET	=	NULL
+
+setwd("!PATH!")
+relPath	=	paste0(unlist(strsplit(getwd(), "OCAT Data"))[1], "OCAT Data")
+
+if	(getwd() == relPath & (is.null(COLUMN) & is.null(SUBSET)))	{
+	COLUMN	=	"Quality"
+	SUBSET	=	"High"
+}
+\end{styleR}
+
+The beginning of this file is very similar to the original version with the \textit{readr} library being loaded, the game title being assigned, file compression being switched one, and the working directory identified.
+The differences come from the creation of the \textbf{relPath}, \textbf{COLUMN}, and \textbf{SUBSET} variables.
+
+If you have looked at the information for the Input.r script or the OCAT – Modular – PA.py script then you will already understand that \textbf{relPath} stands for relative path and points to the OCAT Data folder.
+This is achieved by taking the working directory with \textbf{getwd} and using \textbf{strsplit} to break that string apart at "OCAT Data."
+The output is a list and proves a bit frustrating to work with directly here, so \textbf{unlist} is used to make it a vector of two strings.
+The first string is selected, which is the portion in front of the OCAT Data folder, and as it is missing that directory, \textbf{paste0} is used to add it back.
+
+The other two variables are to identify the column the data should be filtered by and then the value that identifies the desired subset.
+By default these are both given the value of NULL, which would result in no sub-setting, but there are times I do want sub-setting by default, so I have a check to address this.
+
+The two situations I usually apply these scripts in are in the OCAT Data folder to get all of the High Quality data and then at the lowest folders in the hierarchy, for each specific configuration of GPU, API, and Quality.
+In the former situation, I want to work with a subset, but for the latter I do not, and thanks to the \textbf{relPath} variable it is easy to discern between the two.
+If the working directory is the OCAT Data folder, which is the first condition in the \textbf{If} statement, then it is the former situation and there should be sub-setting.
+Of course it must also check to make sure any manual sub-setting has not been configured, which is why the two \textbf{is.null} commands are used on \textbf{COLUMN} and \textbf{SUBSET}.
+Technically grouping these two conditions together in parentheses is not necessary, because the "and" symbol is used for all of the conditions, but it is the case that there are two conditions for \textbf{if} statement to be TRUE; we are working in the OCAT Data folder and there is no manual sub-setting.
+
+\subsubsection{txtFind Custom Function}
+\begin{styleR}
+txtFIND	=	function(TXT, rel.Path = relPath)	{
+	locFILE	=	paste0(rel.Path, "/", TXT)
+	if (file.exists(locFILE))	return(readLines(locFILE, warn = FALSE))
+	return(NULL)
+}
+
+listLOC	=	txtFIND("Locations.txt")
+\end{styleR}
+
+This is the same function as was seen in Input.r for finding TXT files in OCAT Data and then loading in their contents if the file exists.
+It uses the \textbf{file.exists} command to check if the file exists and then loads it in using \textbf{readLines}.
+Normally you can just give \textbf{readLines} the location of the file but I also use the \textbf{warn} argument because the function throws a warning because the file does not end on an empty line.
+The warning does not prevent the function from doing what is desired, but it is annoying.
+
+After making this function, the contents of the Locations.txt file are loaded in and assigned to \textbf{listLOC}.
+This is necessary as the function will later add the location to the CSV and is achieved in the original version of this script by having the Python script read the file's contents and writing it into the R file.
+
+\subsubsection{csvFIND Custom Function}
+\begin{styleR}
+csvFIND	=	function(DIRECT = getwd())	{
+	LIST		=	list.files(DIRECT, recursive = TRUE, pattern = ".csv")
+	LIST		=	LIST[grepl("OCAT", LIST) & grepl("csv", LIST)]
+	LIST.full	=	paste0(DIRECT, "/", LIST)
+	LIST.rel	=	t(data.frame(lapply(LIST.full, strsplit, "OCAT Data/"), row.names = NULL)[2, ])
+	colnames(LIST.rel)	=	NULL
+	rownames(LIST.rel)	=	NULL
+
+	return(LIST.rel)
+}
+
+# LIST.rel	=	csvFIND()
+\end{styleR}
+
+As its name suggests, \textbf{csvFIND} is the function responsible for finding the appropriate CSV files in the current directory and its subdirectories.
+Its only argument is for the directory, hence its name \textbf{DIRECT} and by default should be the current working directory, but it can be changed if desired.
+
+The first line in the function's body uses the \textbf{list.files} function, which does what its name suggests, list the files found in the provided directory.
+To have it search inside subdirectories, the \textbf{recursive} argument needs to be TRUE, and then the \textbf{pattern} argument can be used to only list the files that contain the provided pattern, which is ".csv" in this case.
+Files found in subdirectories will have their path, relative to the provided path, in the list.
+This list is then assigned to \textbf{LIST}.
+
+The second line does some additional cleaning of \textbf{LIST} by applying conditionals with square brackets.
+This means only the elements of the list that satisfy the conditions are passed on and these are then assigned to \textbf{LIST}.
+The conditions are that "OCAT" are present in the file path and that "csv" is in the file path according to \textbf{grepl}, which searches the provided string for a pattern and returns a logical, TRUE or FALSE based on what it finds.
+The latter condition must be TRUE of everything in the list because of the \textbf{pattern} argument in \textbf{list.files}, but it does not hurt to have.
+By the way, it is not checking for ".csv" because \textbf{grepl} will utilize regular expressions and the dot character has a special meaning there.
+The check for "OCAT" works because every output CSV from OCAT has that at the front of its file name, but the combined CSVs this and the original script make do not.
+
+The next line attaches the provided directory path to the front of the elements in \textbf{LIST}, so we have complete paths.
+When collecting the data from the OCAT Data folder, this step would not be necessary, but it is for any lower folders because the folder names are responsible for identifying the GPU, API, and Quality.
+
+With the full path names now in the list, the next line does a few things.
+Starting from the inside, the \textbf{lapply} function applies the \textbf{strsplit} function to every element in \textbf{LIST.full} to split them at "OCAT Data/".
+This specification of the function to execute and then the supplying of arguments for it is very similar to that of \textbf{aggregate} as seen in the Output.r script sections.
+The result of this is then converted to a data frame with the automatic application of row names disabled.
+This data frame will be quite wide as each element will have its own column, and there will be two rows.
+The first row is the portion of the path ahead of "OCAT Data/" and the second row is the path from that folder on, so the second row is selected.
+As I want it to be a tall data frame instead of a wide one, \textbf{t} is used to transpose it, making the rows columns and the columns rows.
+The result is then assigned to \textbf{LIST.rel}, so named because it is a list of the files relative to the OCAT Data folder.
+
+The remaining lines remove column and row names and then return the final list, which is actually a data frame.
+After closing this function, I have a commented out line that would call the function and assign its output to \textbf{LIST.rel} but instead of using this intermediary term, I just call the function directly later.
+It could be useful to examine \textbf{LIST.rel} for troubleshooting purposes though, which is why I have commented out the line instead of deleting it.
+
+\subsubsection{csvCONF Custom Function.}
+\begin{styleR}
+csvCONF	=	function(CSV.list, LOCs = listLOC)	{
+	CSV.config	=	t(as.data.frame(sapply(CSV.list, strsplit, "/")))
+	colnames(CSV.config)	=	NULL
+	rownames(CSV.config)	=	NULL
+
+	CONFIG	=	data.frame(matrix(ncol = 5, nrow = nrow(CSV.config)))
+	colnames(CONFIG)	=	c("GPU", "API", "Quality", "Location", "CSV")
+
+	CONFIG$GPU		=	CSV.config[, 1]
+	if	(ncol(CSV.config) == 4)	CONFIG$API		=	CSV.config[, 2]
+	CONFIG$Quality	=	CSV.config[, ncol(CSV.config)-1]
+
+	appLOC	=	function(DATA, LOCs)	{
+		if (is.null(LOCs))	LOCs	=	paste0("Recording ", 1:nrow(DATA))
+		rep(LOCs, length.out = nrow(DATA))
+	}
+	GROUPS	=	list(GPU = CONFIG$GPU, API = CONFIG$API, Quality = CONFIG$Quality)
+	if (any(is.na(GROUPS$API)))	GROUPS$API	=	NULL
+	CONFIG$Location	=	unlist(by(CONFIG, GROUPS, appLOC, LOCs))
+#	appLOC and by together apply the Location names, and generate them if necessary, to match the GPU-API-Quality groups
+	CONFIG$CSV		=	CSV.config[, ncol(CSV.config)]
+
+	return(CONFIG)
+}
+
+# CSV.config	=	csvCONF(LIST.rel)
+CSV.configFull	=	csvCONF(csvFIND())
+\end{styleR}
+
+This function is the one responsible for taking the output from \textbf{csvFIND} and constructing the configuration for each CSV, which is why I named it \textbf{csvCONF}.
+To do this it needs the list of CSVs, hence the \textbf{CSV.list} argument, and the list of Locations to \textbf{LOCs}, which takes \textbf{listLOC} as the default value.
+
+The first line to the body of the function is mildly similar to one of the later lines in the previous function.
+It uses \textbf{sapply}, a wrapper of \textbf{lapply} to execute \textbf{strsplit} on every element in the list, splitting the strings at the "/" symbol that separates directories in the file path.
+The difference between \textbf{sapply} and \textbf{lapply} is whether the output should be simplified, and in this case, I do want it to be.
+You can use pass \textbf{lapply} the \textbf{simplify} argument to do it with that function, but just calling \textbf{sapply} is a bit cleaner.
+After that is done, the output is made into a data frame and then that is transposed, which makes the columns correspond to the directories in the paths.
+After that, the row and column names are removed as I do not want what are automatically selected.
+
+If you have gone through the OCAT – Modular – PA.py script section, then you will already know the problem and solution I devised for using regular columns for this information.
+I want the columns to be GPU, API, Quality, Location, and finally the CSV file name, but API is not always present.
+My solution with Python and now is to fill out the data frame partly in reverse, because I know the order of this information from the end.
+
+To start this solution though, I need to first create the data frame that will hold the information in the desired columns; \textbf{CONFIG}.
+It needs to be five columns wide and then have as many rows as there are CSV files, so I make a matrix of that size and convert that to a data frame.
+After that step, the column names are applied.
+
+With the names applied, I can reference then when assigning values from \textbf{CSV.list} to them, as I do in the next line with the GPU column being given the values from the first column of the file list.
+This list lacks column names so I just use indices and square brackets to get the information I need.
+
+The next line checks how many columns there are in \textbf{CSV.list}, because if there are four, that means there are API folders and that information can be assigned to that column.
+If the column count is only three though, then nothing will be assigned to the API column of \textbf{CONFIG}, which will need to be checked for and handled later.
+
+With the API column dealt with, next is the Quality column, which will be the second to last column, so I just take the number of the columns from \textbf{CSV.config} and subtract one.
+Dealing with the locations is not nearly as straightforward, evidenced by the next four lines as I needed to create a custom function within this custom function.
+
+\begin{styleR}
+appLOC	=	function(DATA, LOCs)	{
+	if (is.null(LOCs))	LOCs	=	paste0("Recording ", 1:nrow(DATA))
+	rep(LOCs, length.out = nrow(DATA))
+}
+GROUPS	=	list(GPU = CONFIG$GPU, API = CONFIG$API, Quality = CONFIG$Quality)
+if (any(is.na(GROUPS$API)))	GROUPS$API	=	NULL
+CONFIG$Location	=	unlist(by(CONFIG, GROUPS, appLOC, LOCs))
+\end{styleR}
+
+I realized while working on this function, I cannot simply assume the number of locations will always be the same across all configurations.
+I had actually collected a single run of data to check something while testing this, and as that single recording broke the pattern, it broke the location identification as well, requiring this more complex solution.
+To start though, I actually want to skip that function and cover what uses it.
+
+Starting from the inside function, we can see I am using \textbf{by} and passing it \textbf{CONFIG} as well as \textbf{GROUPS}, which was set just above it.
+The approach is just like what I use in Input.r, creating the list and then removing elements if needed.
+In this case the condition is if there are \textbf{any} NA terms in the API element.
+I could use \textbf{all} instead as there should never be a case where there are APIs for some recordings and not others, but it does not matter.
+
+In any case, the \textbf{by} function takes \textbf{CONFIG} and identifies its groupings according to the \textbf{GROUPS} list just created.
+It will then apply the \textbf{appLOC} function I skipped over to these groups, with the \textbf{LOCs} variable supplied to it as an argument.
+
+Coming to the \textbf{appLOC} function, it takes the groups from \textbf{CONFIG} as well as the list of Locations in \textbf{LOCs} as arguments.
+It then checks if \textbf{LOCs} is NULL, an empty list.
+If this is the case, then it generates a generic list to distinguish the recordings, with the length of that list being the number of rows to \textbf{DATA}, the current group identified by \textbf{by}.
+
+The final line of \textbf{appLOC} takes the \textbf{LOCs} list and repeats it as many times as necessary to match the number of rows to \textbf{DATA}.
+This is necessary for a couple reasons, though one I have largely mixed just now.
+Originally I did not include API in the groupings for \textbf{by}, which meant all of the CSVs for the same GPU and Quality would be contained in \textbf{DATA}, necessitating repetition to cover multiple APIs.
+That is not so needed now but it also will shorten the list of locations as needed, such as for that one test I did that prompted this whole thing.
+If this shortening does not occur, then the whole issue of breaking the pattern will still happen.
+
+Lastly, to address the fact \textbf{by} returns an object of type "by" I use \textbf{unlist} to make it something that can be assigned to \textbf{CONFIG} for its Location column.
+After that, the last column of \textbf{CSV.config}, holding the CSV file names, is assigned to the CSV column of \textbf{CONFIG}.
+With that done, \textbf{CONFIG} itself can be returned as it now holds all of the information in the appropriate columns.
+
+After the \textbf{csvCONF} function we can see code to use it twice, with the first being commented out.
+Like the creation of \textbf{LIST.rel} after \textbf{csvFIND}, the commented out line is there for reference when troubleshooting while the following line, calling \textbf{csvCONF} with a call to \textbf{csvFIND} passed to it, is what actually does the work and assigns the result to \textbf{CSV.configFull}.
+
+\subsubsection{csvFILT Custom Function}
+\begin{styleR}
+csvFILT	=	function(CSV.list, COL, SUB)	{
+	if (!is.null(COL)	&	!is.null(SUB))	return(CSV.list[CSV.list[, COL] == SUB, ])
+	return(CSV.list)
+}
+
+CSV.config	=	csvFILT(CSV.configFull, COLUMN, SUBSET)
+\end{styleR}
+
+It has been a bit since they were assigned, but here at least the \textbf{COLUMN} and \textbf{SUBSET} variables are put to use with \textbf{csvFILT} for CSV filtering.
+This is a simple enough function as it just checks if the \textbf{COL} and \textbf{SUB} arguments passed to it are not NULL, and if they are not it returns a subset of the \textbf{CSV.list} it received.
+That subset consists of those elements where the value in \textbf{COL} matches the value of \textbf{SUB}, such as the value in the Quality column matching "High."
+
+After making this function, it is used on \textbf{CSV.configFull} with the result assigned to \textbf{CSV.config} that will be used later.
+While this kind of sub-setting could easily be applied outside of a custom function, the function allows for a check that there is both a column and sub-setting term.
+There always should be, thanks to the check earlier in the script, but I do not mind being overly cautious at times.
+
+\subsubsection{read\_OCAT Custom Function}
+\begin{styleR}
+read_OCAT	=	function(INFO, GPU = NULL, API = NULL, QUA = NULL, LOC = NULL)	{
+	if (is.data.frame(INFO))	{
+		GPU		=	INFO$GPU
+		API		=	INFO$API
+		QUA		=	INFO$Quality
+		LOC		=	INFO$Location
+		FILE	=	INFO$CSV
+	}	else	{FILE	=	INFO}
+
+	filePATH		=	paste(relPath, GPU, QUA, FILE, sep = "/")
+	if	(!any(is.na(API), is.null(API)))	filePATH		=	paste(relPath, GPU, API, QUA, FILE, sep = "/")
+
+	out				=	read_csv(filePATH)[, 1:20]
+
+	out$GPU			=	GPU
+	out$Quality		=	QUA
+	out$Location	=	LOC
+	out$API			=	""
+	if	(!any(is.na(API), is.null(API)))	out$API	=	API
+
+	return(out)
+}
+\end{styleR}
+
+This \textbf{read\_OCAT} function does exactly what its name suggests as it is what reads the OCAT files into R, but it is also a bit more complicated than that, which is fairly clear from the list of arguments.
+I decided to over-engineer it a bit to handle two situations.
+The one it will normally run into is receiving an entire row from \textbf{CSV.config}, which contains the GPU, API, Quality, Location and file name information in it.
+The other is this information being manually provided, in which case the \textbf{INFO} argument will just be a string, the file name.
+This is why there is a check for if \textbf{INFO} is a data frame, and if it is then the arguments are given values from it, and if not, then just \textbf{FILE} is given the value of the CSV name.
+
+With the clearly-named variables given their values, the \textbf{filePATH} needs to be built by concatenating \textbf{relPath}, \textbf{GPU}, \textbf{QUA}, and \textbf{FILE}.
+Instead of using \textbf{paste0} for this, just \textbf{paste} is used so the \textbf{sep} character of "/" can be supplied, to properly separate the directory names.
+That construction of \textbf{filePATH} does not include the API because the next line checks to make sure there is an API to include.
+If there is, then a new value for \textbf{filePATH} will be made and assigned to it.
+The check for if there is an API is a little more complicated because it needs to contend with but default NULL value for the variable and for the NA value that will be in the \textbf{CSV.config} row if there was no API tested.
+Fortunately the \textbf{any} function solves this by checking if either \textbf{is.na} or \textbf{is.null} return TRUE, but as this is a check for if there is an API present, that must be inverted to FALSE so it does not get added to \textbf{filePATH}.
+
+With \textbf{filePATH} created, the next step is to read in the file at that location with \textbf{read\_csv}, though only the first twenty columns are wanted for the \textbf{out} object.
+After that, the GPU, Quality, Location, and API columns are added by selecting them from \textbf{out} and assigning a value as R knows to create the column with the selected name to hold that information.
+First the API column is given an empty string but then it is changed to the provided API, if it exists.
+With that done, \textbf{read\_OCAT} can just return \textbf{out} and we can move on to the next and last function of this script.
+
+\subsubsection{csvOCAT Custom Function}
+\begin{styleR}
+csvOCAT	=	function(CSVs)	{
+	OCATcomb	=	data.frame(matrix(ncol = 24, nrow = 0))
+	for (ROW in 1:nrow(CSVs))	{
+		OCATcomb	=	rbind(OCATcomb, read_OCAT(CSVs[ROW, ]))
+	}
+
+	return(OCATcomb)
+}
+
+OCATcomb	=	csvOCAT(CSV.config)
+\end{styleR}
+
+You might be thinking this does not need to be its own function as all \textbf{csvOCAT} does is create an empty data frame, \textbf{OCATcomb}, and then run through a \textbf{for} loop to load in all of the CSVs before returning it.
+This could definitely be done outside of a function easily, but the advantage to doing it inside of a function is the output can more easily be stored to a variable of any name.
+In this case it is assigned to \textbf{OCATcomb} but in OCAT – Search – Input.r it is stored to \textbf{resultsFull}.
+
+\subsubsection{CSV Writing with Compression}
+\begin{styleR}
+if	(COMPRESS)	{
+	write_csv(OCATcomb, "@Combined - !QUA!.csv.bz2")
+}	else	{
+	write_csv(OCATcomb, "@Combined - !QUA!.csv")
+}
+\end{styleR}
+
+Now the last bit of code here that first checks whether the data should be compressed, and then it saves the data to the "@Combined - !QUA!.csv.bz2" file, though "!QUA!"
+will be replaced by the Python script.
+That is one weakness here, that it is still assumed the data will be subset of Quality, but I consider this weakness fairly minor.
+That is the most likely factor to subset by, so if I need to do something differently, I will have to manually edit this file or the appropriate Python script, with either option being fairly easy.
+
+Though I have mentioned the OCAT – Search – Input.r script and it does share much with this script, I am not going to cover it next.
+I feel it is best to keep the Input.r script simple and thus to load in a combined CSV to work on, so while I will go through it, first I want to cover the new OCAT – Search – PA.py Python script.

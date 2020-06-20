@@ -1,0 +1,32 @@
+Serious Statistics and Scripts - RX Vega 64 - DirectX 11 - Anti-Lag - Max Quality
+Frame Time
+
+Mean
+        GPU                   API        Location       Mean Median
+ RX Vega 64 DirectX 11 - Anti-Lag       Hatsheput FPS 265.71 263.78
+ RX Vega 64 DirectX 11 - Anti-Lag           Dunes FPS 319.14 325.84
+ RX Vega 64 DirectX 11 - Anti-Lag Thebes - Karnak FPS 274.15 280.35
+ RX Vega 64 DirectX 11 - Anti-Lag       Hatsheput  ms   3.76   3.79
+ RX Vega 64 DirectX 11 - Anti-Lag           Dunes  ms   3.13   3.07
+ RX Vega 64 DirectX 11 - Anti-Lag Thebes - Karnak  ms   3.65   3.57
+
+Percentiles
+        GPU                   API        Location       0.1%     1%    99%  99.9%
+ RX Vega 64 DirectX 11 - Anti-Lag       Hatsheput FPS 357.96 345.42 220.65 206.17
+ RX Vega 64 DirectX 11 - Anti-Lag           Dunes FPS 415.11 394.01 228.31 187.17
+ RX Vega 64 DirectX 11 - Anti-Lag Thebes - Karnak FPS 414.42 375.61 178.03 159.46
+ RX Vega 64 DirectX 11 - Anti-Lag       Hatsheput  ms   2.79   2.90   4.53   4.85
+ RX Vega 64 DirectX 11 - Anti-Lag           Dunes  ms   2.41   2.54   4.38   5.34
+ RX Vega 64 DirectX 11 - Anti-Lag Thebes - Karnak  ms   2.41   2.66   5.62   6.27
+
+Percentile of FPS
+        GPU                   API        Location 60 FPS 50 FPS 30 FPS 20 FPS 15 FPS
+ RX Vega 64 DirectX 11 - Anti-Lag       Hatsheput      0      0      0      0      0
+ RX Vega 64 DirectX 11 - Anti-Lag           Dunes      0      0      0      0      0
+ RX Vega 64 DirectX 11 - Anti-Lag Thebes - Karnak      0      0      0      0      0
+
+Distribution Stats
+        GPU                   API        Location Mean (ms) StDev (ms) CoV (%)  Skew Kurtosis
+ RX Vega 64 DirectX 11 - Anti-Lag       Hatsheput      3.76       0.35    9.38 -0.19     5.38
+ RX Vega 64 DirectX 11 - Anti-Lag           Dunes      3.13       0.36   11.47  1.60     8.07
+ RX Vega 64 DirectX 11 - Anti-Lag Thebes - Karnak      3.65       0.55   15.04  7.79   507.76

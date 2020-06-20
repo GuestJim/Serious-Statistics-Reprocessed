@@ -2,31 +2,31 @@ Serious Statistics and Scripts - RTX 2060 - DirectX 11 - Anti-Lag - Max Quality
 Frame Time
 
 Mean
-      GPU        Location       Mean Median
- RTX 2060       Hatsheput FPS 226.83 226.14
- RTX 2060           Dunes FPS 259.75 263.37
- RTX 2060 Thebes - Karnak FPS 241.47 251.64
- RTX 2060       Hatsheput  ms   4.41   4.42
- RTX 2060           Dunes  ms   3.85   3.80
- RTX 2060 Thebes - Karnak  ms   4.14   3.97
+      GPU                   API        Location       Mean Median
+ RTX 2060 DirectX 11 - Anti-Lag       Hatsheput FPS 226.83 226.14
+ RTX 2060 DirectX 11 - Anti-Lag           Dunes FPS 259.75 263.37
+ RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak FPS 241.47 251.64
+ RTX 2060 DirectX 11 - Anti-Lag       Hatsheput  ms   4.41   4.42
+ RTX 2060 DirectX 11 - Anti-Lag           Dunes  ms   3.85   3.80
+ RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak  ms   4.14   3.97
 
 Percentiles
-      GPU        Location       0.1%     1%    99%  99.9%
- RTX 2060       Hatsheput FPS 315.90 294.80 182.55 173.55
- RTX 2060           Dunes FPS 430.65 325.52 194.55 168.01
- RTX 2060 Thebes - Karnak FPS 356.25 327.44 133.76 113.30
- RTX 2060       Hatsheput  ms   3.17   3.39   5.48   5.76
- RTX 2060           Dunes  ms   2.32   3.07   5.14   5.95
- RTX 2060 Thebes - Karnak  ms   2.81   3.05   7.48   8.83
+      GPU                   API        Location       0.1%     1%    99%  99.9%
+ RTX 2060 DirectX 11 - Anti-Lag       Hatsheput FPS 315.90 294.80 182.55 173.55
+ RTX 2060 DirectX 11 - Anti-Lag           Dunes FPS 430.65 325.52 194.55 168.01
+ RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak FPS 356.25 327.44 133.76 113.30
+ RTX 2060 DirectX 11 - Anti-Lag       Hatsheput  ms   3.17   3.39   5.48   5.76
+ RTX 2060 DirectX 11 - Anti-Lag           Dunes  ms   2.32   3.07   5.14   5.95
+ RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak  ms   2.81   3.05   7.48   8.83
 
 Percentile of FPS
-      GPU        Location 60 FPS 50 FPS 30 FPS 20 FPS 15 FPS
- RTX 2060       Hatsheput      0      0      0      0      0
- RTX 2060           Dunes      0      0      0      0      0
- RTX 2060 Thebes - Karnak      0      0      0      0      0
+      GPU                   API        Location 60 FPS 50 FPS 30 FPS 20 FPS 15 FPS
+ RTX 2060 DirectX 11 - Anti-Lag       Hatsheput      0      0      0      0      0
+ RTX 2060 DirectX 11 - Anti-Lag           Dunes      0      0      0      0      0
+ RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak      0      0      0      0      0
 
 Distribution Stats
-      GPU        Location Mean (ms) StDev (ms) CoV (%)  Skew Kurtosis
- RTX 2060       Hatsheput      4.41       0.52   11.76 29.35  3692.25
- RTX 2060           Dunes      3.85       0.43   11.16 13.28  1235.55
- RTX 2060 Thebes - Karnak      4.14       0.82   19.71  2.25    10.17
+      GPU                   API        Location Mean (ms) StDev (ms) CoV (%)  Skew Kurtosis
+ RTX 2060 DirectX 11 - Anti-Lag       Hatsheput      4.41       0.52   11.76 29.35  3692.25
+ RTX 2060 DirectX 11 - Anti-Lag           Dunes      3.85       0.43   11.16 13.28  1235.55
+ RTX 2060 DirectX 11 - Anti-Lag Thebes - Karnak      4.14       0.82   19.71  2.25    10.17

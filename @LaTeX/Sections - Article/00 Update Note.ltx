@@ -1,0 +1,29 @@
+\section{Update Note}
+In the time since I originally wrote this article, \textit{Serious Statistics Reprocessed: Statistics and Scripts} I have done something very predictable; made changes to the scripts.
+For a while these changes were relatively minor, but when the time came to do a series of performance analyses involving multiple APIs in addition to multiple GPUs and multiple locations, I came to make enough changes to constitute a mini-overhaul.
+Well, "mini" compared to the overhaul I did when originally writing this article.
+
+Due to the changes I have made, with some being rather significant concerning approach and design, I have decided to return and revise this article with the changes.
+Most of these changes will be concerned just with the scripts themselves, as the general designs of the graphs have not been changed with a singular exception.
+Perhaps if any of you have read the original you will have noticed a mistake I made concerning units with what I call the QQ graph.
+Something I added to the graph when working on the original article was a theoretical line and the slope for this line.
+The issue I only realized later was that the units for this slope was milliseconds per Z-score, which is technically appropriate for the normal formatting of a QQ graph, but I failed to realize until later I translated the Z-scores on the graph to percentiles.
+The change is easy enough to make so the units of the slope will be millisecond per percent and the cause of the mistake, for anyone curious how it happened, was simply that I was thinking more about adding this feature to a QQ graph rather than my QQ graph.
+
+The changes to the scripts are more numerous and in some cases much more complicated.
+Among the smaller changes was a shuffling of the custom functions I made between the Input and Output scripts I use, as well as re-ordering the functions within the scripts.
+An example of the more complicated changes was creating custom functions for reversing the order of factor levels or applying shortened names to them, and then only using these functions within local environments.
+A problem I often ran into when troubleshooting was having the order or names changed inconsistently between some data elements.
+This removes that issue because such changes only occur when needed and are not applied to the original data.
+Technically this also increases the work to be done, as these changes could potentially be applied multiple times, but I feel the protection to the original data is worth that potential cost.
+
+Other changes to the scripts include a new system for working with consecutive difference data and a better means of subsetting the data for specific locations, APIs, or GPUs.
+There are also new switches and controls for things such as adding to breaks to the map scales and controlling if there should be alternating breaks to the scale labels.
+Perhaps I should not consider the sum of these changes a "mini" overhaul, but compared to what I did when writing the original version of this article, it has been much less effort.
+
+In addition to these changes to the existing scripts, I have also developed some new scripts that take advantage of R's capability to work with files.
+Previously I had left this work to Python, but after some experimentation I was able to develop R scripts that will build the list of CSVs on their own.
+I have these labelled "Search" scripts.
+The functionality these scripts bring is for the R scripts to directly react to additional data being added to the OCAT Data folder, instead of requiring the Python script to be used.
+Some of the tricks I learned with them I have also applied to the normal scripts.
+These new Search scripts will be covered separately from the originals.

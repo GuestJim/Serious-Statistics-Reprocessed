@@ -2,31 +2,31 @@ Serious Statistics and Scripts - RTX 2060 - Vulkan - Max Quality
 Frame Time
 
 Mean
-      GPU        Location       Mean Median
- RTX 2060       Hatsheput FPS 222.26 222.67
- RTX 2060           Dunes FPS 255.56 259.34
- RTX 2060 Thebes - Karnak FPS 227.32 238.27
- RTX 2060       Hatsheput  ms   4.50   4.49
- RTX 2060           Dunes  ms   3.91   3.86
- RTX 2060 Thebes - Karnak  ms   4.40   4.20
+      GPU    API        Location       Mean Median
+ RTX 2060 Vulkan       Hatsheput FPS 222.26 222.67
+ RTX 2060 Vulkan           Dunes FPS 255.56 259.34
+ RTX 2060 Vulkan Thebes - Karnak FPS 227.32 238.27
+ RTX 2060 Vulkan       Hatsheput  ms   4.50   4.49
+ RTX 2060 Vulkan           Dunes  ms   3.91   3.86
+ RTX 2060 Vulkan Thebes - Karnak  ms   4.40   4.20
 
 Percentiles
-      GPU        Location       0.1%     1%    99%  99.9%
- RTX 2060       Hatsheput FPS 336.33 284.50 181.39 165.78
- RTX 2060           Dunes FPS 442.23 310.37 184.72 150.38
- RTX 2060 Thebes - Karnak FPS 341.02 299.54 125.72  95.45
- RTX 2060       Hatsheput  ms   2.97   3.52   5.51   6.03
- RTX 2060           Dunes  ms   2.26   3.22   5.41   6.65
- RTX 2060 Thebes - Karnak  ms   2.93   3.34   7.95  10.48
+      GPU    API        Location       0.1%     1%    99%  99.9%
+ RTX 2060 Vulkan       Hatsheput FPS 336.33 284.50 181.39 165.78
+ RTX 2060 Vulkan           Dunes FPS 442.23 310.37 184.72 150.38
+ RTX 2060 Vulkan Thebes - Karnak FPS 341.02 299.54 125.72  95.45
+ RTX 2060 Vulkan       Hatsheput  ms   2.97   3.52   5.51   6.03
+ RTX 2060 Vulkan           Dunes  ms   2.26   3.22   5.41   6.65
+ RTX 2060 Vulkan Thebes - Karnak  ms   2.93   3.34   7.95  10.48
 
 Percentile of FPS
-      GPU        Location 60 FPS 50 FPS 30 FPS 20 FPS 15 FPS
- RTX 2060       Hatsheput   0.03   0.02   0.01   0.01   0.01
- RTX 2060           Dunes   0.01   0.00   0.00   0.00   0.00
- RTX 2060 Thebes - Karnak   0.06   0.05   0.01   0.00   0.00
+      GPU    API        Location 60 FPS 50 FPS 30 FPS 20 FPS 15 FPS
+ RTX 2060 Vulkan       Hatsheput   0.03   0.02   0.01   0.01   0.01
+ RTX 2060 Vulkan           Dunes   0.01   0.00   0.00   0.00   0.00
+ RTX 2060 Vulkan Thebes - Karnak   0.06   0.05   0.01   0.00   0.00
 
 Distribution Stats
-      GPU        Location Mean (ms) StDev (ms) CoV (%)  Skew Kurtosis
- RTX 2060       Hatsheput      4.50       1.05   23.43 88.32 11332.17
- RTX 2060           Dunes      3.91       0.48   12.37 13.89   958.78
- RTX 2060 Thebes - Karnak      4.40       1.06   24.15  9.62   264.01
+      GPU    API        Location Mean (ms) StDev (ms) CoV (%)  Skew Kurtosis
+ RTX 2060 Vulkan       Hatsheput      4.50       1.05   23.43 88.32 11332.17
+ RTX 2060 Vulkan           Dunes      3.91       0.48   12.37 13.89   958.78
+ RTX 2060 Vulkan Thebes - Karnak      4.40       1.06   24.15  9.62   264.01

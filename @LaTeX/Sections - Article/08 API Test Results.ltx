@@ -62,8 +62,8 @@ I also decided, because I could, to add something to these results.
 }	\vspace{1.0ex}
 
 It is probably easier to see in the table of stats than in the graph, but it is interesting to see that DirectX 11 does better than both DirectX 12 and Vulkan, despite it being the oldest API of the three.
-The Anti-Lag feature being enabled does seem to have an impact, hurting performance a little, but it still is doing better than the two newer, low-level APIs.
-To be fair though, this is likely not a title that calls for a low-level API, or the Anti-Lag features.
+The anti-lag technologies being enabled does seem to have an impact, hurting performance a little, but it still is doing better than the two newer, low-level APIs.
+To be fair though, this is likely not a title that calls for a low-level API, or the anti-lag features.
 These technologies help in CPU limited scenarios, and when you can have average frame rates well exceeding 200 FPS at the game's highest configuration, it is hard to imagine there being any real limitation.
 
 \image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @Course - Frame Time}}
@@ -84,7 +84,7 @@ The 99.9\% values all beat 130 FPS.)
 
 I do not think there is much to say about the Consecutive Difference plots.
 While we do see the sporadic points around the blobs for the DirectX 12 and Vulkan runs, these are likely the results of the outliers we saw in the QQ plots, and being outliers, are not indicative of the trend.
-Overall, the performance for any of these configurations, DX11, DX12, Vulkan, and DX11 with Radeon Anti-Lag enabled, is very good and very solid.
+Overall, the performance for any of these configurations, DX11, DX12, Vulkan, and DX11 with the anti-lag technologies enabled, is very good and very solid.
 The statistics and graphs do suggest DirectX 11 is the superior API for this scenario though, which is with my system configuration and the settings configuration I used for the game, both of which were described in an earlier section.
 
 I had mentioned the MsEstimatedDriverLag data before, and here are the statistics I have for it.
@@ -124,7 +124,7 @@ As DirectX 11 was doing better than these newer APIs on general performance, it 
 
 Now for the extra thing I decided to add because I could.
 For a performance analysis, I do not think it is necessary or completely appropriate for what I try to do with them, but here the geometric mean makes sense to share.
-Because it is looking at frame time, the longest frame time is what the values are normalized by, so smaller percentages are better.
+Because it is looking at frame time, the longest of these mean frame times is what the values are normalized by, so smaller percentages are better.
 
 \vspace{1.0ex}	\noindent	%\resizebox{\columnwidth}{!}{
 \begin{center}
@@ -184,7 +184,7 @@ With this table we can see the relative performance between the three locations.
 That Dunes was the fastest is actually not too surprising, because while it does have the most action going on, it has the least environmental geometry to be concerned with.
 That Hatsheput took longer the Thebes – Karnak does surprise me a little, but then the difference is also very little and the locations are somewhat similar.
 
-Technically I could use the geometric mean like I did here in performance analyses to compare the performance between the GPUs, but that is not exactly the purpose I have for these analyses.
+Technically I could use the geometric mean like I did here in performance analyses to compare the performance between the GPUs, but that is not exactly the purpose I have for the analyses.
 I am not looking to compare the performance of the GPUs, but to report how they perform in the game so you can estimate what you can expect if you have the same or similar GPU, and other hardware.
 The High Quality data I include does allow the GPUs to be compared against each other, and I do include it to be a common and reasonable point of reference, but as the purpose of the analysis is to report on each GPU, including the geometric mean specifically to directly compare the performance of GPUs is a little misaligned.
 Another way to put it is I am not reviewing the performance of the GPUs, but the performance of the game, but if I were to do a graphics card review, I would use the geometric mean.

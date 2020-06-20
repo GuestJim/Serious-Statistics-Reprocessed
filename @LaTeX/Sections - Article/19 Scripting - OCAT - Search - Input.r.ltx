@@ -1,0 +1,409 @@
+\section{Scripting: OCAT - Search - Input.r}
+
+The purpose of this script is to remove the need to create the combined CSV with all of the desired data loaded in and configured.
+While it has achieved this, I do not think I will use it as the process of loading all of the data like this is slower than loading the combined data file.
+As it is very reasonable that this script will be run multiple times, such as to determine the best size for the graphs, this constant searching and finding the individual CSVs takes more time than I think it is worth.
+At least that is the case for multi-GPU data, but for single-GPU scenarios, involving fewer files, this may not hold as true.
+However then I would need to make the Python script intelligently switch which Input.r script it should place in a folder, and I do not feel like setting that up.
+
+Though I do not intend to use this script as part of my usual process, it has still been useful to build and could prove useful in the future.
+The use from building was to push me to make the code for loading in and manipulating the data robust enough to work here as well as in OCAT – Search – PA.r.
+The potential future use would be to more easily call subsets of the data, as it works by creating a list of every CSV with the relevant configuration information identified.
+Currently it will only apply a single subset, such as all High Quality data, but it is not difficult in R to apply a second condition, such as all High Quality data for a specific API and/or specific location, without having to create special CSVs for each subset.
+
+Though there are definitely some significant changes from the original Input.r script, they are not throughout the file.
+For that reason, I will not cover every block and line of code, as at a certain point it will be identical to the OCAT – Combined – Input.r section.
+It will also start off largely the same, but the beginning is a poor thing to skip.
+
+\subsubsection{R Library Loading}
+\begin{styleR}
+library(readr)
+library(ggplot2)
+library(moments)
+\end{styleR}
+
+This much is identical to the original version, loading in the three libraries I use between this and the Output.r script.
+These are the \textit{readr} library I use for reading in CSVs, \textit{ggplot2} for creating the graphs, and \textit{moments} for its skewness and kurtosis functions that I use but do not share the results of.
+
+\subsubsection{Setting Title and Current GPU}
+\begin{styleR}
+game	=	"!GAME!"
+# cGPU	=	!GPU!
+
+gameF	=	gsub(":", "-", game)
+gameF	=	unlist(strsplit(gameF, split=" [(]"))[1]
+\end{styleR}
+
+We now see the first difference with the original version, and it is relatively minor.
+The current GPU variable, \textbf{cGPU}, is not created and set here but later in the file.
+This is because the current GPU is identified by the data read in, and that has not happened yet.
+
+The rest of this code block is for setting the game or article title, which the Python script will handle, and creating a file-name safe version of this title, \textbf{gameF}.
+This involves replacing colons with dashes and if there are parentheses, the keep only the portion ahead of them opening.
+
+\subsubsection{General Graph Formating Control}
+\begin{styleR}
+theme_set(theme_grey(base_size = 16))
+DPI			=	120
+ggdevice	=	"png"
+\end{styleR}
+
+Just like in the original, we have certain general formatting controls here for the graphs.
+The first increases the font size to 16 and the second sets the DPI for the output image files.
+The third determines if the graphs should be saved as PNG images or as a PDF document, or both.
+A PNG is typically best as a PDF can require information for every point on a graph, making it as large as the original data.
+
+\subsubsection{Sub-Setting Controls}
+\begin{styleR}
+COLUMN	=	NULL	;	SUBSET	=	NULL
+\end{styleR}
+
+Another change from the original as these variables are used for sub-setting the found CSVs.
+With \textbf{COLUMN} the type of the subset is identified, such as "Quality," and with \textbf{SUBSET} the specific item within that column to subset by is identified, such as "High."
+Like in the OCAT – Search – PA.r file there will be a check for if these are NULL, but it comes later as it in part depends on the working directory.
+
+\subsubsection{General Graph Design Control}
+\begin{styleR}
+useSHORT	=	TRUE
+# testAPI		=	FALSE
+listFPS		=	NULL
+
+diffLim		=	NULL
+QUAN		=	c(0.01, 0.99)
+FtimeLimit	=	1000/15
+yratesEXT	=	NULL
+
+gWIDTH	=	8
+gHEIGH	=	9
+app.BREAK	=	FALSE
+\end{styleR}
+
+Here we have the switches and controls for graph design elements most likely to be altered, such as the use of shortened names and the limit for frame time scales.
+The \textbf{testAPI} switch, for whether there are multiple APIs to test has been commented out for the same reason the \textbf{cGPU} assignment was previously; this will be controlled by the data later.
+
+So you do not need to go back to the section for the original version of this script, here is a quick run through of these controls:
+\textbf{useSHORT} determines if shortened names for Locations and APIs should be used, if they are provided;
+\textbf{listFPS} will add to the list of frame rates specific percentiles are provided for in the compact table HTML output;
+\textbf{diffLim} controls the mirrored limits for the Consecutive Difference graph;
+\textbf{QUAN} sets the two quantiles used in the QQ graph for the theoretical line;
+\textbf{FtimeLimit} is the upper limit for the frame time scales, and other time-based performance measurements;
+\textbf{yratesEXT} can be used to expand the list of frame rates used for breaks on the time-based performance scales;
+\textbf{gWIDTH} and \textbf{gHEIGH} control the width and height of the graphs;
+and lastly \textbf{app.BREAK} controls whether the labels on the graphs have line breaks or not to stagger them.
+
+\subsubsection{General Output Control}
+\begin{styleR}
+textOUT		=	TRUE
+HTMLOUT		=	TRUE
+graphs		=	TRUE
+graphs_all	=	FALSE
+\end{styleR}
+
+These switches are to control what outputs are produced, with \textbf{textOUT} controlling all text outputs, including the HTML files, while \textbf{HTMLOUT} only controls whether the HTML files are created.
+The \textbf{graphs} switch controls whether any graphs are made and \textbf{graphs\_all} will enable or disable using the \textbf{INDIV} function later.
+With \textbf{INDIV} outputs for subsets in the data will be created, such as creating graphs and text outputs for each location.
+
+\subsubsection{Data Type Output Control}
+\begin{styleR}
+textFRAM	=	TRUE
+graphFRAM	=	TRUE
+
+textDISP	=	FALSE
+graphDISP	=	FALSE
+
+textREND	=	FALSE
+graphREND	=	FALSE
+
+textDRIV	=	FALSE
+graphDRIV	=	FALSE
+\end{styleR}
+
+These switches are to control what data types are processed.
+Normally it is just the frame time, controlled by \textbf{textFRAM} and \textbf{graphFRAM}, but sometimes display time, controlled with \textbf{textDISP} and \textbf{graphDISP}, is also desired.
+The other two pairs are for render time and driver lag.
+The switches described just before these will override these.
+
+\subsubsection{API and Location Specific Text Output Switches}
+\begin{styleR}
+textAPI		=	FALSE
+textLOC		=	FALSE
+\end{styleR}
+
+These two switches are for whether text outputs should be produced for the separate APIs and Locations present in the data.
+This is a bit different from the \textbf{INDIV} function as that will create a subset of the data to pass to Output.r, which can then create all of the output files, including graphs.
+When these switches are TRUE, just text outputs are made from subsets created at the time needed.
+
+\subsubsection{Consecutive Difference Data Creation Switches}
+\begin{styleR}
+textDiff	=	FALSE
+graphDiff	=	FALSE
+\end{styleR}
+
+These switches are meant for controlling if Consecutive Difference data should be created and processed like other measurements, but that is not currently configured fully.
+The data will be created and attached as columns to the \textbf{results} data frame, but there is nothing hooked up to use these columns yet.
+
+\subsubsection{Setting Working Directory}
+\begin{styleR}
+if (interactive())	{
+	setwd("!PATH!")
+}	else	{
+	pdf(NULL)
+}
+\end{styleR}
+
+The code here is a little odd but necessary.
+First \textbf{interactive} is used to determine whether the script is running in the GUI or in the console window.
+If it is in the GUI, then the working directory needs to be changed using \textbf{setwd} and the supplied path from the Python script.
+If the script is executed directly and opens a console window, it will assume the working directory to be the directory of the script, so \textbf{setwd} is not necessary.
+However, an rplots.pdf file will be created when the graphs are made, if the script is run in a console window.
+To disable that, NULL must be passed to the \textbf{pdf} function.
+
+\subsubsection{Relative Path, Sub-Setting Controls, and txtFIND Function}
+\begin{styleR}
+relPath	=	paste0(unlist(strsplit(getwd(), "OCAT Data"))[1], "OCAT Data")
+
+if	(getwd() == relPath & (is.null(COLUMN) & is.null(SUBSET)))	{
+	COLUMN	=	"Quality"
+	SUBSET	=	"High"
+}
+
+txtFIND	=	function(TXT, rel.Path = relPath)	{
+	locFILE	=	paste0(rel.Path, "/", TXT)
+	if (file.exists(locFILE))	return(readLines(locFILE, warn = FALSE))
+	return(NULL)
+}
+\end{styleR}
+
+Again we have arrived at another change from the original file, but not yet the bigger changes.
+After creating the \textbf{relPath} string pointing to the OCAT Data folder, a check is made to of where the working directory is relative to this path, and whether values for \textbf{COLUMN} and \textbf{SUBSET} were provided.
+If the working directory is the OCAT Data folder, that means this is likely a multi-GPU scenario and so sub-setting is required, but it is possible the two controls for how to subset were already supplied.
+If they were not, then both \textbf{COLUMN} and \textbf{SUBSET} will still be NULL and the conditions will pass, setting these variables so as to find the High Quality subset.
+
+It might be worth noting, this condition will fail if only one of the two variables has a non-NULL value.
+If that happens, then R will throw an error because it will not be able to subset the data, so if you set these manually, make sure you set both values.
+
+After taking care of those values, the \textbf{txtFIND} function is created for finding text files in the OCAT Data folder and loading their contents in, if the file exists.
+
+\subsubsection{GPU List}
+\begin{styleR}
+listGPU		=	c(
+"RX 580",
+"RX Vega 64",
+"GTX 770",
+"GTX 980",
+"GTX 1070",
+"GTX 1080",
+"RTX 2060",
+"RTX 2080"
+)
+\end{styleR}
+
+This creates a list of GPUs and while it would be possible to build this from the list of folders the CSVs will be found in, that ordering can be different.
+As you can see, I have the AMD GPUs placed at the top with the NVIDIA following, but also I have the GPUs listed in order of generation and then relative performance.
+A list created by reading the folders will be alphabetical according to R, which will actually start with the GTX 1070, because it sorts character instead of by word.
+Windows, for example, will sort by word and so recognizes the GTX 770 is before the GTX 1070, as 770 is less than 1070.
+As tempting as it might be to let R handle the creation of this list, it really is best to handle it manually.
+Plus, if I ever take the time to set specific colors for each GPU, that will require an explicit list.
+
+\subsubsection{Reading Quality, Location, and API Lists}
+\begin{styleR}
+listQUA		=	txtFIND("Qualities.txt")
+
+listLOC		=	txtFIND("Locations.txt")
+shortLOC	=	txtFIND("Locations Short.txt")
+levsLOC		=	listLOC
+if	(useSHORT	&	!is.null(shortLOC))	levsLOC	=	shortLOC
+
+listAPI		=	txtFIND("APIs.txt")
+shortAPI	=	txtFIND("APIs Short.txt")
+levsAPI		=	listAPI
+if	(useSHORT	&	!is.null(shortAPI))	levsAPI	=	shortAPI
+\end{styleR}
+
+With the \textbf{txtFIND} function, this code will check for specific text files, and if they exist read in their contents to be assigned to certain variables.
+The Qualities.txt, Locations.txt, and APIs.txt files will be read into \textbf{listQUA}, \textbf{listLOC}, and \textbf{listAPI} respectively, with the "Locations Short.txt" and "APIs Short.txt" being read into \textbf{shortLOC} and \textbf{shortAPI}, respectively.
+These last two files provide R with shortened versions of the Locations and/or APIs in the data, but if they do not exists, then the respective variables will be assigned the value NULL.
+
+The \textbf{levsLOC} and \textbf{levsAPI} variables created here are necessary for how I have the shortened names applied.
+Basically, the function that handles that work will always apply the appropriate of these two variables, so the variable must exist and have a value.
+This is why initially these are given the original versions of the lists but then changed only if shortened names are to be used and if the appropriate shortened list exists.
+
+In the original version of this script, it is at this point the combined CSV is loaded in, but as this script is designed to not need that, what comes next is the code for finding the CSVs and ultimately importing them.
+A lot of this will be identical to what is in the OCAT – Search – PA.r script, but there are some changes, as we will see.
+When the code is identical, I will not bother to cover it as much detail as I did before, so please check that section for additional information.
+
+\subsubsection{csvFIND Custom Function}
+\begin{styleR}
+csvFIND	=	function(DIRECT = getwd())	{
+	LIST		=	list.files(DIRECT, recursive = TRUE, pattern = ".csv")
+	LIST		=	LIST[grepl("OCAT", LIST) & grepl("csv", LIST)]
+	LIST.full	=	paste0(DIRECT, "/", LIST)
+	LIST.rel	=	t(data.frame(lapply(LIST.full, strsplit, "OCAT Data/"), row.names = NULL)[2, ])
+	colnames(LIST.rel)	=	NULL
+	rownames(LIST.rel)	=	NULL
+	
+	return(LIST.rel)
+}
+
+# LIST.rel	=	csvFIND()
+\end{styleR}
+
+This \textbf{csvFIND} function is responsible for creating the list of CSV files in the working directory and its subdirectories, or any path passed to it, and then filtering out any files not OCAT CSVs.
+This list consists of relative paths from the top directory it is given, so that directory's path is concatenated onto the front of the elements.
+This new list with the full path to each CSV then has the strings split at "OCAT Data/", so all of the paths are relative to that directory instead of the directory \textbf{csvFIND} was given.
+The resulting list is made into a data frame then with each file having its own row and both the column and row names removed.
+
+The commented out line is present as it can be helpful for troubleshooting to get the output of this function.
+This step is not necessary for the operation of the script though, as the function is only called once and at the time it is needed.
+
+\subsubsection{csvCONF Custom Function}
+\begin{styleR}
+csvCONF	=	function(CSV.list, LOCs = listLOC)	{
+	CSV.config	=	t(as.data.frame(sapply(CSV.list, strsplit, "/")))
+	colnames(CSV.config)	=	NULL
+	rownames(CSV.config)	=	NULL
+	
+	CONFIG	=	data.frame(matrix(ncol = 5, nrow = nrow(CSV.config)))
+	colnames(CONFIG)	=	c("GPU", "API", "Quality", "Location", "CSV")
+	
+	CONFIG$GPU		=	CSV.config[, 1]
+	if	(ncol(CSV.config) == 4)	CONFIG$API		=	CSV.config[, 2]
+	CONFIG$Quality	=	CSV.config[, ncol(CSV.config)-1]
+	
+	appLOC	=	function(DATA, LOCs)	{
+		if (is.null(LOCs))	LOCs	=	paste0("Recording ", 1:nrow(DATA))
+		rep(LOCs, length.out = nrow(DATA))
+	}
+	GROUPS	=	list(GPU = CONFIG$GPU, API = CONFIG$API, Quality = CONFIG$Quality)
+	if (any(is.na(GROUPS$API)))	GROUPS$API	=	NULL
+	CONFIG$Location	=	unlist(by(CONFIG, GROUPS, appLOC, LOCs))
+#	appLOC and by together apply the Location names, and generate them if necessary, to match the GPU-API-Quality groups
+	CONFIG$CSV		=	CSV.config[, ncol(CSV.config)]
+	
+	return(CONFIG)
+}
+
+# CSV.config	=	csvCONF(LIST.rel)
+CSV.configFull	=	csvCONF(csvFIND())
+\end{styleR}
+
+This \textbf{csvCONF} function is responsible for taking the list generated by \textbf{csvFIND} and determining the configuration information for each CSV based on its path and \textbf{listLOC}.
+It does have the flaw that it assumes the order the data is collected in follows the order of the locations set in \textbf{listLOC}, but that is not that large a flaw.
+Before working with the locations though, it first splits the elements of the list so each directory name is its own column.
+A \textbf{CONFIG} data frame is made then with the columns to hold all of the configuration descriptors, GPU, API, Quality, and Location, as well as the CSV file name.
+The information is then mapped to this data frame accordingly and after that a custom function for handling the locations is created.
+It is created so the \textbf{by} function can be used to find the groupings in the data and apply this function to those groupings.
+This \textbf{appLOC} function will generate a generic list of location names, if necessary, before returning the list of locations, repeated as many times as there are CSV files provided to it.
+
+At the end of this block are two lines that call this function.
+The first is commented out as it uses \textbf{LIST.rel}, the variable that can hold the \textbf{csvFIND} result for troubleshooting purposes.
+The second is what will actually use \textbf{csvCONF} with \textbf{csvFIND} to store the output for the former to \textbf{CSV.configFull}, the complete list of CSVs with configuration descriptors.
+
+\subsubsection{csvFILT Custom Function}
+\begin{styleR}
+csvFILT	=	function(CSV.list, COL, SUB)	{
+	if (!is.null(COL)	&	!is.null(SUB))	return(CSV.list[CSV.list[, COL] == SUB, ])
+	return(CSV.list)
+}
+
+CSV.config	=	csvFILT(CSV.configFull, COLUMN, SUBSET)
+\end{styleR}
+
+The \textbf{csvFILT} function will take the list of CSVs and return a subset of it based on the \textbf{COL} and \textbf{SUB} arguments.
+This way a subset of the data can be identified before needing to load in all of the data.
+The values passed to it for this sub-setting are the \textbf{COLUMN} and \textbf{SUBSET} variables set earlier.
+
+\subsubsection{typeFIND Custom Funciton for Multi-GPU, Multi-API, and Multi-Quality Situations}
+\begin{styleR}
+typeFIND	=	function(DATA, TYPE)	{
+	if	(length(unique(DATA[, TYPE])) == 1)	return(unique(DATA[, TYPE]))
+	return(NULL)
+}
+
+cGPU	=	typeFIND(CSV.config, "GPU")
+multiGPU	=	is.null(cGPU)
+labsGPU		=	labs(caption = cGPU)
+if (multiGPU)	labsGPU	=	labs()
+
+testAPI	=	is.null(typeFIND(CSV.config, "API"))
+testQUA	=	is.null(typeFIND(CSV.config, "Quality"))
+\end{styleR}
+
+This block of code is unique to this script because it is what uses the configuration information of the CSVs to determine and react to if this is a multi-GPU, multi-API, and/or multi-Quality situation.
+Key to this is the \textbf{typeFIND} function with its \textbf{DATA} and \textbf{TYPE} arguments.
+The \textbf{DATA} argument should always be the \textbf{CSV.config} data frame that contains all of the configuration information for the CSVs to be read imported, while \textbf{TYPE} should identify the column of interest, such as GPU.
+
+Within \textbf{typeFIND}, the first line uses the \textbf{unique} function on the column of \textbf{DATA} selected by \textbf{TYPE} to return a list of just the unique elements in that column.
+The length of the list then tells us whether or not the data only holds one example of this type, such as a single GPU.
+If this is the case, then that unique example is returned by the function.
+If this is not the case and there are multiple examples for that type, then NULL is returned.
+
+The first use of this function is to set the \textbf{cGPU} variable.
+If there is only one value in the GPU column, that is assigned to the variable but if there are multiple, then it will be assigned NULL.
+The next line then sets the \textbf{multiGPU} variable to be TRUE or FALSE based on if \textbf{cGPU} is NULL or not, and after that \textbf{labsGPU} is set to either place a caption in the graphs for the current GPU, or not.
+
+After handling the GPU situation, \textbf{testAPI} and \textbf{testQUA} are handled by testing if \textbf{typeFIND} for the appropriate columns returns NULL or not.
+Potentially one will want to override these switches, such as if they are looking at a specific sample that for a single API while the larger population does contain multiple APIs.
+For that example, one would just want to set \textbf{testAPI} to TRUE on this line or afterward.
+
+\subsubsection{read\_OCAT Custom Function}
+\begin{styleR}
+read_OCAT	=	function(INFO, GPU = NULL, API = NULL, QUA = NULL, LOC = NULL)	{
+	if (is.data.frame(INFO))	{
+		GPU		=	INFO$GPU
+		API		=	INFO$API
+		QUA		=	INFO$Quality
+		LOC		=	INFO$Location
+		FILE	=	INFO$CSV
+	}	else	{FILE	=	INFO}
+	
+	filePATH		=	paste(relPath, GPU, QUA, FILE, sep = "/")
+	if	(!any(is.na(API), is.null(API)))	filePATH		=	paste(relPath, GPU, API, QUA, FILE, sep = "/")
+	
+	out				=	read_csv(filePATH)[, 1:20]
+	
+	out$GPU			=	GPU
+	out$Quality		=	QUA
+	out$Location	=	LOC
+	out$API			=	""
+	if	(!any(is.na(API), is.null(API)))	out$API	=	API
+	
+	return(out)
+}
+\end{styleR}
+
+This \textbf{read\_OCAT} function is identical to that in the OCAT – Search – PA.r script and serves to read in the CSV files, and then add columns to this data identifying the configuration for that data.
+It can work one of two ways, with the first being to just take a row from the \textbf{CSV.config} data frame, which contains all of the necessary information.
+The other is to pass it the CSV file name and all of the configuration information as separate arguments, which can be useful if you want to manually load in files for experiments or troubleshooting.
+Depending on whether it gets a row from a data frame, which will itself be a data frame, it will assign the configuration information to the appropriately named variables, or assign the CSV file name to the \textbf{FILE} variable.
+
+After this assignment step is done, the \textbf{filePATH} variable is created by combining the \textbf{relPath}, \textbf{GPU}, \textbf{QUA}, and \textbf{FILE} strings, with the slash used as the separation character to construction the path to the current CSV file.
+You may notice this path does not include the API, but the next line checks if an API value exists, and if it does remakes \textbf{filePATH} to include it.
+
+With \textbf{filePATH} constructed from the configuration information and CSV file name, the \textbf{read\_csv} function from \textit{readr} is used to import the data from the CSV.
+Only the first twenty columns are desired though, so only those are selected and assigned to \textbf{out}.
+
+Now that the data has been read in, columns are added and given the values set by the configuration variables, starting with the GPU.
+At first the API column is created and set to be all empty strings, but once again there is a check for if the API exists, and if it does, then that value is assigned to the column, and that is the last step before ending the function by returning \textbf{out}.
+
+\subsubsection{csvOCAT Custom Function}
+\begin{styleR}
+csvOCAT	=	function(CSVs)	{
+	OCATcomb	=	data.frame(matrix(ncol = 24, nrow = 0))
+	for (ROW in 1:nrow(CSVs))	{
+		OCATcomb	=	rbind(OCATcomb, read_OCAT(CSVs[ROW, ]))
+	}
+	
+	return(OCATcomb)
+}
+
+resultsFull	=	csvOCAT(CSV.config)
+\end{styleR}
+
+Like the previous function, the \textbf{csvOCAT} function is identical to that in OCAT – Search – PA.r but what its output is saved to is different, to support the rest of the Input.r script.
+The way \textbf{csvOCAT} works is it takes the data frame of configured CSVs and work through it with a \textbf{for} loop, using \textbf{read\_OCAT} to import the data and binding it together in the \textbf{OCATcomb} data frame.
+This data frame of all of the desired data is then returned by the function.
+
+Finishing this section off, the output of \textbf{csvOCAT} is assigned to \textbf{resultsFull}, which is the variable to hold the original data and in the original version of the script is what the combined CSV is saved to.
+As the process to import all of the CSV data will produce the same result as reading a similarly constructed combined CSV, the remainder of this script is identical with the OCAT – Combined – Input.r.
+If you want to read about what remains in this script, you can go to the \textit{Ordered Factor Level Application} subsection of \textit{Scripting: OCAT – Combined – Input.r} as that would be the next part of this script.

@@ -10,7 +10,7 @@ The question of FPS or frame time is mostly associated with the second meaning o
 (Besides, you cannot compare a unit to a type of measurement.
 The minute has no advantages or disadvantages compared to a stopwatch, after all.In this comparison, there is a pretty clear advantage to frame time, thanks to the tools we have today for measuring performance.
 While the literal count of frames rendered in a second is useful information, thanks to tools like \href{https://github.com/GameTechDev/PresentMon}{PresentMon}, and those that leverage it, we can have the ideal measurement of rendering performance by recording the actual time it takes to render and display each frame.
-My preferred tool is actually \href{https://github.com/GPUOpen-Tools/OCAT}{OCAT, Open Capture and Analytics Tool}, which initially was effectively a convenient front-end for PresentMon, but has since been developed into more.
+My preferred tool is actually \href{https://github.com/GPUOpen-Tools/OCAT}{OCAT, Open Capture and Analytics Tool}, which started as what was effectively a convenient front-end for PresentMon, but has since been developed into much more.
 
 Anyway, because we have free and open source software for measuring the length of time that passes to render each frame, measurements with a resolution of just one second are clearly inferior.
 However, when representing data I feel FPS is better than the milliseconds used for measurements of frame time.
@@ -28,7 +28,7 @@ I got a bit fancy with this one, highlighting a section of it and then inserting
 This highlight covers from 30 FPS to 120 FPS, which is the range most of us likely play games at.
 Frames per second is on the Y-axis while the X-axis is milliseconds per frame, for frame time.
 As you can see the relationship between FPS and frame time is not linear, as the plot curves quite a bit, including across the highlighted section.
-The green lines in the insert have the same 30 FPS steps, but the frame time distances covered are significantly different.
+The green lines in the insert have the same 30 FPS steps, but the frame time distances spanned are significantly different.
 This is because of the nonlinearity of FPS, and I have another, more specific example I can give to continue illustrating the problem with nonlinear measures.
 
 Starting with 30 FPS and 60 FPS, we can add 10 FPS to both, and if you want a reason why, say we have lowered the option for some setting or overclocked the graphics card.
@@ -38,6 +38,6 @@ The difference in frame time from 60 FPS to 70 FPS is 2.381 ms (the difference b
 It is still a 10 FPS difference in both cases, but a very different 10 FPS.
 (If we applied the 2.381 ms difference to 30 FPS, improving the performance, we would have 32.308 FPS, and applying the 8.333 ms difference to 60 FPS for an improvement gets us to 120 FPS.)
 
-This nonlinearity makes for a less than ideal situation when comparing performance measurements, but as millisecond representations for frame time are linear, those comparisons are fine.
+This nonlinearity makes for a less-than-ideal situation when comparing performance measurements, but as millisecond representations for frame time are linear, those comparisons are fine.
 Still, I prefer FPS as the unit for reporting performance, because at least when the performance differences are small, the impact of nonlinearity will be small too, but I do have the scripts configured to provide everything in milliseconds as well, for any who prefer this other unit.
-(The graphs all use milliseconds instead of FPS, both because of the linearity of the unit, but also so they can all easily have similar axes.)
+The graphs work on milliseconds too, but by applying secondary axes will show also show the equivalent FPS values.
