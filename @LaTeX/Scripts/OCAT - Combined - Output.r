@@ -103,7 +103,7 @@ AGG	=	function(datatype, FUN, ..., COL = NULL, ITEM = NULL, DATA = results)	{
 	GROUPS	=	list(GPU = DATA$GPU, API = DATA$API, Quality = DATA$Quality, Location = DATA$Location)
 	if	(!testAPI)	GROUPS$API		=	NULL
 	if	(!testQUA)	GROUPS$Quality	=	NULL
-	
+
 	return(sepCOL(aggregate(DATA[, datatype], GROUPS, FUN, ...)))
 }
 
@@ -111,7 +111,7 @@ addFPS	=	function(DATA, r = 2)	{
 	numCOL	=	sapply(DATA, is.numeric)
 	dataFPS		=	cbind(list("Unit" = "FPS"),	round(1000/DATA[, numCOL], 	r))
 	dataMS		=	cbind(list("Unit" = "ms"),	round(DATA[, numCOL],		r))
-	
+
 	out	=	cbind(DATA[, !numCOL], rbind(dataFPS, dataMS))
 	colnames(out)[grep("Unit", colnames(out))]	=	""
 	return(out)
@@ -127,10 +127,13 @@ compTAB	=	function(MEAN, PERC, ECDF)	{
 		listECDF	=	begECDF:endECDF
 	}
 
+	compECDF	=	as.data.frame(ECDF[, listECDF])
+	names(compECDF)	=	colnames(ECDF)[listECDF]
+
 	out	=	cbind(
 		MEAN,
 		PERC[, sapply(PERC, is.numeric)],
-		ECDF[, listECDF]
+		compECDF
 	)
 
 	colnames(out)[grep("Var.", colnames(out))]	=	""
@@ -143,13 +146,13 @@ dataSEL	=	function(datatype, COL = NULL, ITEM = NULL)	{
 	if	(datatype == "MsBetweenDisplayChange")	descs	=	c("Display Time",	"disp")
 	if	(datatype == "MsUntilRenderComplete")	descs	=	c("Render Time",	"rend")
 	if	(datatype == "MsEstimatedDriverLag")	descs	=	c("Driver Lag",		"driv")
-	
+
 	type	<<-	descs[1];	typeSHORT	<<-	descs[2]
 
 	MEAN	<<-	AGG(datatype,	meanMS,					COL = COL,	ITEM = ITEM)
 	PERC	<<-	AGG(datatype,	percMS,					COL = COL,	ITEM = ITEM)
 	ECDF	<<-	AGG(datatype,	ecdfFPS,	listFPS,	COL = COL,	ITEM = ITEM)
-	STAT	<<-	AGG(datatype,	statMS,					COL = COL,	ITEM = ITEM)	
+	STAT	<<-	AGG(datatype,	statMS,					COL = COL,	ITEM = ITEM)
 }
 
 dataSEL.rm	=	function()	{
@@ -159,13 +162,13 @@ dataSEL.rm	=	function()	{
 
 sinkTXT	=	function(datatype, COL = NULL, ITEM = NULL)	{
 	options(width = 1000)
-	
+
 	subSTR	=	""
 	if	(!is.null(ITEM))	subSTR	=	paste0(" - ", ITEM, " - ")
-	
+
 	filePath	=	paste0(gameGAQF, " ", subSTR, type, ".txt")
 	if	(!is.null(COL))	if	(COL	==	"GPU")	filePath	=	paste0(ITEM, "\\", filePath)
-	
+
 	sink(filePath, split = TRUE)
 
 	writeLines(gameGAQ)
@@ -175,7 +178,7 @@ sinkTXT	=	function(datatype, COL = NULL, ITEM = NULL)	{
 	writeLines("\nPercentiles")
 	print(addFPS(PERC), row.names = FALSE)
 	writeLines("\nPercentile of FPS")
-	print(ECDF, 		row.names = FALSE)	
+	print(ECDF, 		row.names = FALSE)
 	writeLines("\nDistribution Stats")
 	print(STAT,			row.names = FALSE)
 sink()
@@ -194,7 +197,7 @@ OCCHTML	=	function(DATA)	{
 writeOCC	=	function(DATA, dataNAME, name=gameGAQF, fold = "")	{
 	filePath	=	paste0(name, " - ", dataNAME,".html")
 	if	(fold != "")	filePath	=	paste0(fold, "\\", filePath)
-	
+
 	write_tableHTML(OCCHTML(DATA), file = filePath)
 }
 
@@ -204,7 +207,7 @@ sinkHTML	=	function(datatype, COL = NULL, ITEM	= NULL)	{
 
 	FOLD	=	""
 	if	(!is.null(COL)) if	(COL	==	"GPU")	FOLD	=	ITEM
-	
+
 	writeOCC(addFPS(MEAN),								dataNAME = paste0(ITEM.f, typeSHORT, "MEAN"),	fold = FOLD)
 	writeOCC(addFPS(PERC),								dataNAME = paste0(ITEM.f, typeSHORT, "PERC"),	fold = FOLD)
 	writeOCC(ECDF,										dataNAME = paste0(ITEM.f, typeSHORT, "ECDF"),	fold = FOLD)
@@ -370,7 +373,7 @@ graphMEANS	=	function(datatype)	{
 	geom_hline(yintercept = 1000/60, color = "red") +
 	# geom_boxplot(outlier.alpha = 0) +
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", width = 0.6) +
-	geom_bar(aes(fill = GPU), stat = "summary", fun.y = mean) + scale_fill_hue() +
+	geom_bar(aes(fill = GPU), stat = "summary", fun = mean) + scale_fill_hue() +
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
 	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
 	FACET(graphMEANS) +

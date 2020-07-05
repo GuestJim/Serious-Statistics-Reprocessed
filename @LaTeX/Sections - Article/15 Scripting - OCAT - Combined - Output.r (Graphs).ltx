@@ -310,7 +310,7 @@ graphMEANS	=	function(datatype)	{
 	geom_hline(yintercept = 1000/60, color = "red") +
 	# geom_boxplot(outlier.alpha = 0) +
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", width = 0.6) +
-	geom_bar(aes(fill = GPU), stat = "summary", fun.y = "mean") + scale_fill_hue() +
+	geom_bar(aes(fill = GPU), stat = "summary", fun = "mean") + scale_fill_hue() +
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
 	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
 	FACET(graphMEANS) +
@@ -393,7 +393,7 @@ ggtitle(gameQ, subtitle = paste0(datatype, " - Means, Medians, and Percentiles")
 geom_hline(yintercept = 1000/60, color = "red") +
 # geom_boxplot(outlier.alpha = 0) +
 stat_summary(fun.data = BoxPerc, geom = "boxplot", width = 0.6) +
-geom_bar(aes(fill = GPU), stat = "summary", fun.y = mean) + scale_fill_hue() +
+geom_bar(aes(fill = GPU), stat = "summary", fun = mean) + scale_fill_hue() +
 stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
 # geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
 FACET(graphMEANS) +
@@ -451,7 +451,8 @@ If I wanted all of the bars to be the same color, I would set \textbf{fill} outs
 Coming out of \textbf{aes} we have the \textbf{stat} argument, which will override how the layer works with \textbf{stat\_count}.
 Normally the \textbf{geom\_bar} layer is meant to produce bars with a height proportional to the number of cases in the groups passed to it, while \textbf{geom\_col} will have the heights be the values in the data.
 What I want is for the height of the bar to be the arithmetic mean of the data, so I use the \textbf{stat} argument to override how the layer normally works to make the height a summary value for the data.
-The \textbf{fun.y} sets the function used on the Y data to get that summary value.
+The \textbf{fun} sets the function used on the Y data to get that summary value; the mean.
+Originally I used \textbf{fun.y} but this notation has been depreciated.
 
 That closes the layer but not the line as I have the \textbf{scale\_fill\_hue} layer too.
 Scales in \textit{ggplot2} are not just for the axes, but almost any aesthetic that will represent the values in the data, including the fill color.

@@ -139,10 +139,13 @@ compTAB	=	function(MEAN, PERC, ECDF)	{
 		listECDF	=	begECDF:endECDF
 	}
 
+	compECDF	=	as.data.frame(ECDF[, listECDF])
+	names(compECDF)	=	colnames(ECDF)[listECDF]
+
 	out	=	cbind(
 		MEAN,
 		PERC[, sapply(PERC, is.numeric)],
-		ECDF[, listECDF]
+		compECDF
 	)
 
 	colnames(out)[grep("Var.", colnames(out))]	=	""
@@ -162,11 +165,12 @@ Finding the beginning and end of \textbf{listECDF} is not that difficult, thankf
 Within the appropriate lines, the variable and 60 are placed in a new vector and the \textbf{max} or \textbf{min} function is run to find the appropriate range of values.
 These values are made into strings then with \textbf{paste0}, which also attaches " FPS" to it, and then \textbf{grep} is used to find the value in \textbf{ECDF}'s column names.
 
-Once the first and last columns to include are found, the sequence of indices is created and stored to \textbf{listECDF}.
-This is actually important, that the sequence is generated from the beginning to the end as this is how the additional values from the default list of frame rates are included.
-For a quick refresher, the default list within the \textbf{ecfdFPS} function is 60, 50, 30, 20, and 15, so a \textbf{listFPS} value of 45 and my design to always include 60 will include the columns for 60, 50, and 45.
+Ideally with \textbf{listECDF} we would be able to just grab the desired columns and go from there, but there is a quirk to square bracket notation that needs to be addressed.
+When selecting just one column this way, only the contents are returned, not the column name.
+To address this \textbf{compECDF} is created to hold the selected contents as a data frame.
+With \textbf{names} then the column names from the selected columns can be applied to \textbf{compECDF} and that is then what will be used.
 
-With \textbf{listECDF} created we can get to actually pulling together the compact table using \textbf{cbind}.
+With \textbf{compECDF} created we can get to actually pulling together the compact table using \textbf{cbind}.
 As I want the mean and median first, \textbf{MEAN} is the first frame passed to \textbf{cbind}.
 Previously I had \textbf{addFPS} applied within this function, but I have decided to change this, so when \textbf{MEAN} and \textbf{PERC} are passed to \textbf{compTAB}, they must have that function already applied.
 As the complete contents of \textbf{MEAN} are used, there is nothing more to it so we go to the next object for \textbf{cbind}.
