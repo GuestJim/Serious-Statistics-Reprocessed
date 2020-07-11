@@ -58,7 +58,7 @@ With that covered, we can get to the graphs, starting with the first one I usual
 
 \subsection{Means, Medians, and Percentiles}
 
-\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @Means - Frame Time}}
+\image[height = 0.5\textheight]{Serious Statistics and Scripts - Max - @Means - Frame Time}
 
 Previously I had this type of graph labelled as Averages, but as I covered earlier, average can refer to more than one value, so I have changed the name to be more specific.
 
@@ -147,7 +147,7 @@ The label for the mean is on the left side of the respective bar and lacks a bac
 The values for the 1\% and 99\% labels are placed to be vertically aligned on the top or bottom of the box which marks those values, and the 0.1\% and 99.9\% labels are placed above and below the lines marking them.
 As you can see, the labels for the percentiles step in closer to the center of the bars; this is to help avoid the labels falling on top of each other and to better match where the plots themselves mark the values.
 
-\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @Means Labeled - Frame Time}}
+\image[height = 0.5\textheight]{Serious Statistics and Scripts - Max - @Means Labeled - Frame Time}
 
 \subsection{Course}
 
@@ -155,7 +155,7 @@ The second graph I usually share I call a Course graph, as it shows the frame ti
 Previously I had lines on it marking the percentiles, but do not anymore as they can be tricky to have work with the facets (what enables me to have multiple plots in a single graph) and I do not think they are strictly necessary.
 What does remain, however, is a blue smooth line that serves as a kind of trend line, though it does not always react quickly to sudden changes in the data.
 
-\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @Course - Frame Time}}
+\image[height = 0.5\textheight]{Serious Statistics and Scripts - Max - @Course - Frame Time}
 
 To be perfectly honest, I include this line in part for aesthetic purposes, and not to provide a representative trend line.
 My knowledge and understanding of statistics and probability does not enable me to select the most appropriate model to generate such a trend line.
@@ -193,7 +193,7 @@ These plots draw a curve based on how much data is contained within bins.
 It is possible to control the number of bins or the width of the bins, with that latter being what I chose to set.
 The bin width I decided on after trying different values is 0.03 as the resulting appearance of the plots looked good to me, being neither too jagged nor too smooth.
 
-\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @Freq - Frame Time}}
+\image[height = 0.5\textheight]{Serious Statistics and Scripts - Max - @Freq - Frame Time}
 
 It might be worth noting that these curves are not depicting the probability distribution function of the data, but the distribution function itself.
 This matters most because it means the sizes of the curves are not normalized, making the Y-axis important to check.
@@ -229,7 +229,7 @@ Consider the 68-95-99.7 rule for the Normal distribution I mentioned in a previo
 From 1 to 2 standard deviations from the mean, however, there is only 13.5\% of the data.
 Regardless of the labels on the scale, the data would be nonlinear, with more at the center and less at the edges, but with percentiles the scale shows this too.
 
-\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @QQ - Frame Time}}
+\image[height = 0.5\textheight]{Serious Statistics and Scripts - Max - @QQ - Frame Time}
 
 Looking at this graph, we can see I have made some changes compared to how they have been in most recent articles.
 This is because adding these additional layers, like the rectangles marking certain percentiles here and the lines in the Frequency plots, is a bit tricky to do with faceted graphs.
@@ -311,7 +311,7 @@ The solution that came to me was to create a graph that will show both the speci
 To achieve this goal, one axis is the measured frame time while the other is the difference between consecutive measurements.
 To be specific, this is the difference between the current and next frame, so that coordinate is telling you where the performance is going, instead of where it was.
 
-\image[height = 0.5\textheight]{{Serious Statistics and Scripts - Max - @Diff - Frame Time}}
+\image[height = 0.5\textheight]{Serious Statistics and Scripts - Max - @Diff - Frame Time}
 
 Because I changed the limts on the X-scale for the frame time measurements, these plots are very stretched in that dimension.
 I could also reduce the scale of the Y-axis, but as we can already see there is cropping for some plots, I did not want to cut out even more data.
